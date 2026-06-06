@@ -15,7 +15,9 @@ services:
       POSTGRES_USER: ${DB_USER:-bank}
       POSTGRES_PASSWORD: ${DB_PASSWORD:-bank}
     ports:
-      - "5432:5432"
+      # 5433 cote machine (5432 est deja pris par un PostgreSQL local).
+      # En interne, les conteneurs utilisent toujours postgres:5432.
+      - "5433:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
       # Cree une base par service au premier demarrage
