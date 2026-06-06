@@ -25,7 +25,7 @@ synchronise par **événements**.
 
 | Service | Techno | Base | Entités détenues |
 |---------|--------|------|------------------|
-| **auth-service** *(à créer)* | Java | `bank_auth_db` | `Utilisateur`, `Role` |
+| **auth-service** | Java | `bank_auth_db` | `Utilisateur`, `Role` |
 | **customer-service** | Java | `bank_customer_db` | `Client`, `Operateur`, `Adresse` |
 | **account-service** | Java | `bank_account_db` | `Compte` |
 | **transaction-service** | Java | `bank_transaction_db` | `Transaction` |

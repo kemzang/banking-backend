@@ -65,6 +65,25 @@ services:
 
   # ------------------ SERVICES METIER (Java) ------------------
 
+  auth-service:
+    build: ./microservices-backend/auth-service
+    container_name: bank-auth
+    ports:
+      - "8085:8085"
+    environment:
+      SERVER_PORT: 8085
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/bank_auth_db
+      SPRING_DATASOURCE_USERNAME: ${DB_USER:-bank}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-bank}
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-service:8761/eureka/
+      JWT_SECRET: ${JWT_SECRET:-change-me-une-cle-secrete-de-256-bits-minimum-pour-le-tp-inf462}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      discovery-service:
+        condition: service_started
+    networks: [bank-net]
+
   customer-service:
     build: ./microservices-backend/customer-service
     container_name: bank-customer
