@@ -97,8 +97,8 @@ cd microservices-backend/<service>
 |---|----------|-------------|------|
 | 1 | Cahier des charges fonctionnel et non fonctionnel | [docs/02-cahier-des-charges.md](docs/02-cahier-des-charges.md) | 🟡 squelette |
 | 2 | Étude DDD complète | [docs/01-analyse-ddd.md](docs/01-analyse-ddd.md) | 🟡 squelette |
-| 3 | Proposition d'architecture microservices justifiée | `docs/` | 🔴 à faire |
-| 4 | Diagrammes UML | `docs/` | 🔴 à faire |
+| 3 | Proposition d'architecture microservices justifiée | [docs/03-modele-domaine-et-plan.md](docs/03-modele-domaine-et-plan.md) | 🟡 amorcé |
+| 4 | Diagrammes UML (cas d'usage, classes, MCD/MLD) | [docs/03-modele-domaine-et-plan.md](docs/03-modele-domaine-et-plan.md) | 🟢 amorcé |
 | 5 | Code source complet (GitHub) | ce dépôt | 🟡 échafaudage |
 | 6 | Documentation technique et des API | `docs/` + Swagger | 🔴 à faire |
 | 7 | Fichiers de conteneurisation Docker | `*/Dockerfile`, `docker-compose.yml` | 🟢 amorcé |
@@ -113,9 +113,14 @@ cd microservices-backend/<service>
 
 ## Démarche de travail
 
-Voir la méthodologie en 5 phases et la répartition par *bounded context* dans
-[docs/01-analyse-ddd.md](docs/01-analyse-ddd.md). **Principe clé : finaliser
-l'analyse métier (DDD) avant d'écrire la logique métier.**
+Le **modèle de données complet** (entités, attributs, relations), les **diagrammes**
+(cas d'usage, classes, MCD, MLD), le **plan de démarrage** (par quoi commencer) et
+la **répartition anti-conflits** de l'équipe sont détaillés dans
+👉 **[docs/03-modele-domaine-et-plan.md](docs/03-modele-domaine-et-plan.md)**.
+
+**Principe clé : se mettre d'accord sur les contrats (API + événements) et le
+modèle de données AVANT d'écrire la logique métier.** On démarre par
+`customer-service` (modèle de référence) + `auth-service`.
 
 ## Équipe
 _(noms des membres et répartition par bounded context à compléter)_
