@@ -1,0 +1,46 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: gateway-service
+  cloud:
+    gateway:
+      # Cree automatiquement une route par service enregistre dans Eureka :
+      #   http://localhost:8080/CUSTOMER-SERVICE/**  ->  service "customer-service"
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+      # Routes explicites (preferees pour des URLs propres et pour ajouter
+      # des filtres : securite, rate-limiting, circuit-breaker, etc.)
+      routes:
+        - id: customer-service
+          uri: lb://customer-service        # lb:// = load-balance via Eureka
+          predicates:
+            - Path=/api/customers/**
+        - id: account-service
+          uri: lb://account-service
+          predicates:
+            - Path=/api/accounts/**
+        - id: transaction-service
+          uri: lb://transaction-service
+          predicates:
+            - Path=/api/transactions/**
+        - id: loan-service
+          uri: lb://loan-service
+          predicates:
+            - Path=/api/loans/**
+
+# Enregistrement de la gateway aupres de l'annuaire Eureka
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URI:http://localhost:8761/eureka/}
+
+# Exposition des endpoints d'observabilite (health, info, gateway routes...)
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,gateway
