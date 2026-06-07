@@ -1,36 +1,47 @@
 server:
   port: 8080
 
+# Secret de verification des JWT : DOIT etre identique a celui de auth-service.
+app:
+  jwt:
+    secret: ${JWT_SECRET:change-me-une-cle-secrete-de-256-bits-minimum-pour-le-tp-inf462}
+
 spring:
   application:
     name: gateway-service
   cloud:
     gateway:
-      # Cree automatiquement une route par service enregistre dans Eureka :
-      #   http://localhost:8080/CUSTOMER-SERVICE/**  ->  service "customer-service"
-      discovery:
-        locator:
-          enabled: true
-          lower-case-service-id: true
-      # Routes explicites (preferees pour des URLs propres et pour ajouter
-      # des filtres : securite, rate-limiting, circuit-breaker, etc.)
-      routes:
-        - id: customer-service
-          uri: lb://customer-service        # lb:// = load-balance via Eureka
-          predicates:
-            - Path=/api/customers/**
-        - id: account-service
-          uri: lb://account-service
-          predicates:
-            - Path=/api/accounts/**
-        - id: transaction-service
-          uri: lb://transaction-service
-          predicates:
-            - Path=/api/transactions/**
-        - id: loan-service
-          uri: lb://loan-service
-          predicates:
-            - Path=/api/loans/**
+      # NB Spring Cloud 2025.x / gateway-server-webflux : la config est sous
+      # spring.cloud.gateway.server.webflux.* (et non plus directement .gateway.*)
+      server:
+        webflux:
+          # Cree automatiquement une route par service enregistre dans Eureka
+          discovery:
+            locator:
+              enabled: true
+              lower-case-service-id: true
+          # Routes explicites (URLs propres + possibilite d'ajouter des filtres)
+          routes:
+            - id: auth-service
+              uri: lb://auth-service
+              predicates:
+                - Path=/api/auth/**
+            - id: customer-service
+              uri: lb://customer-service        # lb:// = load-balance via Eureka
+              predicates:
+                - Path=/api/customers/**
+            - id: account-service
+              uri: lb://account-service
+              predicates:
+                - Path=/api/accounts/**
+            - id: transaction-service
+              uri: lb://transaction-service
+              predicates:
+                - Path=/api/transactions/**
+            - id: loan-service
+              uri: lb://loan-service
+              predicates:
+                - Path=/api/loans/**
 
 # Enregistrement de la gateway aupres de l'annuaire Eureka
 eureka:

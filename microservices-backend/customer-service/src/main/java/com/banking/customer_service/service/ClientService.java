@@ -5,7 +5,7 @@ import com.banking.customer_service.dto.ClientResponseDTO;
 import com.banking.customer_service.entity.Client;
 import com.banking.customer_service.repository.ClientRepository;
 import lombok.RequiredArgsConstructor;
-import main.java.com.banking.customer_service.entity.StatutKyc;
+import com.banking.customer_service.entity.StatutKyc;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;

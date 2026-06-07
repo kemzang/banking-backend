@@ -61,6 +61,7 @@ services:
       - "8080:8080"
     environment:
       EUREKA_URI: http://discovery-service:8761/eureka/
+      JWT_SECRET: ${JWT_SECRET:-change-me-une-cle-secrete-de-256-bits-minimum-pour-le-tp-inf462}
     depends_on:
       - discovery-service
     networks: [bank-net]
