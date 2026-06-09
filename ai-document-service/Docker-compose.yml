@@ -1,0 +1,13 @@
+services:
+  python-service:
+    build: .
+    container_name: tp-inf462-python-service
+    ports:
+      - "8001:8001"
+    volumes:
+      - ./storage:/app/storage
+      - ./app/storage:/app/app/storage
+    env_file:
+      - .env
+    environment:
+      TESSERACT_CMD: /usr/bin/tesseract
