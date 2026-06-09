@@ -1,3 +1,5 @@
+from typing import Annotated
+
 from fastapi import APIRouter, Depends, File, UploadFile
 from sqlalchemy.orm import Session
 
@@ -5,6 +7,7 @@ from app.core.database import get_db
 from app.repositories.document_repository import DocumentRepository
 from app.schemas.ocr_schema import (
     OcrAnalysisResponse,
+    ErrorResponse,
     OcrHistorySuccessResponse,
     OcrSuccessResponse,
 )
@@ -19,9 +22,21 @@ def get_ocr_service(db: Session = Depends(get_db)) -> OcrService:
     return OcrService(DocumentRepository(db))
 
 
-@router.post("/extract", response_model=OcrSuccessResponse)
+@router.post(
+    "/extract",
+    response_model=OcrSuccessResponse,
+    summary="Extraire le texte d'une image",
+    responses={
+        400: {"model": ErrorResponse, "description": "Image invalide"},
+        422: {"model": ErrorResponse, "description": "Fichier absent"},
+        503: {"model": ErrorResponse, "description": "Tesseract indisponible"},
+    },
+)
 async def extract_text(
-    file: UploadFile | None = File(default=None),
+    file: Annotated[
+        UploadFile,
+        File(description="Image PNG, JPG ou JPEG à analyser"),
+    ],
     service: OcrService = Depends(get_ocr_service),
 ) -> dict:
     analysis = await service.extract(file)
@@ -32,7 +47,11 @@ async def extract_text(
     )
 
 
-@router.get("/history", response_model=OcrHistorySuccessResponse)
+@router.get(
+    "/history",
+    response_model=OcrHistorySuccessResponse,
+    summary="Lister l'historique OCR",
+)
 def get_history(
     service: OcrService = Depends(get_ocr_service),
 ) -> dict:
@@ -47,7 +66,14 @@ def get_history(
     )
 
 
-@router.get("/history/{analysis_id}", response_model=OcrSuccessResponse)
+@router.get(
+    "/history/{analysis_id}",
+    response_model=OcrSuccessResponse,
+    summary="Consulter une analyse OCR",
+    responses={
+        404: {"model": ErrorResponse, "description": "Analyse introuvable"},
+    },
+)
 def get_history_item(
     analysis_id: int,
     service: OcrService = Depends(get_ocr_service),

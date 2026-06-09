@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict
 
@@ -25,3 +25,9 @@ class OcrHistorySuccessResponse(BaseModel):
     status: Literal["success"]
     message: str
     data: list[OcrAnalysisResponse]
+
+
+class ErrorResponse(BaseModel):
+    status: Literal["error"]
+    message: str
+    errors: Any

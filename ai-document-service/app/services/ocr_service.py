@@ -30,7 +30,7 @@ class OcrService:
         if settings.tesseract_cmd:
             pytesseract.pytesseract.tesseract_cmd = settings.tesseract_cmd
 
-    async def extract(self, file: UploadFile | None) -> DocumentAnalysis:
+    async def extract(self, file: UploadFile) -> DocumentAnalysis:
         saved_path: Path | None = None
 
         try:
@@ -57,10 +57,18 @@ class OcrService:
             if saved_path:
                 delete_file(saved_path)
             raise
-        except (
-            pytesseract.TesseractError,
-            pytesseract.TesseractNotFoundError,
-        ) as exc:
+        except pytesseract.TesseractNotFoundError as exc:
+            if saved_path:
+                delete_file(saved_path)
+            raise AppException(
+                message=(
+                    "Tesseract est introuvable. Vérifiez TESSERACT_CMD "
+                    "dans le fichier .env"
+                ),
+                status_code=503,
+                errors={"tesseract_cmd": settings.tesseract_cmd or "tesseract"},
+            ) from exc
+        except pytesseract.TesseractError as exc:
             if saved_path:
                 delete_file(saved_path)
             raise AppException(

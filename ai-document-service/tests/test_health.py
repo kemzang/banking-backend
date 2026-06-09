@@ -47,3 +47,17 @@ def test_analysis_validation_error_uses_standard_format() -> None:
     assert body["status"] == "error"
     assert body["message"] == "Données de requête invalides"
     assert body["errors"]
+
+
+def test_ocr_openapi_uses_a_required_binary_upload() -> None:
+    openapi_schema = app.openapi()
+    request_body = openapi_schema["paths"]["/api/v1/ocr/extract"]["post"][
+        "requestBody"
+    ]
+    multipart_schema = request_body["content"]["multipart/form-data"]["schema"]
+    schema_reference = multipart_schema["$ref"].split("/")[-1]
+    upload_schema = openapi_schema["components"]["schemas"][schema_reference]
+
+    assert upload_schema["required"] == ["file"]
+    assert upload_schema["properties"]["file"]["type"] == "string"
+    assert upload_schema["properties"]["file"]["format"] == "binary"

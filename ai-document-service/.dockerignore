@@ -1,0 +1,10 @@
+.env
+.git
+.gitignore
+.pytest_cache
+__pycache__
+*.py[cod]
+storage
+app/storage/uploads
+tests
+venv
