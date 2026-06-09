@@ -35,6 +35,6 @@ def init_db() -> None:
         Path(database_path).parent.mkdir(parents=True, exist_ok=True)
 
     # Models must be imported before SQLAlchemy creates the metadata.
-    from app.models.document import Document  # noqa: F401
+    from app.models.document_analysis import DocumentAnalysis  # noqa: F401
 
     Base.metadata.create_all(bind=engine)

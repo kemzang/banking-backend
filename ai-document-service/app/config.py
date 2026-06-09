@@ -23,10 +23,9 @@ class Settings(BaseModel):
     )
     app_version: str = os.getenv("APP_VERSION", "1.0.0")
     debug: bool = _as_bool(os.getenv("DEBUG", "false"))
-    database_url: str = os.getenv(
-        "DATABASE_URL",
-        f"sqlite:///{(BASE_DIR / 'data' / 'ai_document.db').as_posix()}",
-    )
+    database_url: str = os.getenv("DATABASE_URL", "sqlite:///./storage/app.db")
+    tesseract_cmd: str | None = os.getenv("TESSERACT_CMD") or None
+    upload_dir: Path = BASE_DIR / "app" / "storage" / "uploads"
 
 
 settings = Settings()

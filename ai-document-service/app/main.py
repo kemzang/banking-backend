@@ -7,6 +7,7 @@ from app.core.database import init_db
 from app.core.exceptions import register_exception_handlers
 from app.routes.analysis import router as analysis_router
 from app.routes.health import router as health_router
+from app.routes.ocr import router as ocr_router
 
 
 @asynccontextmanager
@@ -25,5 +26,6 @@ app = FastAPI(
 
 app.include_router(health_router, prefix="/api/v1/health", tags=["Health"])
 app.include_router(analysis_router, prefix="/api/v1/analysis", tags=["Analysis"])
+app.include_router(ocr_router, prefix="/api/v1/ocr", tags=["OCR"])
 
 register_exception_handlers(app)

@@ -1,5 +1,5 @@
 """SQLAlchemy persistence models."""
 
-from app.models.document import Document
+from app.models.document_analysis import DocumentAnalysis
 
-__all__ = ["Document"]
+__all__ = ["DocumentAnalysis"]

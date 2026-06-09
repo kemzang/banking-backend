@@ -2,5 +2,6 @@
 .pytest_cache/
 __pycache__/
 *.py[cod]
-data/
+storage/
+app/storage/uploads/
 venv/

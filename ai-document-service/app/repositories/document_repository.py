@@ -1,23 +1,45 @@
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.models.document import Document
+from app.models.document_analysis import DocumentAnalysis
 
 
 class DocumentRepository:
-    """Small persistence boundary ready for the future OCR service."""
+    """Persistence operations for document analysis history."""
 
     def __init__(self, db: Session) -> None:
         self.db = db
 
-    def create(self, filename: str, extracted_text: str | None = None) -> Document:
-        document = Document(
-            filename=filename,
+    def create(
+        self,
+        original_filename: str,
+        stored_filename: str,
+        extracted_text: str | None = None,
+        confidence_score: float = 0.0,
+        status: str = "completed",
+    ) -> DocumentAnalysis:
+        analysis = DocumentAnalysis(
+            original_filename=original_filename,
+            stored_filename=stored_filename,
             extracted_text=extracted_text,
+            confidence_score=confidence_score,
+            status=status,
         )
-        self.db.add(document)
-        self.db.commit()
-        self.db.refresh(document)
-        return document
+        try:
+            self.db.add(analysis)
+            self.db.commit()
+            self.db.refresh(analysis)
+        except Exception:
+            self.db.rollback()
+            raise
+        return analysis
 
-    def get_by_id(self, document_id: int) -> Document | None:
-        return self.db.get(Document, document_id)
+    def find_all(self) -> list[DocumentAnalysis]:
+        statement = select(DocumentAnalysis).order_by(
+            DocumentAnalysis.created_at.desc(),
+            DocumentAnalysis.id.desc(),
+        )
+        return list(self.db.scalars(statement).all())
+
+    def find_by_id(self, analysis_id: int) -> DocumentAnalysis | None:
+        return self.db.get(DocumentAnalysis, analysis_id)
