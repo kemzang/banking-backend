@@ -1,0 +1,124 @@
+{
+  "info": {
+    "name": "Plateforme Bancaire - INF462",
+    "description": "Tests des endpoints via la Gateway (:8080). Le token JWT est recupere automatiquement apres le login et reutilise dans les requetes protegees.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080" },
+    { "key": "email", "value": "jean@mail.com" },
+    { "key": "password", "value": "secret123" },
+    { "key": "token", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "1. Register (inscription)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// genere un email unique a chaque execution pour eviter le 409",
+                  "pm.collectionVariables.set('email', 'jean' + Date.now() + '@mail.com');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/auth/register", "host": ["{{baseUrl}}"], "path": ["api", "auth", "register"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"motDePasse\": \"{{password}}\",\n  \"telephone\": \"699000000\"\n}"
+            }
+          }
+        },
+        {
+          "name": "2. Login (connexion -> recupere le token)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.token) {",
+                  "  pm.collectionVariables.set('token', json.token);",
+                  "  console.log('Token enregistre');",
+                  "}",
+                  "pm.test('login OK (200)', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "auth", "login"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"motDePasse\": \"{{password}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "3. Me (utilisateur courant - protege)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/auth/me", "host": ["{{baseUrl}}"], "path": ["api", "auth", "me"] }
+          }
+        },
+        {
+          "name": "4. Me SANS token (doit renvoyer 401)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/auth/me", "host": ["{{baseUrl}}"], "path": ["api", "auth", "me"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Customers",
+      "item": [
+        {
+          "name": "1. Creer un client (protege)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/customers", "host": ["{{baseUrl}}"], "path": ["api", "customers"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"utilisateurId\": \"11111111-1111-1111-1111-111111111111\",\n  \"operateurId\": 1,\n  \"nom\": \"Doe\",\n  \"prenom\": \"Jean\",\n  \"dateNaissance\": \"1995-04-12\",\n  \"email\": \"client@mail.com\",\n  \"telephone\": \"699000000\",\n  \"numeroIdentite\": \"1234567890\",\n  \"typePiece\": \"CNI\",\n  \"adresse\": { \"rue\": \"Rue 1\", \"ville\": \"Yaounde\", \"pays\": \"Cameroun\", \"codePostal\": \"\" }\n}"
+            }
+          }
+        },
+        {
+          "name": "2. Lire un client par id (protege)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/customers/1", "host": ["{{baseUrl}}"], "path": ["api", "customers", "1"] }
+          }
+        },
+        {
+          "name": "3. Lire un client SANS token (doit renvoyer 401)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/customers/1", "host": ["{{baseUrl}}"], "path": ["api", "customers", "1"] }
+          }
+        }
+      ]
+    }
+  ]
+}
