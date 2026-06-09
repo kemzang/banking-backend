@@ -47,11 +47,22 @@ services:
 
   # ------------------ SOCLE MICROSERVICES ------------------
 
+  config-service:
+    build: ./microservices-backend/config-service
+    container_name: bank-config
+    ports:
+      - "8888:8888"
+    networks: [bank-net]
+
   discovery-service:
     build: ./microservices-backend/discovery-service
     container_name: bank-discovery
     ports:
       - "8761:8761"
+    environment:
+      CONFIG_SERVER_URI: http://config-service:8888
+    depends_on:
+      - config-service
     networks: [bank-net]
 
   gateway-service:
@@ -181,12 +192,18 @@ services:
   #       condition: service_healthy
   #   networks: [bank-net]
 
-  # ai-document-service:
-  #   build: ./ai-document-service
-  #   container_name: bank-ai
-  #   ports:
-  #     - "8000:8000"
-  #   networks: [bank-net]
+  ai-document-service:
+    build: ./ai-document-service
+    container_name: bank-ai
+    ports:
+      - "8001:8001"
+    environment:
+      TESSERACT_CMD: /usr/bin/tesseract
+      DATABASE_URL: sqlite:///./storage/app.db
+    volumes:
+      - ./ai-document-service/storage:/app/storage
+      - ./ai-document-service/app/storage:/app/app/storage
+    networks: [bank-net]
 
 networks:
   bank-net:

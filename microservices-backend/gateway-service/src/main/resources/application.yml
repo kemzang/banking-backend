@@ -42,6 +42,10 @@ spring:
               uri: lb://loan-service
               predicates:
                 - Path=/api/loans/**
+            - id: ai-document-service
+              uri: http://ai-document-service:8001   # URL directe (service Python, pas dans Eureka)
+              predicates:
+                - Path=/api/v1/**
 
 # Enregistrement de la gateway aupres de l'annuaire Eureka
 eureka:

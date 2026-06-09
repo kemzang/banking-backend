@@ -141,24 +141,29 @@
 
 ---
 
-## 📄 ai-document-service — `/api/documents`
+## 📄 ai-document-service — `/api/v1/...` (Python/FastAPI, port 8001)
+
+> Implémentation réelle (Daryl). Service Python autonome (base SQLite), routé par
+> la gateway via URL directe. Réponses enveloppées : `{ status, message, data }`.
 
 | Méthode | URL | Description |
 |---------|-----|-------------|
-| POST | `/api/documents` | Téléverser un document (multipart) |
-| GET | `/api/documents/{id}` | Statut + résultat OCR |
-| GET | `/api/documents?clientId={id}` | Documents d'un client |
+| GET | `/api/v1/health/` | État du service |
+| POST | `/api/v1/ocr/extract` | Extraire le texte d'une image (multipart : `file`) |
+| GET | `/api/v1/ocr/history` | Historique des analyses OCR |
+| GET | `/api/v1/ocr/history/{id}` | Détail d'une analyse OCR |
+| GET | `/api/v1/analysis/...` | Analyse de documents |
 
-**POST /api/documents** (multipart : `clientId`, `type`, `file`) → `201`
+**POST /api/v1/ocr/extract** (multipart : `file` = image PNG/JPG/JPEG) → `200`
 ```json
-{ "id": 7, "clientId": 5, "type": "CNI", "statut": "SOUMIS" }
+{
+  "status": "success",
+  "message": "OCR effectué avec succès",
+  "data": { "id": 1, "texte_extrait": "...", "score_confiance": 0.94 }
+}
 ```
-**GET /api/documents/{id}** → `200`
-```json
-{ "id": 7, "type": "CNI", "statut": "VERIFIE",
-  "ocr": { "scoreConfiance": 0.94,
-           "donneesStructurees": { "nom": "Doe", "numero": "1234567890" } } }
-```
+> Codes d'erreur : `400` image invalide, `422` fichier absent, `503` Tesseract indisponible.
+> Documentation interactive auto-générée : `http://localhost:8001/docs` (Swagger FastAPI).
 
 ---
 
