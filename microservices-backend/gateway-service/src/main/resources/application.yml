@@ -30,6 +30,10 @@ spring:
               uri: lb://customer-service        # lb:// = load-balance via Eureka
               predicates:
                 - Path=/api/customers/**
+            - id: customer-service-operators
+              uri: lb://customer-service
+              predicates:
+                - Path=/api/operators/**
             - id: account-service
               uri: lb://account-service
               predicates:

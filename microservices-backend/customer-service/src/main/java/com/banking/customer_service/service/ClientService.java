@@ -11,6 +11,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.List;
+
 @Service                       // = composant métier géré par Spring
 @RequiredArgsConstructor       // Lombok génère le constructeur pour les champs final
 public class ClientService {
@@ -52,6 +54,42 @@ public class ClientService {
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Client introuvable: " + id));
         //   .map(this::toResponse)
         //   .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Client introuvable: " + id));
+    }
+
+    // LISTER tous les clients
+    public List<ClientResponseDTO> lister() {
+        return clientRepository.findAll().stream().map(this::toResponse).toList();
+    }
+
+    // MODIFIER un client existant (champs autorises ; ni id, ni statutKyc, ni dateInscription)
+    public ClientResponseDTO modifier(Long id, ClientRequestDTO dto) {
+        Client client = clientRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Client introuvable: " + id));
+
+        // si l'email change, verifier qu'il n'est pas deja pris par un autre client
+        if (!client.getEmail().equals(dto.email()) && clientRepository.existsByEmail(dto.email())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Email deja utilise: " + dto.email());
+        }
+
+        client.setOperateurId(dto.operateurId());
+        client.setNom(dto.nom());
+        client.setPrenom(dto.prenom());
+        client.setDateNaissance(dto.dateNaissance());
+        client.setEmail(dto.email());
+        client.setTelephone(dto.telephone());
+        client.setNumeroIdentite(dto.numeroIdentite());
+        client.setTypePiece(dto.typePiece());
+        client.setAdresse(dto.adresse());
+
+        return toResponse(clientRepository.save(client));
+    }
+
+    // METTRE A JOUR le statut KYC
+    public ClientResponseDTO majKyc(Long id, StatutKyc statut) {
+        Client client = clientRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Client introuvable: " + id));
+        client.setStatutKyc(statut);
+        return toResponse(clientRepository.save(client));
     }
 
     // --- conversion Entity -> DTO de sortie ---

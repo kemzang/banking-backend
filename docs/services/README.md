@@ -13,7 +13,7 @@
 | gateway-service | Java | ✅ fait (sécurisé JWT) | — |
 | auth-service | Java | ✅ fait | (modèle de référence sécurité) |
 | ai-document-service | Python | ✅ fait (Daryl) | — |
-| **customer-service** | Java | 🟡 partiel (à finir) | [customer-service.md](customer-service.md) |
+| **customer-service** | Java | ✅ fait (Client + Operateur, CRUD complet) | [customer-service.md](customer-service.md) |
 | **account-service** | Java | 🔴 à faire | [account-service.md](account-service.md) |
 | **transaction-service** | Java | 🔴 à faire | [transaction-service.md](transaction-service.md) |
 | **loan-service** | Java | 🔴 à faire | [loan-service.md](loan-service.md) |

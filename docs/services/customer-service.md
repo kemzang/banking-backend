@@ -78,9 +78,9 @@ public record KycRequestDTO(StatutKyc statutKyc) {}   // ex. { "statutKyc": "VAL
 Ajouter `spring-boot-starter-validation`, annoter les records (`@NotBlank`, `@Email`,
 `@Positive`…) et mettre `@Valid` devant les `@RequestBody` → renvoie `400` si invalide.
 
-## D. Checklist
-- [ ] entité `Operateur` + enum + repository + DTO + service + controller (`/api/operators`)
-- [ ] endpoints Client : `GET` liste, `PUT`, `PATCH /kyc`
-- [ ] (option) validation `@Valid`
-- [ ] **Gateway** : ajouter la route `/api/operators/**` → `lb://customer-service`
-- [ ] test : créer opérateur → créer client lié → modifier → valider KYC
+## D. Checklist — ✅ FAIT (9 juin 2026)
+- [x] entité `Operateur` + enum `TypeOperateur` + repository + DTO + service + controller (`/api/operators`)
+- [x] endpoints Client : `GET` liste, `PUT`, `PATCH /kyc` (+ DTO `KycRequestDTO`)
+- [ ] (option) validation `@Valid` — non fait (reste optionnel)
+- [x] **Gateway** : route `/api/operators/**` → `lb://customer-service`
+- [x] test via gateway : opérateur créé (201) → client créé (201) → modifié (200) → KYC VALIDE (200)
