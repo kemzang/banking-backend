@@ -1,54 +1,28 @@
-<header class="topbar">
-  <div class="brand">🏦 Plateforme Bancaire</div>
-  <div class="user">
-    @if (user(); as u) {
-      <span>{{ u.email }} <em>({{ u.roles.join(', ') }})</em></span>
-    }
-    <button class="logout" (click)="deconnexion()">Déconnexion</button>
-  </div>
-</header>
+<h1 class="page-title">Tableau de bord</h1>
+<p class="page-sub">Vue d'ensemble de la plateforme bancaire.</p>
 
-<main class="content">
-  <h1>Tableau de bord</h1>
-  <p class="hint">Cette page prouve la liaison front ↔ API : elle lit votre profil
-    (<code>/api/auth/me</code>) et la liste des opérateurs (<code>/api/operators</code>).</p>
+<div class="stats">
+  <a class="stat" routerLink="/clients">
+    <span class="num">{{ nbClients() }}</span>
+    <span class="lbl">👤 Clients</span>
+  </a>
+  <a class="stat" routerLink="/operateurs">
+    <span class="num">{{ nbOperateurs() }}</span>
+    <span class="lbl">🏢 Opérateurs</span>
+  </a>
+  <a class="stat" routerLink="/documents">
+    <span class="num">{{ nbDocuments() }}</span>
+    <span class="lbl">📄 Documents analysés</span>
+  </a>
+</div>
 
-  @if (erreur()) {
-    <div class="alert">{{ erreur() }}</div>
-  }
-
-  <section class="grid">
-    <div class="card">
-      <h2>Opérateurs ({{ operateurs().length }})</h2>
-      @if (operateurs().length === 0) {
-        <p class="empty">Aucun opérateur pour l'instant.</p>
-      } @else {
-        <table>
-          <thead><tr><th>ID</th><th>Nom</th><th>Type</th><th>Code</th></tr></thead>
-          <tbody>
-            @for (op of operateurs(); track op.id) {
-              <tr><td>{{ op.id }}</td><td>{{ op.nom }}</td><td>{{ op.type }}</td><td>{{ op.code }}</td></tr>
-            }
-          </tbody>
-        </table>
-      }
-    </div>
-
-    <div class="card">
-      <h2>Ajouter un opérateur</h2>
-      <form (ngSubmit)="ajouterOperateur()">
-        <label>Nom</label>
-        <input name="nom" [(ngModel)]="nom" required placeholder="AfricaBank" />
-        <label>Type</label>
-        <select name="type" [(ngModel)]="type">
-          <option value="BANQUE">BANQUE</option>
-          <option value="MICROFINANCE">MICROFINANCE</option>
-          <option value="MOBILE">MOBILE</option>
-        </select>
-        <label>Code</label>
-        <input name="code" [(ngModel)]="code" required placeholder="AFB001" />
-        <button type="submit">Créer</button>
-      </form>
-    </div>
-  </section>
-</main>
+<div class="card todo">
+  <h2>Modules disponibles</h2>
+  <ul>
+    <li>✅ Authentification (connexion / inscription / rôles)</li>
+    <li>✅ Gestion des clients + validation KYC</li>
+    <li>✅ Gestion des opérateurs</li>
+    <li>✅ Analyse de documents par OCR (service IA)</li>
+    <li>⏳ Comptes, transactions, prêts — <em>en cours de développement côté back-end</em></li>
+  </ul>
+</div>

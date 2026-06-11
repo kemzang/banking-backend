@@ -1,56 +1,25 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
-import { AuthService } from '../../core/services/auth.service';
-import { CustomerService, Operateur } from '../../core/services/customer.service';
-import { UserResponse } from '../../core/models/auth.models';
+import { RouterLink } from '@angular/router';
+import { CustomerService } from '../../core/services/customer.service';
+import { DocumentService } from '../../core/services/document.service';
 
 @Component({
   selector: 'app-dashboard',
-  imports: [FormsModule],
+  imports: [RouterLink],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss',
 })
 export class Dashboard implements OnInit {
-  private auth = inject(AuthService);
   private customer = inject(CustomerService);
-  private router = inject(Router);
+  private docs = inject(DocumentService);
 
-  user = signal<UserResponse | null>(null);
-  operateurs = signal<Operateur[]>([]);
-  erreur = signal<string | null>(null);
-
-  // formulaire de creation d'operateur
-  nom = '';
-  type = 'BANQUE';
-  code = '';
+  nbClients = signal(0);
+  nbOperateurs = signal(0);
+  nbDocuments = signal(0);
 
   ngOnInit(): void {
-    this.charger();
-  }
-
-  charger(): void {
-    this.auth.me().subscribe({ next: (u) => this.user.set(u) });
-    this.customer.getOperateurs().subscribe({
-      next: (o) => this.operateurs.set(o),
-      error: () => this.erreur.set('Impossible de charger les opérateurs.'),
-    });
-  }
-
-  ajouterOperateur(): void {
-    this.erreur.set(null);
-    this.customer.createOperateur({ nom: this.nom, type: this.type, code: this.code }).subscribe({
-      next: () => {
-        this.nom = '';
-        this.code = '';
-        this.charger();
-      },
-      error: (e) => this.erreur.set(e.status === 409 ? 'Ce code est déjà utilisé.' : 'Erreur lors de la création.'),
-    });
-  }
-
-  deconnexion(): void {
-    this.auth.logout();
-    this.router.navigate(['/login']);
+    this.customer.getClients().subscribe({ next: (c) => this.nbClients.set(c.length) });
+    this.customer.getOperateurs().subscribe({ next: (o) => this.nbOperateurs.set(o.length) });
+    this.docs.history().subscribe({ next: (h) => this.nbDocuments.set(h.length) });
   }
 }

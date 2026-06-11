@@ -1,0 +1,71 @@
+<h1 class="page-title">Clients</h1>
+<p class="page-sub">Inscription et gestion des clients, validation KYC.</p>
+
+@if (erreur()) { <div class="alert alert-error">{{ erreur() }}</div> }
+@if (succes()) { <div class="alert alert-ok">{{ succes() }}</div> }
+
+<div class="grid-2">
+  <div class="card">
+    <h2>Liste des clients ({{ clients().length }})</h2>
+    @if (clients().length === 0) {
+      <p class="empty">Aucun client pour l'instant.</p>
+    } @else {
+      <table>
+        <thead>
+          <tr><th>ID</th><th>Nom</th><th>Email</th><th>KYC</th><th>Actions</th></tr>
+        </thead>
+        <tbody>
+          @for (c of clients(); track c.id) {
+            <tr>
+              <td>{{ c.id }}</td>
+              <td>{{ c.prenom }} {{ c.nom }}</td>
+              <td>{{ c.email }}</td>
+              <td><span [class]="badgeClass(c.statutKyc)">{{ c.statutKyc }}</span></td>
+              <td>
+                <button class="btn btn-sm btn-green" (click)="changerKyc(c, 'VALIDE')">Valider</button>
+                <button class="btn btn-sm btn-ghost" (click)="changerKyc(c, 'REJETE')">Rejeter</button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+  </div>
+
+  <div class="card">
+    <h2>Nouveau client</h2>
+    <form (ngSubmit)="creer()">
+      <div class="field">
+        <label>Opérateur</label>
+        <select name="operateurId" [(ngModel)]="form.operateurId" required>
+          <option [ngValue]="0" disabled>-- choisir --</option>
+          @for (op of operateurs(); track op.id) {
+            <option [ngValue]="op.id">{{ op.nom }}</option>
+          }
+        </select>
+      </div>
+      <div class="row">
+        <div class="field"><label>Nom</label><input name="nom" [(ngModel)]="form.nom" required /></div>
+        <div class="field"><label>Prénom</label><input name="prenom" [(ngModel)]="form.prenom" required /></div>
+      </div>
+      <div class="field"><label>Date de naissance</label><input type="date" name="dn" [(ngModel)]="form.dateNaissance" required /></div>
+      <div class="field"><label>Email</label><input type="email" name="email" [(ngModel)]="form.email" required /></div>
+      <div class="field"><label>Téléphone</label><input name="tel" [(ngModel)]="form.telephone" /></div>
+      <div class="row">
+        <div class="field"><label>N° pièce</label><input name="ni" [(ngModel)]="form.numeroIdentite" /></div>
+        <div class="field">
+          <label>Type pièce</label>
+          <select name="tp" [(ngModel)]="form.typePiece">
+            <option value="CNI">CNI</option>
+            <option value="PASSEPORT">PASSEPORT</option>
+          </select>
+        </div>
+      </div>
+      <div class="row">
+        <div class="field"><label>Ville</label><input name="ville" [(ngModel)]="form.adresse.ville" /></div>
+        <div class="field"><label>Pays</label><input name="pays" [(ngModel)]="form.adresse.pays" /></div>
+      </div>
+      <button type="submit" class="btn">Créer le client</button>
+    </form>
+  </div>
+</div>

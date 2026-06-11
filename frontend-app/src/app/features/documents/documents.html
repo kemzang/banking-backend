@@ -1,0 +1,51 @@
+<h1 class="page-title">Documents — Reconnaissance OCR</h1>
+<p class="page-sub">Téléversez une image (CNI, justificatif…) : le service IA extrait automatiquement le texte.</p>
+
+@if (erreur()) { <div class="alert alert-error">{{ erreur() }}</div> }
+
+<div class="grid-2">
+  <div class="card">
+    <h2>Analyser un document</h2>
+
+    <div class="dropzone">
+      <input type="file" id="file" accept="image/*" (change)="onFichier($event)" />
+      <label for="file">📎 {{ fichier ? fichier.name : 'Choisir une image (PNG, JPG)' }}</label>
+    </div>
+
+    @if (apercu()) {
+      <img class="apercu" [src]="apercu()" alt="aperçu" />
+    }
+
+    <button class="btn" (click)="analyser()" [disabled]="!fichier || chargement()">
+      {{ chargement() ? 'Analyse en cours...' : 'Lancer l\'analyse OCR' }}
+    </button>
+
+    @if (resultat(); as r) {
+      <div class="resultat">
+        <h3>Texte extrait</h3>
+        <pre>{{ r.extracted_text || '(aucun texte détecté)' }}</pre>
+        <p class="meta">Confiance : <b>{{ (r.confidence_score * 100) | number:'1.0-0' }}%</b> · Statut : {{ r.status }}</p>
+      </div>
+    }
+  </div>
+
+  <div class="card">
+    <h2>Historique ({{ historique().length }})</h2>
+    @if (historique().length === 0) {
+      <p class="empty">Aucune analyse pour l'instant.</p>
+    } @else {
+      <table>
+        <thead><tr><th>ID</th><th>Fichier</th><th>Conf.</th></tr></thead>
+        <tbody>
+          @for (h of historique(); track h.id) {
+            <tr>
+              <td>{{ h.id }}</td>
+              <td>{{ h.original_filename }}</td>
+              <td>{{ (h.confidence_score * 100) | number:'1.0-0' }}%</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+  </div>
+</div>
