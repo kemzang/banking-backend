@@ -1,16 +1,7 @@
-FROM maven:3.9.11-eclipse-temurin-17 AS build
-WORKDIR /workspace
-
-COPY pom.xml .
-COPY src ./src
-RUN mvn -B -DskipTests clean package
-
+# Image d'execution. Le .jar est construit AU PREALABLE sur la machine
+# (./mvnw -DskipTests package) puis copie ici — pas de build Maven dans Docker.
 FROM eclipse-temurin:17-jre
 WORKDIR /app
-
-RUN useradd --system --uid 1001 spring
-COPY --from=build /workspace/target/transaction-service-*.jar app.jar
-
-USER spring
+COPY target/*.jar app.jar
 EXPOSE 8083
-ENTRYPOINT ["java", "-jar", "/app/app.jar"]
+ENTRYPOINT ["java", "-jar", "app.jar"]

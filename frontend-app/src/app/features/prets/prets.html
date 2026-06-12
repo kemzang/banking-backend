@@ -1,0 +1,129 @@
+<h1 class="page-title">Prêts</h1>
+<p class="page-sub">Demande, analyse/décision, échéancier et remboursement des prêts.</p>
+
+@if (erreur()) { <div class="alert alert-error">{{ erreur() }}</div> }
+@if (succes()) { <div class="alert alert-ok">{{ succes() }}</div> }
+
+<div class="grid-2">
+  <!-- Nouvelle demande -->
+  <div class="card">
+    <h2>📝 Nouvelle demande</h2>
+    <form (ngSubmit)="soumettre()">
+      <div class="field">
+        <label>Client</label>
+        <select name="cl" [(ngModel)]="nouvelle.clientId" required>
+          <option [ngValue]="0" disabled>-- client --</option>
+          @for (cl of clients(); track cl.id) { <option [ngValue]="cl.id">{{ cl.prenom }} {{ cl.nom }}</option> }
+        </select>
+      </div>
+      <div class="row">
+        <div class="field"><label>Montant</label><input type="number" name="mt" [(ngModel)]="nouvelle.montantDemande" required /></div>
+        <div class="field"><label>Durée (mois)</label><input type="number" name="dm" [(ngModel)]="nouvelle.dureeMois" required /></div>
+      </div>
+      <div class="field"><label>Motif</label><input name="mo" [(ngModel)]="nouvelle.motif" /></div>
+      <button class="btn" type="submit">Soumettre la demande</button>
+    </form>
+  </div>
+
+  <!-- Paramètres de décision -->
+  <div class="card">
+    <h2>⚙️ Paramètres de décision</h2>
+    <p class="page-sub">Utilisés lors de l'approbation d'une demande ci-dessous.</p>
+    <div class="row">
+      <div class="field"><label>Taux d'intérêt (annuel)</label><input type="number" step="0.01" name="ti" [(ngModel)]="tauxInteret" /></div>
+      <div class="field">
+        <label>Compte de versement</label>
+        <select name="cd" [(ngModel)]="compteDecision">
+          <option [ngValue]="0" disabled>-- compte --</option>
+          @for (c of comptes(); track c.id) { <option [ngValue]="c.id">{{ c.numeroCompte }}</option> }
+        </select>
+      </div>
+    </div>
+    <p class="page-sub">Remboursement : montant + moyen, appliqués via le bouton « Rembourser ».</p>
+    <div class="row">
+      <div class="field"><label>Montant remb.</label><input type="number" name="rm" [(ngModel)]="remb.montant" /></div>
+      <div class="field">
+        <label>Moyen</label>
+        <select name="mp" [(ngModel)]="remb.moyenPaiement">
+          <option value="COMPTE">COMPTE</option>
+          <option value="MOBILE">MOBILE</option>
+        </select>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Demandes -->
+<div class="card" style="margin-top:1.5rem">
+  <h2>Demandes ({{ demandes().length }})</h2>
+  @if (demandes().length === 0) {
+    <p class="empty">Aucune demande soumise dans cette session.</p>
+  } @else {
+    <table>
+      <thead><tr><th>ID</th><th>Client</th><th>Montant</th><th>Durée</th><th>Score</th><th>Statut</th><th>Décision</th></tr></thead>
+      <tbody>
+        @for (d of demandes(); track d.id) {
+          <tr>
+            <td>{{ d.id }}</td><td>{{ nomClient(d.clientId) }}</td>
+            <td>{{ d.montantDemande | number:'1.0-0' }}</td><td>{{ d.dureeMois }} mois</td>
+            <td>{{ d.scoreRisque }}</td>
+            <td><span [class]="badgeD(d.statut)">{{ d.statut }}</span></td>
+            <td>
+              @if (d.statut === 'SOUMISE') {
+                <button class="btn btn-sm btn-green" (click)="approuver(d)">Approuver</button>
+                <button class="btn btn-sm btn-ghost" (click)="rejeter(d)">Rejeter</button>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</div>
+
+<!-- Prêts -->
+<div class="card" style="margin-top:1.5rem">
+  <h2>Prêts accordés ({{ prets().length }})</h2>
+  @if (prets().length === 0) {
+    <p class="empty">Aucun prêt accordé dans cette session.</p>
+  } @else {
+    <table>
+      <thead><tr><th>ID</th><th>Client</th><th>Montant</th><th>Taux</th><th>Capital restant</th><th>Statut</th><th>Actions</th></tr></thead>
+      <tbody>
+        @for (p of prets(); track p.id) {
+          <tr>
+            <td>{{ p.id }}</td><td>{{ nomClient(p.clientId) }}</td>
+            <td>{{ p.montantAccorde | number:'1.0-0' }}</td><td>{{ p.tauxInteret }}</td>
+            <td>{{ p.capitalRestant | number:'1.0-0' }}</td>
+            <td><span [class]="badgeD(p.statut === 'SOLDE' ? 'APPROUVEE' : p.statut)">{{ p.statut }}</span></td>
+            <td>
+              <button class="btn btn-sm btn-ghost" (click)="voirEcheancier(p)">Échéancier</button>
+              <button class="btn btn-sm" (click)="rembourser(p)">Rembourser</button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</div>
+
+<!-- Échéancier -->
+@if (echeancier(); as e) {
+  <div class="card" style="margin-top:1.5rem">
+    <h2>Échéancier — prêt #{{ e.pretId }}</h2>
+    <table>
+      <thead><tr><th>N°</th><th>Échéance</th><th>Capital</th><th>Intérêt</th><th>Total</th><th>Statut</th></tr></thead>
+      <tbody>
+        @for (ec of e.echeances; track ec.numero) {
+          <tr>
+            <td>{{ ec.numero }}</td><td>{{ ec.dateEcheance }}</td>
+            <td>{{ ec.montantCapital | number:'1.0-2' }}</td>
+            <td>{{ ec.montantInteret | number:'1.0-2' }}</td>
+            <td><b>{{ ec.montantTotal | number:'1.0-2' }}</b></td>
+            <td><span [class]="badgeE(ec.statut)">{{ ec.statut }}</span></td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}

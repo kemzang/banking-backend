@@ -140,19 +140,17 @@ services:
     ports:
       - "8083:8083"
     environment:
-      SERVER_PORT: 8083
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/bank_transaction_db
-      SPRING_DATASOURCE_USERNAME: ${DB_USER:-bank}
-      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-bank}
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-service:8761/eureka/
-      SPRING_RABBITMQ_HOST: rabbitmq
+      # noms de variables attendus par transaction-service (application.yml)
+      DB_URL: jdbc:postgresql://postgres:5432/bank_transaction_db
+      DB_USERNAME: ${DB_USER:-bank}
+      DB_PASSWORD: ${DB_PASSWORD:-bank}
+      EUREKA_URL: http://discovery-service:8761/eureka
+      TRANSACTION_EVENTS_BROKER: log   # publication d'événements en log (pas de Kafka requis)
     depends_on:
       postgres:
         condition: service_healthy
       discovery-service:
         condition: service_started
-      rabbitmq:
-        condition: service_healthy
     networks: [bank-net]
 
   loan-service:
@@ -161,19 +159,15 @@ services:
     ports:
       - "8084:8084"
     environment:
-      SERVER_PORT: 8084
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/bank_loan_db
-      SPRING_DATASOURCE_USERNAME: ${DB_USER:-bank}
-      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-bank}
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-service:8761/eureka/
-      SPRING_RABBITMQ_HOST: rabbitmq
+      # loan-service active le profil 'docker' (cf. Dockerfile) : url/eureka viennent
+      # de application-docker.yml ; on fournit juste les identifiants BDD.
+      DB_USERNAME: ${DB_USER:-bank}
+      DB_PASSWORD: ${DB_PASSWORD:-bank}
     depends_on:
       postgres:
         condition: service_healthy
       discovery-service:
         condition: service_started
-      rabbitmq:
-        condition: service_healthy
     networks: [bank-net]
 
   # ------------------ SERVICES POLYGLOTTES ------------------
