@@ -1,0 +1,22 @@
+<div class="auth-page">
+  <form class="card" (ngSubmit)="seConnecter()">
+    <h1>Connexion</h1>
+    <p class="subtitle">Plateforme Bancaire</p>
+
+    @if (erreur()) {
+      <div class="alert">{{ erreur() }}</div>
+    }
+
+    <label>Email</label>
+    <input type="email" name="email" [(ngModel)]="email" required placeholder="jean@mail.com" />
+
+    <label>Mot de passe</label>
+    <input type="password" name="motDePasse" [(ngModel)]="motDePasse" required placeholder="••••••••" />
+
+    <button type="submit" [disabled]="chargement()">
+      {{ chargement() ? 'Connexion...' : 'Se connecter' }}
+    </button>
+
+    <p class="switch">Pas encore de compte ? <a routerLink="/register">S'inscrire</a></p>
+  </form>
+</div>

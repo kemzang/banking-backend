@@ -1,0 +1,33 @@
+<h1 class="page-title">Tableau de bord</h1>
+<p class="page-sub">Vue d'ensemble de la plateforme bancaire.</p>
+
+<div class="stats">
+  <a class="stat" routerLink="/clients">
+    <span class="num">{{ nbClients() }}</span>
+    <span class="lbl">👤 Clients</span>
+  </a>
+  <a class="stat" routerLink="/comptes">
+    <span class="num">{{ nbComptes() }}</span>
+    <span class="lbl">💳 Comptes</span>
+  </a>
+  <a class="stat" routerLink="/operateurs">
+    <span class="num">{{ nbOperateurs() }}</span>
+    <span class="lbl">🏢 Opérateurs</span>
+  </a>
+  <a class="stat" routerLink="/documents">
+    <span class="num">{{ nbDocuments() }}</span>
+    <span class="lbl">📄 Documents analysés</span>
+  </a>
+</div>
+
+<div class="card todo">
+  <h2>Modules disponibles</h2>
+  <ul>
+    <li>✅ Authentification (connexion / inscription / rôles)</li>
+    <li>✅ Gestion des clients + validation KYC</li>
+    <li>✅ Gestion des opérateurs</li>
+    <li>✅ Gestion des comptes (ouverture, solde, suspension/clôture)</li>
+    <li>✅ Analyse de documents par OCR (service IA)</li>
+    <li>⏳ Transactions, prêts — <em>en cours de développement côté back-end</em></li>
+  </ul>
+</div>

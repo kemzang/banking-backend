@@ -1,0 +1,26 @@
+<div class="shell">
+  <aside class="sidebar">
+    <div class="logo">🏦 BankPlatform</div>
+    <nav>
+      <a routerLink="/dashboard" routerLinkActive="active">📊 Tableau de bord</a>
+      <a routerLink="/clients" routerLinkActive="active">👤 Clients</a>
+      <a routerLink="/comptes" routerLinkActive="active">💳 Comptes</a>
+      <a routerLink="/operateurs" routerLinkActive="active">🏢 Opérateurs</a>
+      <a routerLink="/documents" routerLinkActive="active">📄 Documents (OCR)</a>
+    </nav>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <span class="spacer"></span>
+      @if (user(); as u) {
+        <span class="who">{{ u.email }} <em>· {{ u.roles.join(', ') }}</em></span>
+      }
+      <button class="logout" (click)="deconnexion()">Déconnexion</button>
+    </header>
+
+    <section class="page">
+      <router-outlet />
+    </section>
+  </div>
+</div>

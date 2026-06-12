@@ -1,0 +1,26 @@
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+@media (max-width: 700px) { .stats { grid-template-columns: 1fr; } }
+
+.stat {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.stat:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08); }
+.stat .num { font-size: 2.2rem; font-weight: 700; color: #2563eb; line-height: 1; }
+.stat .lbl { color: #475569; font-size: 0.95rem; }
+
+.todo ul { margin: 0; padding-left: 1.2rem; line-height: 1.9; color: #334155; }
+.todo em { color: #94a3b8; }

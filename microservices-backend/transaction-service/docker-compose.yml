@@ -1,0 +1,44 @@
+services:
+  transaction-db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: bank_transaction_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5434:5432"
+    volumes:
+      - transaction-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d bank_transaction_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  transaction-service:
+    build:
+      context: .
+    ports:
+      - "8083:8083"
+    environment:
+      DB_URL: jdbc:postgresql://transaction-db:5432/bank_transaction_db
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      EUREKA_URL: http://discovery-service:8761/eureka
+      TRANSACTION_EVENTS_BROKER: log
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      TRANSACTION_MAX_AMOUNT: 1000000
+      TRANSACTION_COMMISSION_PERCENTAGE: 0.005
+    depends_on:
+      transaction-db:
+        condition: service_healthy
+    networks:
+      - banking-network
+
+volumes:
+  transaction-db-data:
+
+networks:
+  banking-network:
+    name: banking-network
+    external: true

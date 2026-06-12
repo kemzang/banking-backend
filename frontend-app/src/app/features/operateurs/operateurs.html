@@ -1,0 +1,39 @@
+<h1 class="page-title">Opérateurs financiers</h1>
+<p class="page-sub">Banques, microfinances et opérateurs mobiles de la plateforme.</p>
+
+@if (erreur()) { <div class="alert alert-error">{{ erreur() }}</div> }
+
+<div class="grid-2">
+  <div class="card">
+    <h2>Liste ({{ operateurs().length }})</h2>
+    @if (operateurs().length === 0) {
+      <p class="empty">Aucun opérateur pour l'instant.</p>
+    } @else {
+      <table>
+        <thead><tr><th>ID</th><th>Nom</th><th>Type</th><th>Code</th></tr></thead>
+        <tbody>
+          @for (op of operateurs(); track op.id) {
+            <tr><td>{{ op.id }}</td><td>{{ op.nom }}</td><td>{{ op.type }}</td><td>{{ op.code }}</td></tr>
+          }
+        </tbody>
+      </table>
+    }
+  </div>
+
+  <div class="card">
+    <h2>Nouvel opérateur</h2>
+    <form (ngSubmit)="creer()">
+      <div class="field"><label>Nom</label><input name="nom" [(ngModel)]="nom" required placeholder="AfricaBank" /></div>
+      <div class="field">
+        <label>Type</label>
+        <select name="type" [(ngModel)]="type">
+          <option value="BANQUE">BANQUE</option>
+          <option value="MICROFINANCE">MICROFINANCE</option>
+          <option value="MOBILE">MOBILE</option>
+        </select>
+      </div>
+      <div class="field"><label>Code</label><input name="code" [(ngModel)]="code" required placeholder="AFB001" /></div>
+      <button type="submit" class="btn">Créer</button>
+    </form>
+  </div>
+</div>

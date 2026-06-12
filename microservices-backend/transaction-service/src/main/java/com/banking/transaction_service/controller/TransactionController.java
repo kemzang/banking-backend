@@ -5,6 +5,14 @@ import com.banking.transaction_service.dto.RetraitRequestDTO;
 import com.banking.transaction_service.dto.TransactionResponseDTO;
 import com.banking.transaction_service.dto.TransfertRequestDTO;
 import com.banking.transaction_service.service.TransactionService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import org.springframework.http.HttpStatus;
@@ -23,6 +31,7 @@ import java.util.List;
 @Validated
 @RestController
 @RequestMapping("/api/transactions")
+@Tag(name = "Transactions", description = "Depots, retraits, transferts et historique")
 public class TransactionController {
 
     private final TransactionService transactionService;
@@ -32,7 +41,25 @@ public class TransactionController {
     }
 
     @PostMapping("/deposit")
+    @Operation(summary = "Effectuer un depot")
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Depot valide"),
+            @ApiResponse(responseCode = "400", description = "Requete invalide"),
+            @ApiResponse(responseCode = "502", description = "Erreur account-service"),
+            @ApiResponse(responseCode = "503", description = "account-service indisponible")
+    })
     public ResponseEntity<TransactionResponseDTO> deposit(
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    required = true,
+                    content = @Content(
+                            schema = @Schema(implementation = DepotRequestDTO.class),
+                            examples = @ExampleObject(
+                                    value = """
+                                            {"compteId":1,"montant":50000,"devise":"XAF"}
+                                            """
+                            )
+                    )
+            )
             @Valid @RequestBody DepotRequestDTO request
     ) {
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -40,7 +67,24 @@ public class TransactionController {
     }
 
     @PostMapping("/withdraw")
+    @Operation(summary = "Effectuer un retrait")
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Retrait valide"),
+            @ApiResponse(responseCode = "400", description = "Requete invalide"),
+            @ApiResponse(responseCode = "409", description = "Solde ou devise incompatible")
+    })
     public ResponseEntity<TransactionResponseDTO> withdraw(
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    required = true,
+                    content = @Content(
+                            schema = @Schema(implementation = RetraitRequestDTO.class),
+                            examples = @ExampleObject(
+                                    value = """
+                                            {"compteId":1,"montant":10000,"devise":"XAF"}
+                                            """
+                            )
+                    )
+            )
             @Valid @RequestBody RetraitRequestDTO request
     ) {
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -48,7 +92,27 @@ public class TransactionController {
     }
 
     @PostMapping("/transfer")
+    @Operation(summary = "Effectuer un transfert")
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Transfert valide"),
+            @ApiResponse(responseCode = "400", description = "Requete invalide"),
+            @ApiResponse(responseCode = "409", description = "Solde ou devise incompatible"),
+            @ApiResponse(responseCode = "502", description = "Erreur account-service")
+    })
     public ResponseEntity<TransactionResponseDTO> transfer(
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    required = true,
+                    content = @Content(
+                            schema = @Schema(implementation = TransfertRequestDTO.class),
+                            examples = @ExampleObject(
+                                    value = """
+                                            {"compteSourceId":1,"compteDestId":2,
+                                            "montant":25000,"devise":"XAF",
+                                            "motif":"Paiement fournisseur"}
+                                            """
+                            )
+                    )
+            )
             @Valid @RequestBody TransfertRequestDTO request
     ) {
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -56,13 +120,22 @@ public class TransactionController {
     }
 
     @GetMapping("/{id}")
-    public TransactionResponseDTO getById(@PathVariable @Positive Long id) {
+    @Operation(summary = "Consulter une transaction")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Transaction trouvee"),
+            @ApiResponse(responseCode = "404", description = "Transaction introuvable")
+    })
+    public TransactionResponseDTO getById(
+            @Parameter(example = "1") @PathVariable @Positive Long id
+    ) {
         return transactionService.getById(id);
     }
 
     @GetMapping
+    @Operation(summary = "Consulter l'historique d'un compte")
+    @ApiResponse(responseCode = "200", description = "Historique retourne")
     public List<TransactionResponseDTO> getByAccount(
-            @RequestParam @Positive Long accountId
+            @Parameter(example = "1") @RequestParam @Positive Long accountId
     ) {
         return transactionService.getByCompte(accountId);
     }

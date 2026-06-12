@@ -1,0 +1,25 @@
+<div class="auth-page">
+  <form class="card" (ngSubmit)="sInscrire()">
+    <h1>Inscription</h1>
+    <p class="subtitle">Créer un compte</p>
+
+    @if (erreur()) {
+      <div class="alert">{{ erreur() }}</div>
+    }
+
+    <label>Email</label>
+    <input type="email" name="email" [(ngModel)]="email" required placeholder="jean@mail.com" />
+
+    <label>Téléphone</label>
+    <input type="text" name="telephone" [(ngModel)]="telephone" placeholder="699000000" />
+
+    <label>Mot de passe</label>
+    <input type="password" name="motDePasse" [(ngModel)]="motDePasse" required placeholder="••••••••" />
+
+    <button type="submit" [disabled]="chargement()">
+      {{ chargement() ? 'Création...' : "S'inscrire" }}
+    </button>
+
+    <p class="switch">Déjà un compte ? <a routerLink="/login">Se connecter</a></p>
+  </form>
+</div>
