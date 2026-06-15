@@ -1,0 +1,207 @@
+services:
+
+  # ------------------ INFRASTRUCTURE ------------------
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: bank-postgres
+    environment:
+      POSTGRES_USER: ${DB_USER:-bank}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-bank}
+    ports:
+      # 5433 cote machine (5432 est deja pris par un PostgreSQL local).
+      # En interne, les conteneurs utilisent toujours postgres:5432.
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      # Cree une base par service au premier demarrage
+      - ./infra/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-bank}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks: [bank-net]
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: bank-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-guest}
+    ports:
+      - "5672:5672"     # protocole AMQP
+      - "15672:15672"   # console d'administration : http://localhost:15672
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+    networks: [bank-net]
+
+  # ------------------ SOCLE MICROSERVICES ------------------
+
+  config-service:
+    build: ./microservices-backend/config-service
+    container_name: bank-config
+    ports:
+      - "8888:8888"
+    networks: [bank-net]
+
+  discovery-service:
+    build: ./microservices-backend/discovery-service
+    container_name: bank-discovery
+    ports:
+      - "8761:8761"
+    environment:
+      CONFIG_SERVER_URI: http://config-service:8888
+    depends_on:
+      - config-service
+    networks: [bank-net]
+
+  gateway-service:
+    build: ./microservices-backend/gateway-service
+    container_name: bank-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      EUREKA_URI: http://discovery-service:8761/eureka/
+      JWT_SECRET: ${JWT_SECRET:-change-me-une-cle-secrete-de-256-bits-minimum-pour-le-tp-inf462}
+    depends_on:
+      - discovery-service
+    networks: [bank-net]
+
+  # ------------------ SERVICES METIER (Java) ------------------
+
+  auth-service:
+    build: ./microservices-backend/auth-service
+    container_name: bank-auth
+    ports:
+      - "8085:8085"
+    environment:
+      SERVER_PORT: 8085
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/bank_auth_db
+      SPRING_DATASOURCE_USERNAME: ${DB_USER:-bank}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-bank}
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-service:8761/eureka/
+      JWT_SECRET: ${JWT_SECRET:-change-me-une-cle-secrete-de-256-bits-minimum-pour-le-tp-inf462}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      discovery-service:
+        condition: service_started
+    networks: [bank-net]
+
+  customer-service:
+    build: ./microservices-backend/customer-service
+    container_name: bank-customer
+    ports:
+      - "8081:8081"
+    environment:
+      SERVER_PORT: 8081
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/bank_customer_db
+      SPRING_DATASOURCE_USERNAME: ${DB_USER:-bank}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-bank}
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-service:8761/eureka/
+    depends_on:
+      postgres:
+        condition: service_healthy
+      discovery-service:
+        condition: service_started
+    networks: [bank-net]
+
+  account-service:
+    build: ./microservices-backend/account-service
+    container_name: bank-account
+    ports:
+      - "8082:8082"
+    environment:
+      SERVER_PORT: 8082
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/bank_account_db
+      SPRING_DATASOURCE_USERNAME: ${DB_USER:-bank}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-bank}
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-service:8761/eureka/
+    depends_on:
+      postgres:
+        condition: service_healthy
+      discovery-service:
+        condition: service_started
+    networks: [bank-net]
+
+  transaction-service:
+    build: ./microservices-backend/transaction-service
+    container_name: bank-transaction
+    ports:
+      - "8083:8083"
+    environment:
+      SERVER_PORT: 8083
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/bank_transaction_db
+      SPRING_DATASOURCE_USERNAME: ${DB_USER:-bank}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-bank}
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-service:8761/eureka/
+      SPRING_RABBITMQ_HOST: rabbitmq
+    depends_on:
+      postgres:
+        condition: service_healthy
+      discovery-service:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+    networks: [bank-net]
+
+  loan-service:
+    build: ./microservices-backend/loan-service
+    container_name: bank-loan
+    ports:
+      - "8084:8084"
+    environment:
+      SERVER_PORT: 8084
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/bank_loan_db
+      SPRING_DATASOURCE_USERNAME: ${DB_USER:-bank}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-bank}
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-service:8761/eureka/
+      SPRING_RABBITMQ_HOST: rabbitmq
+    depends_on:
+      postgres:
+        condition: service_healthy
+      discovery-service:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+    networks: [bank-net]
+
+  # ------------------ SERVICES POLYGLOTTES ------------------
+  # NOTE : ces deux services n'ont pas encore de code. Decommentez
+  #        quand index.js / main.py seront presents.
+
+  notification-service:
+    build: ./notification-service
+    container_name: bank-notification
+    ports:
+      - "3000:3000"
+    environment:
+      RABBITMQ_URL: amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASSWORD:-guest}@rabbitmq:5672
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    networks: [bank-net]
+
+  ai-document-service:
+    build: ./ai-document-service
+    container_name: bank-ai
+    ports:
+      - "8001:8001"
+    environment:
+      TESSERACT_CMD: /usr/bin/tesseract
+      DATABASE_URL: sqlite:///./storage/app.db
+    volumes:
+      - ./ai-document-service/storage:/app/storage
+      - ./ai-document-service/app/storage:/app/app/storage
+    networks: [bank-net]
+
+networks:
+  bank-net:
+    driver: bridge
+
+volumes:
+  pgdata:
