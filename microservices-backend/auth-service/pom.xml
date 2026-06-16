@@ -74,6 +74,13 @@
 			<scope>runtime</scope>
 		</dependency>
 
+		<!-- Verification des jetons Google (Sign in with Google) -->
+		<dependency>
+			<groupId>com.google.api-client</groupId>
+			<artifactId>google-api-client</artifactId>
+			<version>2.7.0</version>
+		</dependency>
+
 		<dependency>
 			<groupId>org.postgresql</groupId>
 			<artifactId>postgresql</artifactId>

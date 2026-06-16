@@ -3,4 +3,7 @@
 export const environment = {
   production: false,
   apiUrl: '/api',
+  // ID client OAuth Google (Google Cloud Console). Laisser vide pour desactiver
+  // le bouton "Se connecter avec Google".
+  googleClientId: '',
 };

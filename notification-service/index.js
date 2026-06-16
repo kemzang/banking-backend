@@ -13,8 +13,20 @@ const PORT = process.env.PORT || 3000;
 const app = express();
 app.use(express.json());
 
+// Historique en memoire des dernieres notifications (consultable par le front).
+const recent = [];
+const MAX_RECENT = 50;
+let seq = 0;
+function addNotification(event) {
+  recent.unshift({ id: ++seq, receivedAt: new Date().toISOString(), ...event });
+  if (recent.length > MAX_RECENT) recent.pop();
+}
+
 app.get('/health', (_req, res) => res.json({ status: 'UP', service: 'notification-service' }));
 app.get('/',       (_req, res) => res.json({ message: 'notification-service is running' }));
+
+// Liste des notifications recentes (consommee par le frontend via la gateway)
+app.get('/api/notifications', (_req, res) => res.json(recent));
 
 app.listen(PORT, () => console.log(`[HTTP] notification-service démarré sur le port ${PORT}`));
 
@@ -47,6 +59,7 @@ async function start() {
 
     try {
       await handleTransactionEvent(event, transporter);
+      addNotification(event);   // memorise pour l'historique expose au front
       channel.ack(msg);  // acquittement : message traité avec succès
     } catch (err) {
       console.error('[Consumer] Erreur traitement, requeue :', err.message);

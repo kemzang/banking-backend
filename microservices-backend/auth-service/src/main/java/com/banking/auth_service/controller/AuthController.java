@@ -1,6 +1,7 @@
 package com.banking.auth_service.controller;
 
 import com.banking.auth_service.dto.AuthResponse;
+import com.banking.auth_service.dto.GoogleLoginRequest;
 import com.banking.auth_service.dto.LoginRequest;
 import com.banking.auth_service.dto.RegisterRequest;
 import com.banking.auth_service.dto.UserResponse;
@@ -28,6 +29,12 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@RequestBody LoginRequest req) {
         return ResponseEntity.ok(authService.login(req));
+    }
+
+    // POST /api/auth/google -> 200 + jeton JWT (connexion via Google, public)
+    @PostMapping("/google")
+    public ResponseEntity<AuthResponse> google(@RequestBody GoogleLoginRequest req) {
+        return ResponseEntity.ok(authService.googleLogin(req.idToken()));
     }
 
     // GET /api/auth/me -> 200 + utilisateur courant (protege : necessite un jeton valide)

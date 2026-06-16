@@ -26,6 +26,16 @@ export class AuthService {
     );
   }
 
+  // Connexion via Google : envoie l'ID token Google, recoit NOTRE jeton JWT.
+  googleLogin(idToken: string): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${this.base}/google`, { idToken }).pipe(
+      tap((res) => {
+        localStorage.setItem(this.TOKEN_KEY, res.token);
+        this.connecte.set(true);
+      }),
+    );
+  }
+
   me(): Observable<UserResponse> {
     return this.http.get<UserResponse>(`${this.base}/me`);
   }

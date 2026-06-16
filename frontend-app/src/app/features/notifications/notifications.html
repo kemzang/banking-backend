@@ -1,0 +1,27 @@
+<h1 class="page-title">Notifications</h1>
+<p class="page-sub">Notifications générées en <b>temps réel</b> par les opérations (via RabbitMQ → service Node).
+  La liste se rafraîchit automatiquement.</p>
+
+@if (erreur()) { <div class="alert alert-error">{{ erreur() }}</div> }
+
+<div class="card">
+  <h2>Reçues ({{ items().length }})</h2>
+  @if (items().length === 0) {
+    <p class="empty">Aucune notification. Effectuez un dépôt/retrait/transfert pour en générer une.</p>
+  } @else {
+    <table>
+      <thead><tr><th>Référence</th><th>Type</th><th>Montant</th><th>Statut</th><th>Reçue à</th></tr></thead>
+      <tbody>
+        @for (n of items(); track n.id) {
+          <tr>
+            <td>{{ n.reference }}</td>
+            <td>{{ n.type }}</td>
+            <td>{{ n.montant | number:'1.0-0' }} {{ n.devise }}</td>
+            <td><span [class]="badge(n.statut)">{{ n.statut }}</span></td>
+            <td>{{ n.receivedAt }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</div>

@@ -34,7 +34,7 @@ public class SecurityConfig {
                 // Aucune session cote serveur : tout repose sur le jeton (stateless)
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/register", "/api/auth/login").permitAll() // routes publiques
+                        .requestMatchers("/api/auth/register", "/api/auth/login", "/api/auth/google").permitAll() // routes publiques
                         .requestMatchers("/actuator/**", "/error").permitAll()                  // /error doit rester accessible
                         .anyRequest().authenticated())                                          // tout le reste protege
                 // Non authentifie -> 401 (et non le 403 par defaut)

@@ -26,7 +26,8 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
     // Routes accessibles SANS jeton (inscription / connexion).
     private static final List<String> PUBLIC_PATHS = List.of(
             "/api/auth/login",
-            "/api/auth/register"
+            "/api/auth/register",
+            "/api/auth/google"
     );
 
     private final SecretKey key;

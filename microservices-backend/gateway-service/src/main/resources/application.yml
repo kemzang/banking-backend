@@ -50,6 +50,10 @@ spring:
               uri: http://ai-document-service:8001   # URL directe (service Python, pas dans Eureka)
               predicates:
                 - Path=/api/v1/**
+            - id: notification-service
+              uri: http://notification-service:3000   # URL directe (service Node, pas dans Eureka)
+              predicates:
+                - Path=/api/notifications/**
 
 # Enregistrement de la gateway aupres de l'annuaire Eureka
 eureka:

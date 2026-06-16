@@ -17,6 +17,11 @@
       {{ chargement() ? 'Connexion...' : 'Se connecter' }}
     </button>
 
+    @if (googleActif) {
+      <div class="sep">ou</div>
+      <div id="googleBtn" style="display:flex;justify-content:center"></div>
+    }
+
     <p class="switch">Pas encore de compte ? <a routerLink="/register">S'inscrire</a></p>
   </form>
 </div>

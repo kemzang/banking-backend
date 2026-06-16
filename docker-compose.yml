@@ -91,6 +91,7 @@ services:
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-bank}
       EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-service:8761/eureka/
       JWT_SECRET: ${JWT_SECRET:-change-me-une-cle-secrete-de-256-bits-minimum-pour-le-tp-inf462}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
     depends_on:
       postgres:
         condition: service_healthy
@@ -145,12 +146,18 @@ services:
       DB_USERNAME: ${DB_USER:-bank}
       DB_PASSWORD: ${DB_PASSWORD:-bank}
       EUREKA_URL: http://discovery-service:8761/eureka
-      TRANSACTION_EVENTS_BROKER: log   # publication d'événements en log (pas de Kafka requis)
+      # Publication des evenements vers RabbitMQ (exchange banking.events) -> notification-service
+      TRANSACTION_EVENTS_BROKER: rabbitmq
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_USERNAME: ${RABBITMQ_USER:-guest}
+      SPRING_RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-guest}
     depends_on:
       postgres:
         condition: service_healthy
       discovery-service:
         condition: service_started
+      rabbitmq:
+        condition: service_healthy
     networks: [bank-net]
 
   loan-service:
@@ -171,20 +178,19 @@ services:
     networks: [bank-net]
 
   # ------------------ SERVICES POLYGLOTTES ------------------
-  # NOTE : ces deux services n'ont pas encore de code. Decommentez
-  #        quand index.js / main.py seront presents.
 
-  # notification-service:
-  #   build: ./notification-service
-  #   container_name: bank-notification
-  #   ports:
-  #     - "3000:3000"
-  #   environment:
-  #     RABBITMQ_URL: amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASSWORD:-guest}@rabbitmq:5672
-  #   depends_on:
-  #     rabbitmq:
-  #       condition: service_healthy
-  #   networks: [bank-net]
+  notification-service:
+    build: ./notification-service
+    container_name: bank-notification
+    ports:
+      - "3000:3000"
+    environment:
+      RABBITMQ_URL: amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASSWORD:-guest}@rabbitmq:5672
+      # SMTP optionnel : sans ces variables, le service utilise Ethereal (mailbox de test)
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    networks: [bank-net]
 
   ai-document-service:
     build: ./ai-document-service

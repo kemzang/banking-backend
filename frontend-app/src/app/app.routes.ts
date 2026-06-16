@@ -18,6 +18,7 @@ export const routes: Routes = [
       { path: 'comptes', loadComponent: () => import('./features/comptes/comptes').then((m) => m.Comptes) },
       { path: 'transactions', loadComponent: () => import('./features/transactions/transactions').then((m) => m.Transactions) },
       { path: 'prets', loadComponent: () => import('./features/prets/prets').then((m) => m.Prets) },
+      { path: 'notifications', loadComponent: () => import('./features/notifications/notifications').then((m) => m.Notifications) },
       { path: 'operateurs', loadComponent: () => import('./features/operateurs/operateurs').then((m) => m.Operateurs) },
       { path: 'documents', loadComponent: () => import('./features/documents/documents').then((m) => m.Documents) },
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
