@@ -15,6 +15,7 @@ export const routes: Routes = [
     children: [
       { path: 'dashboard', loadComponent: () => import('./features/dashboard/dashboard').then((m) => m.Dashboard) },
       { path: 'clients', loadComponent: () => import('./features/clients/clients').then((m) => m.Clients) },
+      { path: 'comptes/:id', loadComponent: () => import('./features/comptes/compte-detail').then((m) => m.CompteDetail) },
       { path: 'comptes', loadComponent: () => import('./features/comptes/comptes').then((m) => m.Comptes) },
       { path: 'transactions', loadComponent: () => import('./features/transactions/transactions').then((m) => m.Transactions) },
       { path: 'prets', loadComponent: () => import('./features/prets/prets').then((m) => m.Prets) },
