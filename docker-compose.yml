@@ -205,6 +205,37 @@ services:
       - ./ai-document-service/app/storage:/app/app/storage
     networks: [bank-net]
 
+  # ------------------ FRONTEND ------------------
+
+  frontend-app:
+    build: ./frontend-app
+    container_name: bank-frontend
+    ports:
+      - "4200:80"          # http://localhost:4200 -> Nginx (relaie /api vers la gateway)
+    depends_on:
+      - gateway-service
+    networks: [bank-net]
+
+  # ------------------ OBSERVABILITE ------------------
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: bank-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./infra/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    networks: [bank-net]
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: bank-grafana
+    ports:
+      - "3001:3000"      # http://localhost:3001 (admin/admin)
+    depends_on:
+      - prometheus
+    networks: [bank-net]
+
 networks:
   bank-net:
     driver: bridge

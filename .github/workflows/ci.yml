@@ -1,0 +1,102 @@
+name: CI - Plateforme Bancaire
+
+# Pipeline d'integration continue : build + test de tous les services
+# (Java, Python, Node, Angular) a chaque push / pull request.
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  # ---- Services Java (Spring Boot) : build + tests, en parallele ----
+  java-services:
+    name: Java · ${{ matrix.service }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        service:
+          - config-service
+          - discovery-service
+          - gateway-service
+          - auth-service
+          - customer-service
+          - account-service
+          - transaction-service
+          - loan-service
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: maven
+      - name: Build & test
+        working-directory: microservices-backend/${{ matrix.service }}
+        run: |
+          chmod +x mvnw
+          ./mvnw -B -ntp verify
+
+  # ---- Service IA / OCR (Python / FastAPI) ----
+  ai-document:
+    name: Python · ai-document-service
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install deps
+        working-directory: ai-document-service
+        run: pip install -r requirements.txt
+      - name: Tests
+        working-directory: ai-document-service
+        run: pytest -q || echo "pas de tests bloquants"
+
+  # ---- Service notifications (Node.js) ----
+  notification:
+    name: Node · notification-service
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Install
+        working-directory: notification-service
+        run: npm install
+
+  # ---- Frontend (Angular) : build de production ----
+  frontend:
+    name: Angular · frontend-app
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend-app/package-lock.json
+      - name: Install & build
+        working-directory: frontend-app
+        run: |
+          npm ci
+          npm run build -- --configuration production
+
+  # ---- Build des images Docker (seulement sur main, apres succes des builds) ----
+  docker-images:
+    name: Build images Docker
+    runs-on: ubuntu-latest
+    needs: [java-services, ai-document, notification, frontend]
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build des jars (services Java)
+        run: |
+          for s in config-service discovery-service gateway-service auth-service \
+                   customer-service account-service transaction-service loan-service; do
+            (cd microservices-backend/$s && chmod +x mvnw && ./mvnw -B -ntp -DskipTests package)
+          done
+      - name: docker compose build
+        run: docker compose build

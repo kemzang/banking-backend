@@ -35,6 +35,11 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-actuator</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>io.micrometer</groupId>
+			<artifactId>micrometer-registry-prometheus</artifactId>
+			<scope>runtime</scope>
+		</dependency>
 		<!-- Spring Cloud Gateway reactif (WebFlux) — nom d'artefact a partir de
 		     Spring Cloud 2025.x (l'ancien spring-cloud-starter-gateway n'existe plus). -->
 		<dependency>

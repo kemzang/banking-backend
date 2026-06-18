@@ -1,0 +1,32 @@
+# Namespace + configuration partagee + secrets de la plateforme bancaire.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: banking
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: bank-config
+  namespace: banking
+data:
+  EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: "http://discovery-service:8761/eureka/"
+  EUREKA_URI: "http://discovery-service:8761/eureka/"
+  EUREKA_URL: "http://discovery-service:8761/eureka"
+  CONFIG_SERVER_URI: "http://config-service:8888"
+  SPRING_RABBITMQ_HOST: "rabbitmq"
+  TRANSACTION_EVENTS_BROKER: "rabbitmq"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: bank-secret
+  namespace: banking
+type: Opaque
+stringData:
+  DB_USER: "bank"
+  DB_PASSWORD: "bank"
+  RABBITMQ_USER: "guest"
+  RABBITMQ_PASSWORD: "guest"
+  JWT_SECRET: "change-me-une-cle-secrete-de-256-bits-minimum-pour-le-tp-inf462"
+  GOOGLE_CLIENT_ID: ""
