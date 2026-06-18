@@ -48,3 +48,19 @@ management:
 springdoc:
   swagger-ui:
     path: /swagger-ui.html
+
+# Resilience : circuit breaker sur les appels a account-service.
+# Les exceptions metier sont ignorees (ne doivent pas ouvrir le circuit).
+resilience4j:
+  circuitbreaker:
+    instances:
+      account:
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 10s
+        ignore-exceptions:
+          - com.banking.transaction_service.exception.SoldeInsuffisantException
+          - com.banking.transaction_service.exception.DeviseIncompatibleException
+          - com.banking.transaction_service.exception.InvalidTransactionException
+          - com.banking.transaction_service.exception.TransactionLimitExceededException

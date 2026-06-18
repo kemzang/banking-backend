@@ -49,6 +49,24 @@ export class AuthService {
     return localStorage.getItem(this.TOKEN_KEY);
   }
 
+  // Decode les roles depuis le JWT (claim "roles").
+  roles(): string[] {
+    const t = this.token;
+    if (!t) return [];
+    try {
+      const payload = JSON.parse(atob(t.split('.')[1]));
+      const r = payload.roles ?? [];
+      return Array.isArray(r) ? r : [r];
+    } catch {
+      return [];
+    }
+  }
+
+  hasRole(...attendus: string[]): boolean {
+    const r = this.roles();
+    return attendus.some((a) => r.includes(a));
+  }
+
   private hasToken(): boolean {
     return !!localStorage.getItem(this.TOKEN_KEY);
   }

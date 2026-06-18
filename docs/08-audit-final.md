@@ -1,5 +1,17 @@
 # Audit final vs énoncé — 16 juin 2026
 
+> **Mise à jour 18 juin** — Blocs 1, 2 et 3 réalisés :
+> - **Cloud Native/DevOps** ✅ : frontend conteneurisé (Nginx), manifests **Kubernetes** (`k8s/`),
+>   **CI/CD** (`.github/workflows/ci.yml`), **observabilité** (Prometheus + Grafana, `/actuator/prometheus`).
+> - **Fonctionnel** ✅ : **espaces par rôle** (front + seed admin), **OCR→KYC**, **statistiques**,
+>   **audit/traçabilité** (filtre gateway), **résilience** (circuit breaker resilience4j transaction→account).
+> - **Documentation** ✅ : étude **DDD** complétée (01), **rapport technique** (10),
+>   **diagrammes séquence & déploiement** (11), cahier des charges finalisé (02).
+>
+> Restent surtout : déploiement K8s **sur un vrai cluster** (manifests prêts, non déployés faute de cluster),
+> saga/compensation des transferts, persistance des notifications/audit, et la **démo** finale.
+
+
 Vérification du code réel contre chaque exigence du sujet INF462.
 ✅ fait & testé · 🟡 partiel · ❌ manquant
 

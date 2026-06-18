@@ -1,6 +1,6 @@
 # Cahier des charges — Plateforme Bancaire Distribuée
 
-> Livrable n°1 du TP INF462. Squelette à compléter/affiner en équipe.
+> Livrable n°1 du TP INF462.
 
 ---
 
@@ -80,8 +80,20 @@ sécurisée et transparente, malgré des règles métier propres à chacun.
 
 ## 6. Périmètre / Hors-périmètre
 
-- **Inclus** : _(à préciser)_
-- **Hors-périmètre** (pour ce TP) : _(à préciser — ex : intégration bancaire réelle, paiements externes...)_
+- **Inclus** : inscription/authentification (mot de passe + Google), gestion des clients & KYC,
+  opérateurs, comptes (ouverture/solde/statuts), transactions (dépôt/retrait/transfert),
+  prêts (demande/décision/échéancier/remboursement), OCR de documents, notifications
+  asynchrones, espaces par rôle, supervision (Prometheus/Grafana), conteneurisation & K8s & CI/CD.
+- **Hors-périmètre** (pour ce TP) : intégration à un système bancaire réel / interbancaire,
+  paiements externes réels, envoi SMS/email réel en production (simulé via Ethereal),
+  vérification biométrique, conformité réglementaire complète (AML/lutte anti-fraude avancée).
+
+## 8. Exemples de critères d'acceptation
+- **EF-03 Dépôt** : un dépôt d'un montant > 0 sur un compte ACTIF augmente le solde du même montant et crée une transaction `VALIDEE` (HTTP 201).
+- **EF-04/05 Transfert** : un transfert débite la source (refus `409` si solde insuffisant) et crédite la destination ; une commission est calculée.
+- **EF-07/08 Prêt** : l'approbation d'une demande crée un prêt et génère un échéancier à mensualités constantes.
+- **EF-10 Notification** : toute transaction validée produit une notification consultable et un email.
+- **ENF-03 Sécurité** : tout endpoint (hors /api/auth/**) refuse l'accès sans JWT valide (`401`).
 
 ## 7. Critères d'acceptation et d'évaluation
 

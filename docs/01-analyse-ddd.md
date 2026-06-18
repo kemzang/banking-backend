@@ -1,132 +1,108 @@
 # Analyse Domain-Driven Design (DDD) — Plateforme Bancaire Distribuée
 
-> Livrable n°2 du TP INF462. À compléter en équipe AVANT le développement.
-> Présentation finale : **22 juin 2026**.
-
----
+> Livrable n°2 du TP INF462 — étude reflétant l'implémentation réelle.
 
 ## 1. Langage ubiquitaire (Ubiquitous Language)
 
-Glossaire des termes métier partagés par toute l'équipe. Un même mot = un même sens.
-
 | Terme | Définition métier |
 |-------|-------------------|
-| Client | _(personne physique/morale détenant un ou plusieurs comptes)_ |
-| Opérateur financier | _(banque, microfinance, opérateur mobile — possède ses propres règles)_ |
-| Compte | _(à compléter)_ |
-| Transaction | _(dépôt, retrait, transfert)_ |
-| Transfert intra-opérateur | _(à compléter)_ |
-| Transfert inter-opérateur | _(à compléter)_ |
-| Prêt | _(à compléter)_ |
-| Échéancier | _(à compléter)_ |
-| Plafond | _(à compléter)_ |
-| Commission | _(à compléter)_ |
-| ... | ... |
+| **Client** | Personne physique détentrice de comptes/prêts, rattachée à un opérateur. |
+| **Opérateur financier** | Banque, microfinance ou opérateur mobile ; possède ses propres règles. |
+| **Utilisateur** | Compte de connexion (identifiants + rôles) ; un client est lié à un utilisateur. |
+| **KYC** | *Know Your Customer* : statut de vérification d'identité (EN_ATTENTE/VALIDE/REJETE). |
+| **Compte** | Compte financier d'un client (solde, devise, plafond, découvert, statut). |
+| **Transaction** | Dépôt, retrait ou transfert ; possède une référence, un montant, une commission, un statut. |
+| **Transfert intra/inter-opérateur** | Transfert entre 2 comptes du même opérateur / d'opérateurs différents. |
+| **Commission** | Frais prélevés sur une opération (ex. transfert inter-opérateur). |
+| **Plafond journalier** | Montant maximal retirable/transférable par jour. |
+| **Demande de prêt** | Sollicitation de financement par un client (montant, durée, motif, score de risque). |
+| **Prêt** | Crédit accordé après approbation d'une demande (capital, taux, échéancier). |
+| **Échéance** | Ligne de l'échéancier (capital + intérêt dus à une date). |
+| **Remboursement** | Paiement d'une échéance. |
+| **Document** | Pièce numérique soumise (CNI, passeport…) analysée par OCR. |
+| **Notification** | Message (email/SMS/push) émis suite à un événement métier. |
 
----
-
-## 2. Identification des sous-domaines
-
-Classer chaque sous-domaine et justifier (cela oriente l'effort d'ingénierie).
+## 2. Sous-domaines
 
 | Sous-domaine | Type | Justification |
 |--------------|------|---------------|
-| Gestion des prêts | **Core** | Cœur de la valeur métier, règles complexes |
-| Transactions / Transferts | **Core** | _(à justifier)_ |
-| Gestion des comptes | Core / Supporting ? | _(à justifier)_ |
-| Gestion des clients (KYC) | Supporting | _(à justifier)_ |
-| Documents & IA/OCR | Supporting | Alimente l'ouverture de compte et les prêts |
-| Notifications | Generic | _(à justifier)_ |
-| Authentification / Sécurité | Generic | _(à justifier)_ |
-| Reporting & Statistiques | Supporting | _(à justifier)_ |
-| Audit & Traçabilité | Supporting / Generic | _(à justifier)_ |
+| **Prêts** | **Core** | Cœur de valeur, règles complexes (scoring, amortissement). |
+| **Transactions / Transferts** | **Core** | Différenciant : intra/inter-opérateurs, commissions, cohérence. |
+| **Comptes** | Supporting | Indispensable mais standard. |
+| **Clients / KYC** | Supporting | Gestion d'identité métier + conformité. |
+| **Documents & OCR/IA** | Supporting | Alimente KYC et prêts ; techno spécialisée (Python). |
+| **Authentification** | Generic | Mécanisme standard (mot de passe, Google, JWT). |
+| **Notifications** | Generic | Canal d'information réutilisable. |
+| **Opérateurs** | Supporting | Référentiel des établissements partenaires. |
 
-> **Core** = avantage concurrentiel (développer soi-même, soigner) ·
-> **Supporting** = nécessaire mais pas différenciant ·
-> **Generic** = solution standard/existante réutilisable.
+## 3. Bounded Contexts → microservices
 
----
+| Bounded Context | Microservice | Techno | Base |
+|-----------------|--------------|--------|------|
+| Identity | `auth-service` | Java | `bank_auth_db` |
+| Customer | `customer-service` | Java | `bank_customer_db` |
+| Account | `account-service` | Java | `bank_account_db` |
+| Transaction | `transaction-service` | Java | `bank_transaction_db` |
+| Loan | `loan-service` | Java | `bank_loan_db` |
+| Document/AI | `ai-document-service` | Python | SQLite |
+| Notification | `notification-service` | Node.js | (en mémoire) |
 
-## 3. Bounded Contexts (limites de contexte)
-
-Un Bounded Context = une frontière où le modèle est cohérent. Souvent → 1 microservice.
-
-| Bounded Context | Responsabilité | Microservice prévu | Techno |
-|-----------------|----------------|--------------------|--------|
-| Customer | Inscription, profil, KYC | `customer-service` | Java/Spring |
-| Account | Soldes, ouverture/clôture | `account-service` | Java/Spring |
-| Transaction | Dépôt, retrait, transferts | `transaction-service` | Java/Spring |
-| Loan | Demande, analyse, échéancier, remboursement | `loan-service` | Java/Spring |
-| Notification | Envoi multi-canal (SMS, mail, push) | `notification-service` | Node.js |
-| Document/AI | OCR, extraction, vérification | `ai-document-service` | Python/FastAPI |
-| Identity | Auth, rôles (client/admin/opérateur) | `auth-service` _(à créer)_ | _(à choisir)_ |
+> 1 Bounded Context = 1 microservice = 1 base (**database per service**). Aucune
+> jointure inter-bases : on référence par identifiant + on synchronise par événements.
 
 ### Context Map (relations entre contextes)
-Décrire les relations : _Customer/Supplier_, _Conformist_, _Anti-Corruption Layer_,
-_Shared Kernel_, _Open Host Service_, etc.
-
+```mermaid
+flowchart LR
+    AUTH[Identity / auth] -->|userId| CUST[Customer]
+    CUST -->|clientId, operateurId| ACC[Account]
+    CUST -->|clientId| LOAN[Loan]
+    ACC -->|credit / debit REST| TX[Transaction]
+    TX -->|lb:// RestClient| ACC
+    LOAN -->|compteId versement| ACC
+    DOC[Document / OCR] -->|document.verified / KYC| CUST
+    TX -->|événement transaction.completed| NOTIF[Notification]
+    LOAN -.événement.-> NOTIF
 ```
-[Customer] --(uploads docs)--> [Document/AI] --(infos extraites)--> [Loan]
-[Transaction] --(événement)--> [Notification]
-[Loan] --(événement)--> [Notification]
-... (à compléter avec un schéma)
-```
-
----
+- **Customer → Account/Loan** : *Customer/Supplier* (amont fournit l'identité client).
+- **Transaction → Account** : *Conformist* via API REST (`lb://account-service`), protégé par **circuit breaker**.
+- **Document → Customer** : *Open Host* (le résultat OCR alimente le KYC).
+- **Transaction/Loan → Notification** : communication **asynchrone** (RabbitMQ), découplée.
 
 ## 4. Agrégats, Entités, Value Objects
 
-Pour chaque Bounded Context, définir l'**agrégat** (cluster cohérent avec une racine
-garante des invariants).
+| Bounded Context | Aggregate Root | Entités / VO | Invariants clés |
+|-----------------|----------------|--------------|-----------------|
+| Identity | `Utilisateur` | + `Role` (enum, `@ElementCollection`) | email unique ; mot de passe haché (BCrypt). |
+| Customer | `Client` | `Operateur` ; VO `Adresse` (`@Embeddable`) | email unique ; KYC initial EN_ATTENTE. |
+| Account | `Compte` | — | solde ≥ −découvert ; retrait ≤ plafond ; clôture si solde = 0. |
+| Transaction | `Transaction` | — | montant > 0 ; débit ≤ solde+découvert ; référence unique. |
+| Loan | `Pret` | `DemandePret`, `Echeance`, `Remboursement` | Pret créé seulement si demande APPROUVEE ; Σ échéances = capital+intérêts. |
+| Document | `Document` | `ResultatOCR` | 1 document → 1 résultat OCR. |
+| Notification | `Notification` | — | une notification par événement consommé. |
 
-### Bounded Context : Account (exemple à dupliquer)
-- **Aggregate Root** : `Compte`
-- **Entités** : `Compte`
-- **Value Objects** : `Solde` (montant + devise), `NuméroCompte`, `Plafond`
-- **Invariants métier** :
-  - Le solde ne peut pas passer sous le découvert autorisé.
-  - Un retrait ne peut excéder le plafond journalier.
-- **Repository** : `CompteRepository`
-
-### Bounded Context : Loan
-- **Aggregate Root** : `DemandePret`
-- _(à compléter)_
-
-> _(Dupliquer ce bloc pour Customer, Transaction, etc.)_
-
----
+> Les relations `@ManyToOne`/`@OneToMany` ne sont utilisées qu'**à l'intérieur** d'un
+> agrégat/contexte (ex. `Pret → Echeance`). Jamais entre microservices.
 
 ## 5. Événements métier (Domain Events)
 
-Base de la communication **asynchrone** entre services (Kafka / RabbitMQ).
+| Événement | Émis par | Consommé par | Transport |
+|-----------|----------|--------------|-----------|
+| `transaction.completed` | transaction | notification | RabbitMQ (`banking.events`) ✅ implémenté |
+| `transaction.rejected` | transaction | notification | RabbitMQ |
+| `document.verified` (→ KYC) | ai-document / front | customer | (orchestré côté front actuellement) |
+| `loan.approved` | loan | notification, account | (perspective) |
+| `loan.installment.overdue` | loan | notification | (perspective) |
 
-| Événement | Émis par | Consommé par | Effet |
-|-----------|----------|--------------|-------|
-| `CompteCree` | Account | Notification | Mail de bienvenue |
-| `DepotEffectue` | Transaction | Account, Notification | MAJ solde + notif |
-| `TransfertInitie` | Transaction | Account (débit/crédit) | Mouvement de fonds |
-| `DocumentVerifie` | Document/AI | Loan, Customer | Débloque l'étape suivante |
-| `PretApprouve` | Loan | Account, Notification | Versement + échéancier |
-| `EcheanceImpayee` | Loan | Notification | Relance |
-| ... | ... | ... | ... |
+## 6. Communications
 
----
+| Type | Cas | Mécanisme |
+|------|-----|-----------|
+| **Synchrone** | front→services, transaction→account | REST via **API Gateway** + **Eureka** (`lb://`) |
+| **Asynchrone** | transaction→notification | **RabbitMQ** (exchange topic `banking.events`) |
 
-## 6. Communications : synchrone vs asynchrone
+## 7. Justification du découpage
 
-| Interaction | Type | Mécanisme | Justification |
-|-------------|------|-----------|---------------|
-| Frontend → services | Synchrone | REST via API Gateway | Réponse immédiate attendue |
-| Transaction → Notification | Asynchrone | Événement (broker) | Découplage, résilience |
-| Loan → Document/AI | _(à décider)_ | _(REST ou événement)_ | _(à justifier)_ |
-| ... | ... | ... | ... |
-
----
-
-## 7. Justification du découpage en microservices
-
-Synthèse : pourquoi ce découpage ? (cohésion forte intra-service, couplage faible
-inter-services, alignement sur les Bounded Contexts, scalabilité indépendante,
-équipes autonomes, "database per service"...).
-
-_(à rédiger — c'est le livrable n°3)_
+- **Alignement Bounded Contexts ↔ microservices** : chaque service a un modèle cohérent et une base dédiée → couplage faible, cohésion forte.
+- **Scalabilité indépendante** : les services Core (transaction, loan) peuvent être mis à l'échelle séparément.
+- **Polyglottisme assumé** : OCR en Python (écosystème IA), notifications en Node (I/O asynchrone), métier bancaire en Java/Spring (robustesse, transactions).
+- **Résilience** : circuit breaker (transaction→account), communications asynchrones découplées, configuration centralisée, découverte de services.

@@ -2,10 +2,32 @@
 <p class="page-sub">Téléversez une image (CNI, justificatif…) : le service IA extrait automatiquement le texte.</p>
 
 @if (erreur()) { <div class="alert alert-error">{{ erreur() }}</div> }
+@if (succes()) { <div class="alert alert-ok">{{ succes() }}</div> }
 
 <div class="grid-2">
   <div class="card">
     <h2>Analyser un document</h2>
+
+    <div class="row">
+      <div class="field">
+        <label>Client concerné</label>
+        <select name="cl" [(ngModel)]="clientId">
+          <option [ngValue]="0" disabled>-- client --</option>
+          @for (c of clients(); track c.id) {
+            <option [ngValue]="c.id">{{ c.prenom }} {{ c.nom }}</option>
+          }
+        </select>
+      </div>
+      <div class="field">
+        <label>Type de document</label>
+        <select name="td" [(ngModel)]="typeDoc">
+          <option value="CNI">CNI</option>
+          <option value="PASSEPORT">Passeport</option>
+          <option value="JUSTIF_DOMICILE">Justificatif de domicile</option>
+          <option value="BULLETIN_SALAIRE">Bulletin de salaire</option>
+        </select>
+      </div>
+    </div>
 
     <div class="dropzone">
       <input type="file" id="file" accept="image/*" (change)="onFichier($event)" />
@@ -25,6 +47,8 @@
         <h3>Texte extrait</h3>
         <pre>{{ r.extracted_text || '(aucun texte détecté)' }}</pre>
         <p class="meta">Confiance : <b>{{ (r.confidence_score * 100) | number:'1.0-0' }}%</b> · Statut : {{ r.status }}</p>
+        <!-- Alimente le processus metier : validation du KYC du client -->
+        <button class="btn btn-green" (click)="validerKyc()">✔ Valider le KYC du client</button>
       </div>
     }
   </div>

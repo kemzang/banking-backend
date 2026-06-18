@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { authGuard } from './core/guards/auth.guard';
+import { authGuard, roleGuard } from './core/guards/auth.guard';
 import { Layout } from './layout/layout';
 
 export const routes: Routes = [
@@ -14,13 +14,29 @@ export const routes: Routes = [
     canActivate: [authGuard],
     children: [
       { path: 'dashboard', loadComponent: () => import('./features/dashboard/dashboard').then((m) => m.Dashboard) },
-      { path: 'clients', loadComponent: () => import('./features/clients/clients').then((m) => m.Clients) },
+      {
+        path: 'clients',
+        canActivate: [roleGuard],
+        data: { roles: ['ADMIN', 'OPERATEUR'] },
+        loadComponent: () => import('./features/clients/clients').then((m) => m.Clients),
+      },
       { path: 'comptes', loadComponent: () => import('./features/comptes/comptes').then((m) => m.Comptes) },
       { path: 'transactions', loadComponent: () => import('./features/transactions/transactions').then((m) => m.Transactions) },
       { path: 'prets', loadComponent: () => import('./features/prets/prets').then((m) => m.Prets) },
       { path: 'notifications', loadComponent: () => import('./features/notifications/notifications').then((m) => m.Notifications) },
-      { path: 'operateurs', loadComponent: () => import('./features/operateurs/operateurs').then((m) => m.Operateurs) },
       { path: 'documents', loadComponent: () => import('./features/documents/documents').then((m) => m.Documents) },
+      {
+        path: 'statistiques',
+        canActivate: [roleGuard],
+        data: { roles: ['ADMIN', 'OPERATEUR'] },
+        loadComponent: () => import('./features/statistiques/statistiques').then((m) => m.Statistiques),
+      },
+      {
+        path: 'operateurs',
+        canActivate: [roleGuard],
+        data: { roles: ['ADMIN'] },
+        loadComponent: () => import('./features/operateurs/operateurs').then((m) => m.Operateurs),
+      },
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
     ],
   },

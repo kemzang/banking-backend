@@ -1,0 +1,43 @@
+<h1 class="page-title">Statistiques</h1>
+<p class="page-sub">Rapports agrégés de la plateforme (clients, comptes, encours, notifications).</p>
+
+<div class="stats" style="display:grid;grid-template-columns:repeat(4,1fr);gap:1.25rem;margin-bottom:1.5rem">
+  <div class="card"><span style="font-size:2rem;font-weight:700;color:#2563eb">{{ nbClients() }}</span><div>👤 Clients</div></div>
+  <div class="card"><span style="font-size:2rem;font-weight:700;color:#2563eb">{{ nbComptes() }}</span><div>💳 Comptes</div></div>
+  <div class="card"><span style="font-size:2rem;font-weight:700;color:#16a34a">{{ soldeTotal() | number:'1.0-0' }}</span><div>💰 Encours total (XAF)</div></div>
+  <div class="card"><span style="font-size:2rem;font-weight:700;color:#2563eb">{{ nbNotifs() }}</span><div>🔔 Notifications</div></div>
+</div>
+
+<div class="grid-2">
+  <div class="card">
+    <h2>Encours par type de compte</h2>
+    @if (parType().length === 0) {
+      <p class="empty">Aucune donnée.</p>
+    } @else {
+      <table>
+        <thead><tr><th>Type</th><th>Nb comptes</th><th>Solde cumulé</th></tr></thead>
+        <tbody>
+          @for (t of parType(); track t.type) {
+            <tr><td>{{ t.type }}</td><td>{{ t.nb }}</td><td>{{ t.total | number:'1.0-0' }} XAF</td></tr>
+          }
+        </tbody>
+      </table>
+    }
+  </div>
+
+  <div class="card">
+    <h2>Clients par statut KYC</h2>
+    @if (parStatutKyc().length === 0) {
+      <p class="empty">Aucune donnée.</p>
+    } @else {
+      <table>
+        <thead><tr><th>Statut KYC</th><th>Nb clients</th></tr></thead>
+        <tbody>
+          @for (k of parStatutKyc(); track k.statut) {
+            <tr><td>{{ k.statut }}</td><td>{{ k.nb }}</td></tr>
+          }
+        </tbody>
+      </table>
+    }
+  </div>
+</div>
