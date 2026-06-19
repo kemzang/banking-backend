@@ -25,6 +25,13 @@ public class ClientController {
         return ResponseEntity.status(HttpStatus.CREATED).body(cree);
     }
 
+    // GET /api/customers/by-email/{email}  -> renvoie un client par email
+    // DOIT etre avant /{id} sinon "by-email" est interprete comme un id
+    @GetMapping("/by-email/{email}")
+    public ResponseEntity<ClientResponseDTO> getClientParEmail(@PathVariable String email) {
+        return ResponseEntity.ok(clientService.getClientParEmail(email));
+    }
+
     // GET /api/customers/{id}  -> renvoie un client, 200 OK (ou 404 si introuvable)
     @GetMapping("/{id}")
     public ResponseEntity<ClientResponseDTO> getClient(@PathVariable Long id) {

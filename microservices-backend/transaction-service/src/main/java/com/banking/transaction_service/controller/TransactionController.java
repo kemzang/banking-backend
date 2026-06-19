@@ -1,5 +1,8 @@
 package com.banking.transaction_service.controller;
 
+import com.banking.transaction_service.client.AccountClient;
+import com.banking.transaction_service.client.CustomerClient;
+import com.banking.transaction_service.dto.AccountResponseDTO;
 import com.banking.transaction_service.dto.DepotRequestDTO;
 import com.banking.transaction_service.dto.RetraitRequestDTO;
 import com.banking.transaction_service.dto.TransactionResponseDTO;
@@ -22,9 +25,11 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -35,9 +40,15 @@ import java.util.List;
 public class TransactionController {
 
     private final TransactionService transactionService;
+    private final AccountClient accountClient;
+    private final CustomerClient customerClient;
 
-    public TransactionController(TransactionService transactionService) {
+    public TransactionController(TransactionService transactionService,
+                                  AccountClient accountClient,
+                                  CustomerClient customerClient) {
         this.transactionService = transactionService;
+        this.accountClient = accountClient;
+        this.customerClient = customerClient;
     }
 
     @PostMapping("/deposit")
@@ -45,6 +56,7 @@ public class TransactionController {
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Depot valide"),
             @ApiResponse(responseCode = "400", description = "Requete invalide"),
+            @ApiResponse(responseCode = "403", description = "Acces refuse"),
             @ApiResponse(responseCode = "502", description = "Erreur account-service"),
             @ApiResponse(responseCode = "503", description = "account-service indisponible")
     })
@@ -60,8 +72,11 @@ public class TransactionController {
                             )
                     )
             )
-            @Valid @RequestBody DepotRequestDTO request
+            @Valid @RequestBody DepotRequestDTO request,
+            @RequestHeader(value = "X-User-Email", required = false) String userEmail,
+            @RequestHeader(value = "X-User-Roles", required = false) String userRoles
     ) {
+        verifierAccesCompte(request.compteId(), userEmail, userRoles);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(transactionService.depot(request));
     }
@@ -71,6 +86,7 @@ public class TransactionController {
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Retrait valide"),
             @ApiResponse(responseCode = "400", description = "Requete invalide"),
+            @ApiResponse(responseCode = "403", description = "Acces refuse"),
             @ApiResponse(responseCode = "409", description = "Solde ou devise incompatible")
     })
     public ResponseEntity<TransactionResponseDTO> withdraw(
@@ -85,8 +101,11 @@ public class TransactionController {
                             )
                     )
             )
-            @Valid @RequestBody RetraitRequestDTO request
+            @Valid @RequestBody RetraitRequestDTO request,
+            @RequestHeader(value = "X-User-Email", required = false) String userEmail,
+            @RequestHeader(value = "X-User-Roles", required = false) String userRoles
     ) {
+        verifierAccesCompte(request.compteId(), userEmail, userRoles);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(transactionService.retrait(request));
     }
@@ -96,6 +115,7 @@ public class TransactionController {
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Transfert valide"),
             @ApiResponse(responseCode = "400", description = "Requete invalide"),
+            @ApiResponse(responseCode = "403", description = "Acces refuse"),
             @ApiResponse(responseCode = "409", description = "Solde ou devise incompatible"),
             @ApiResponse(responseCode = "502", description = "Erreur account-service")
     })
@@ -113,8 +133,11 @@ public class TransactionController {
                             )
                     )
             )
-            @Valid @RequestBody TransfertRequestDTO request
+            @Valid @RequestBody TransfertRequestDTO request,
+            @RequestHeader(value = "X-User-Email", required = false) String userEmail,
+            @RequestHeader(value = "X-User-Roles", required = false) String userRoles
     ) {
+        verifierAccesCompte(request.compteSourceId(), userEmail, userRoles);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(transactionService.transfert(request));
     }
@@ -135,8 +158,34 @@ public class TransactionController {
     @Operation(summary = "Consulter l'historique d'un compte")
     @ApiResponse(responseCode = "200", description = "Historique retourne")
     public List<TransactionResponseDTO> getByAccount(
-            @Parameter(example = "1") @RequestParam @Positive Long accountId
+            @Parameter(example = "1") @RequestParam @Positive Long accountId,
+            @RequestHeader(value = "X-User-Email", required = false) String userEmail,
+            @RequestHeader(value = "X-User-Roles", required = false) String userRoles
     ) {
+        verifierAccesCompte(accountId, userEmail, userRoles);
         return transactionService.getByCompte(accountId);
+    }
+
+    private boolean estAdminOuOperateur(String roles) {
+        if (roles == null || roles.isBlank()) return false;
+        return roles.contains("ADMIN") || roles.contains("OPERATEUR");
+    }
+
+    private Long getClientIdFromEmail(String email) {
+        if (email == null || email.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Email utilisateur manquant");
+        }
+        return customerClient.getClientByEmail(email).id();
+    }
+
+    private void verifierAccesCompte(Long compteId, String userEmail, String userRoles) {
+        if (estAdminOuOperateur(userRoles)) {
+            return;
+        }
+        Long monClientId = getClientIdFromEmail(userEmail);
+        AccountResponseDTO compte = accountClient.getById(compteId);
+        if (!monClientId.equals(compte.clientId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Accès refusé à ce compte");
+        }
     }
 }

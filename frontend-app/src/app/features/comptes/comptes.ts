@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { DecimalPipe } from '@angular/common';
 import { AccountService, Compte, CompteRequest } from '../../core/services/account.service';
 import { Client, CustomerService } from '../../core/services/customer.service';
+import { AuthService } from '../../core/services/auth.service';
 
 @Component({
   selector: 'app-comptes',
@@ -12,6 +13,7 @@ import { Client, CustomerService } from '../../core/services/customer.service';
 export class Comptes implements OnInit {
   private account = inject(AccountService);
   private customer = inject(CustomerService);
+  private auth = inject(AuthService);
 
   comptes = signal<Compte[]>([]);
   clients = signal<Client[]>([]);
@@ -26,10 +28,29 @@ export class Comptes implements OnInit {
   }
 
   charger(): void {
-    this.account.list().subscribe({
-      next: (c) => this.comptes.set(c),
-      error: () => this.erreur.set('Impossible de charger les comptes.'),
-    });
+    if (this.estAdminOuOperateur()) {
+      this.account.list().subscribe({
+        next: (c) => this.comptes.set(c),
+        error: () => this.erreur.set('Impossible de charger les comptes.'),
+      });
+    } else {
+      this.customer.getClientParEmail(this.auth.email()).subscribe({
+        next: (client) => {
+          this.account.list(client.id).subscribe({
+            next: (c) => this.comptes.set(c),
+            error: () => this.erreur.set('Impossible de charger les comptes.'),
+          });
+        },
+        error: () => {
+          // Client non trouvé dans customer-service → pas de comptes
+          this.comptes.set([]);
+        },
+      });
+    }
+  }
+
+  estAdminOuOperateur(): boolean {
+    return this.auth.hasRole('ADMIN', 'OPERATEUR');
   }
 
   ouvrir(): void {

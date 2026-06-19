@@ -59,6 +59,9 @@ export class CustomerService {
   getClient(id: number): Observable<Client> {
     return this.http.get<Client>(`${this.clUrl}/${id}`);
   }
+  getClientParEmail(email: string): Observable<Client> {
+    return this.http.get<Client>(`${this.clUrl}/by-email/${email}`);
+  }
   createClient(req: ClientRequest): Observable<Client> {
     return this.http.post<Client>(this.clUrl, req);
   }

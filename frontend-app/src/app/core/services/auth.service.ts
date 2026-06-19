@@ -62,6 +62,17 @@ export class AuthService {
     }
   }
 
+  email(): string {
+    const t = this.token;
+    if (!t) return '';
+    try {
+      const payload = JSON.parse(atob(t.split('.')[1]));
+      return payload.sub ?? '';
+    } catch {
+      return '';
+    }
+  }
+
   hasRole(...attendus: string[]): boolean {
     const r = this.roles();
     return attendus.some((a) => r.includes(a));

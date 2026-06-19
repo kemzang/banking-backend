@@ -61,6 +61,13 @@ public class ClientService {
         return clientRepository.findAll().stream().map(this::toResponse).toList();
     }
 
+    // RECUPERER un client par email
+    public ClientResponseDTO getClientParEmail(String email) {
+        return clientRepository.findByEmail(email)
+                .map(this::toResponse)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Client introuvable pour cet email: " + email));
+    }
+
     // MODIFIER un client existant (champs autorises ; ni id, ni statutKyc, ni dateInscription)
     public ClientResponseDTO modifier(Long id, ClientRequestDTO dto) {
         Client client = clientRepository.findById(id)

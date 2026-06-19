@@ -3,6 +3,8 @@ import { FormsModule } from '@angular/forms';
 import { DecimalPipe } from '@angular/common';
 import { TransactionService, Transaction } from '../../core/services/transaction.service';
 import { AccountService, Compte } from '../../core/services/account.service';
+import { CustomerService } from '../../core/services/customer.service';
+import { AuthService } from '../../core/services/auth.service';
 
 @Component({
   selector: 'app-transactions',
@@ -12,6 +14,8 @@ import { AccountService, Compte } from '../../core/services/account.service';
 export class Transactions implements OnInit {
   private tx = inject(TransactionService);
   private account = inject(AccountService);
+  private customer = inject(CustomerService);
+  private auth = inject(AuthService);
 
   comptes = signal<Compte[]>([]);
   historique = signal<Transaction[]>([]);
@@ -28,7 +32,21 @@ export class Transactions implements OnInit {
   }
 
   chargerComptes(): void {
-    this.account.list().subscribe({ next: (c) => this.comptes.set(c) });
+    if (this.estAdminOuOperateur()) {
+      this.account.list().subscribe({ next: (c) => this.comptes.set(c) });
+    } else {
+      this.customer.getClientParEmail(this.auth.email()).subscribe({
+        next: (client) => {
+          this.account.list(client.id).subscribe({
+            next: (c) => this.comptes.set(c),
+          });
+        },
+      });
+    }
+  }
+
+  estAdminOuOperateur(): boolean {
+    return this.auth.hasRole('ADMIN', 'OPERATEUR');
   }
 
   private apres(msg: string): void {

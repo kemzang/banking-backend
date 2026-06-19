@@ -65,8 +65,10 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
 
             // 4. On propage l'identite aux services en aval via des en-tetes
             //    (ils n'ont plus a re-verifier le jeton : ils font confiance a la gateway)
+            String userId = String.valueOf(claims.get("userId"));
             ServerHttpRequest mutated = request.mutate()
                     .header("X-User-Email", claims.getSubject())
+                    .header("X-User-Id", userId)
                     .header("X-User-Roles", String.valueOf(claims.get("roles")))
                     .build();
 
