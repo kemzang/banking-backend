@@ -4,72 +4,98 @@
 @if (erreur()) { <div class="alert alert-error">{{ erreur() }}</div> }
 @if (succes()) { <div class="alert alert-ok">{{ succes() }}</div> }
 
-<div class="grid-2">
+@if (estAdminOuOperateur()) {
+  <div class="grid-2">
+    <div class="card">
+      <h2>Liste des comptes ({{ comptes().length }})</h2>
+      @if (comptes().length === 0) {
+        <p class="empty">Aucun compte pour l'instant.</p>
+      } @else {
+        <table>
+          <thead>
+            <tr><th>N° compte</th><th>Client</th><th>Type</th><th>Solde</th><th>Statut</th><th>Actions</th></tr>
+          </thead>
+          <tbody>
+            @for (c of comptes(); track c.id) {
+              <tr>
+                <td>{{ c.numeroCompte }}</td>
+                <td>{{ nomClient(c.clientId) }}</td>
+                <td>{{ c.type }}</td>
+                <td><b>{{ c.solde | number:'1.0-2' }}</b> {{ c.devise }}</td>
+                <td><span [class]="badgeClass(c.statut)">{{ c.statut }}</span></td>
+                <td>
+                  @if (c.statut === 'ACTIF') {
+                    <button class="btn btn-sm btn-ghost" (click)="suspendre(c)">Suspendre</button>
+                    <button class="btn btn-sm btn-ghost" (click)="cloturer(c)">Clôturer</button>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    </div>
+
+    <div class="card">
+      <h2>Ouvrir un compte</h2>
+      <form (ngSubmit)="ouvrir()">
+        <div class="field">
+          <label>Client</label>
+          <select name="clientId" [(ngModel)]="form.clientId" required>
+            <option [ngValue]="0" disabled>-- choisir --</option>
+            @for (cl of clients(); track cl.id) {
+              <option [ngValue]="cl.id">{{ cl.prenom }} {{ cl.nom }}</option>
+            }
+          </select>
+        </div>
+        <div class="row">
+          <div class="field">
+            <label>Type</label>
+            <select name="type" [(ngModel)]="form.type">
+              <option value="COURANT">COURANT</option>
+              <option value="EPARGNE">EPARGNE</option>
+              <option value="PROFESSIONNEL">PROFESSIONNEL</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Devise</label>
+            <select name="devise" [(ngModel)]="form.devise">
+              <option value="XAF">XAF</option>
+              <option value="EUR">EUR</option>
+              <option value="USD">USD</option>
+            </select>
+          </div>
+        </div>
+        <div class="row">
+          <div class="field"><label>Plafond journalier</label><input type="number" name="plaf" [(ngModel)]="form.plafondJournalier" /></div>
+          <div class="field"><label>Découvert autorisé</label><input type="number" name="dec" [(ngModel)]="form.decouvertAutorise" /></div>
+        </div>
+        <button type="submit" class="btn">Ouvrir le compte</button>
+      </form>
+    </div>
+  </div>
+} @else {
+  <!-- Vue CLIENT : juste la liste de ses comptes -->
   <div class="card">
-    <h2>Liste des comptes ({{ comptes().length }})</h2>
+    <h2>Mes comptes ({{ comptes().length }})</h2>
     @if (comptes().length === 0) {
-      <p class="empty">Aucun compte pour l'instant.</p>
+      <p class="empty">Vous n'avez aucun compte. Un opérateur doit vous ouvrir un compte.</p>
     } @else {
       <table>
         <thead>
-          <tr><th>N° compte</th><th>Client</th><th>Type</th><th>Solde</th><th>Statut</th><th>Actions</th></tr>
+          <tr><th>N° compte</th><th>Type</th><th>Solde</th><th>Statut</th></tr>
         </thead>
         <tbody>
           @for (c of comptes(); track c.id) {
             <tr>
               <td>{{ c.numeroCompte }}</td>
-              <td>{{ nomClient(c.clientId) }}</td>
               <td>{{ c.type }}</td>
               <td><b>{{ c.solde | number:'1.0-2' }}</b> {{ c.devise }}</td>
               <td><span [class]="badgeClass(c.statut)">{{ c.statut }}</span></td>
-              <td>
-                @if (c.statut === 'ACTIF') {
-                  <button class="btn btn-sm btn-ghost" (click)="suspendre(c)">Suspendre</button>
-                  <button class="btn btn-sm btn-ghost" (click)="cloturer(c)">Clôturer</button>
-                }
-              </td>
             </tr>
           }
         </tbody>
       </table>
     }
   </div>
-
-  <div class="card">
-    <h2>Ouvrir un compte</h2>
-    <form (ngSubmit)="ouvrir()">
-      <div class="field">
-        <label>Client</label>
-        <select name="clientId" [(ngModel)]="form.clientId" required>
-          <option [ngValue]="0" disabled>-- choisir --</option>
-          @for (cl of clients(); track cl.id) {
-            <option [ngValue]="cl.id">{{ cl.prenom }} {{ cl.nom }}</option>
-          }
-        </select>
-      </div>
-      <div class="row">
-        <div class="field">
-          <label>Type</label>
-          <select name="type" [(ngModel)]="form.type">
-            <option value="COURANT">COURANT</option>
-            <option value="EPARGNE">EPARGNE</option>
-            <option value="PROFESSIONNEL">PROFESSIONNEL</option>
-          </select>
-        </div>
-        <div class="field">
-          <label>Devise</label>
-          <select name="devise" [(ngModel)]="form.devise">
-            <option value="XAF">XAF</option>
-            <option value="EUR">EUR</option>
-            <option value="USD">USD</option>
-          </select>
-        </div>
-      </div>
-      <div class="row">
-        <div class="field"><label>Plafond journalier</label><input type="number" name="plaf" [(ngModel)]="form.plafondJournalier" /></div>
-        <div class="field"><label>Découvert autorisé</label><input type="number" name="dec" [(ngModel)]="form.decouvertAutorise" /></div>
-      </div>
-      <button type="submit" class="btn">Ouvrir le compte</button>
-    </form>
-  </div>
-</div>
+}

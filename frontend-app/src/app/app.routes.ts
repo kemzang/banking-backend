@@ -24,7 +24,7 @@ export const routes: Routes = [
       { path: 'transactions', loadComponent: () => import('./features/transactions/transactions').then((m) => m.Transactions) },
       { path: 'prets', loadComponent: () => import('./features/prets/prets').then((m) => m.Prets) },
       { path: 'notifications', loadComponent: () => import('./features/notifications/notifications').then((m) => m.Notifications) },
-      { path: 'documents', loadComponent: () => import('./features/documents/documents').then((m) => m.Documents) },
+      { path: 'documents', canActivate: [roleGuard], data: { roles: ['ADMIN', 'OPERATEUR'] }, loadComponent: () => import('./features/documents/documents').then((m) => m.Documents) },
       {
         path: 'statistiques',
         canActivate: [roleGuard],

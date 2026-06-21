@@ -9,7 +9,9 @@
       <a routerLink="/comptes" routerLinkActive="active">💳 Comptes</a>
       <a routerLink="/transactions" routerLinkActive="active">💸 Transactions</a>
       <a routerLink="/prets" routerLinkActive="active">🏦 Prêts</a>
-      <a routerLink="/documents" routerLinkActive="active">📄 Documents (OCR)</a>
+      @if (estOperateur()) {
+        <a routerLink="/documents" routerLinkActive="active">📄 Documents (OCR)</a>
+      }
       <a routerLink="/notifications" routerLinkActive="active">🔔 Notifications</a>
       @if (estOperateur()) {
         <a routerLink="/statistiques" routerLinkActive="active">📈 Statistiques</a>

@@ -4,6 +4,7 @@ import { DecimalPipe } from '@angular/common';
 import { DemandePret, Echeancier, LoanService, Pret } from '../../core/services/loan.service';
 import { Client, CustomerService } from '../../core/services/customer.service';
 import { AccountService, Compte } from '../../core/services/account.service';
+import { AuthService } from '../../core/services/auth.service';
 
 @Component({
   selector: 'app-prets',
@@ -14,25 +15,46 @@ export class Prets implements OnInit {
   private loan = inject(LoanService);
   private customer = inject(CustomerService);
   private account = inject(AccountService);
+  private auth = inject(AuthService);
 
   clients = signal<Client[]>([]);
   comptes = signal<Compte[]>([]);
-  demandes = signal<DemandePret[]>([]); // suivies cote front (pas d'endpoint liste)
+  demandes = signal<DemandePret[]>([]);
   prets = signal<Pret[]>([]);
+  mesPrets = signal<Pret[]>([]); // Prêts du CLIENT connecté
   echeancier = signal<Echeancier | null>(null);
   erreur = signal<string | null>(null);
   succes = signal<string | null>(null);
 
   nouvelle = { clientId: 0, montantDemande: 0, dureeMois: 12, motif: '' };
-  // champs de décision partagés
   tauxInteret = 0.12;
   compteDecision = 0;
-  // remboursement
   remb = { montant: 0, moyenPaiement: 'COMPTE' };
 
   ngOnInit(): void {
-    this.customer.getClients().subscribe({ next: (c) => this.clients.set(c) });
-    this.account.list().subscribe({ next: (a) => this.comptes.set(a) });
+    if (this.estClient()) {
+      this.chargerPourClient();
+    } else {
+      this.customer.getClients().subscribe({ next: (c) => this.clients.set(c) });
+      this.account.list().subscribe({ next: (a) => this.comptes.set(a) });
+    }
+  }
+
+  estClient(): boolean {
+    return this.auth.hasRole('CLIENT');
+  }
+
+  private chargerPourClient(): void {
+    const email = this.auth.email();
+    if (!email) return;
+    this.customer.getClientParEmail(email).subscribe({
+      next: (client) => {
+        this.nouvelle.clientId = client.id;
+        // Charger les prêts du client (via les demandes approuvées)
+        // Note: il faudrait un endpoint GET /loans?clientId=X côté backend
+        // Pour l'instant, on affiche juste le formulaire de demande
+      },
+    });
   }
 
   soumettre(): void {
@@ -41,7 +63,7 @@ export class Prets implements OnInit {
       next: (d) => {
         this.demandes.update((list) => [d, ...list]);
         this.succes.set(`Demande #${d.id} soumise (score risque ${d.scoreRisque}).`);
-        this.nouvelle = { clientId: 0, montantDemande: 0, dureeMois: 12, motif: '' };
+        this.nouvelle = { clientId: this.estClient() ? this.nouvelle.clientId : 0, montantDemande: 0, dureeMois: 12, motif: '' };
       },
       error: () => this.erreur.set('Erreur lors de la soumission.'),
     });

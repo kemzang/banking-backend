@@ -5,67 +5,106 @@
 @if (succes()) { <div class="alert alert-ok">{{ succes() }}</div> }
 
 @if (comptes().length === 0) {
-  <div class="card"><p class="empty">Aucun compte disponible. Créez d'abord un compte dans la page « Comptes ».</p></div>
+  <div class="card"><p class="empty">Aucun compte disponible. Un opérateur doit vous ouvrir un compte.</p></div>
 } @else {
   <div class="grid-2">
-    <div class="card">
-      <h2>💰 Dépôt</h2>
-      <form (ngSubmit)="deposer()">
-        <div class="field">
-          <label>Compte</label>
-          <select name="dc" [(ngModel)]="depot.compteId" required>
-            <option [ngValue]="0" disabled>-- compte --</option>
-            @for (c of comptes(); track c.id) {
-              <option [ngValue]="c.id">{{ c.numeroCompte }} ({{ c.solde | number:'1.0-0' }} {{ c.devise }})</option>
-            }
-          </select>
-        </div>
-        <div class="field"><label>Montant</label><input type="number" name="dm" [(ngModel)]="depot.montant" required /></div>
-        <button class="btn btn-green" type="submit">Déposer</button>
-      </form>
-    </div>
-
-    <div class="card">
-      <h2>🏧 Retrait</h2>
-      <form (ngSubmit)="retirer()">
-        <div class="field">
-          <label>Compte</label>
-          <select name="rc" [(ngModel)]="retrait.compteId" required>
-            <option [ngValue]="0" disabled>-- compte --</option>
-            @for (c of comptes(); track c.id) {
-              <option [ngValue]="c.id">{{ c.numeroCompte }} ({{ c.solde | number:'1.0-0' }} {{ c.devise }})</option>
-            }
-          </select>
-        </div>
-        <div class="field"><label>Montant</label><input type="number" name="rm" [(ngModel)]="retrait.montant" required /></div>
-        <button class="btn" type="submit">Retirer</button>
-      </form>
-    </div>
-
-    <div class="card">
-      <h2>🔁 Transfert</h2>
-      <form (ngSubmit)="transferer()">
-        <div class="row">
+    @if (estAdminOuOperateur()) {
+      <div class="card">
+        <h2>💰 Dépôt</h2>
+        <form (ngSubmit)="deposer()">
           <div class="field">
-            <label>Source</label>
-            <select name="ts" [(ngModel)]="transfert.compteSourceId" required>
-              <option [ngValue]="0" disabled>-- source --</option>
-              @for (c of comptes(); track c.id) { <option [ngValue]="c.id">{{ c.numeroCompte }}</option> }
+            <label>Compte</label>
+            <select name="dc" [(ngModel)]="depot.compteId" required>
+              <option [ngValue]="0" disabled>-- compte --</option>
+              @for (c of comptes(); track c.id) {
+                <option [ngValue]="c.id">{{ c.numeroCompte }} ({{ c.solde | number:'1.0-0' }} {{ c.devise }})</option>
+              }
             </select>
           </div>
+          <div class="field"><label>Montant</label><input type="number" name="dm" [(ngModel)]="depot.montant" required /></div>
+          <button class="btn btn-green" type="submit">Déposer</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <h2>🏧 Retrait</h2>
+        <form (ngSubmit)="retirer()">
           <div class="field">
-            <label>Destination</label>
-            <select name="td" [(ngModel)]="transfert.compteDestId" required>
-              <option [ngValue]="0" disabled>-- destination --</option>
-              @for (c of comptes(); track c.id) { <option [ngValue]="c.id">{{ c.numeroCompte }}</option> }
+            <label>Compte</label>
+            <select name="rc" [(ngModel)]="retrait.compteId" required>
+              <option [ngValue]="0" disabled>-- compte --</option>
+              @for (c of comptes(); track c.id) {
+                <option [ngValue]="c.id">{{ c.numeroCompte }} ({{ c.solde | number:'1.0-0' }} {{ c.devise }})</option>
+              }
             </select>
           </div>
-        </div>
-        <div class="field"><label>Montant</label><input type="number" name="tm" [(ngModel)]="transfert.montant" required /></div>
-        <div class="field"><label>Motif</label><input name="tmo" [(ngModel)]="transfert.motif" /></div>
-        <button class="btn" type="submit">Transférer</button>
-      </form>
-    </div>
+          <div class="field"><label>Montant</label><input type="number" name="rm" [(ngModel)]="retrait.montant" required /></div>
+          <button class="btn" type="submit">Retirer</button>
+        </form>
+      </div>
+    } @else {
+      <!-- CLIENT : dépôt/retrait simplifié sur son compte principal -->
+      <div class="card">
+        <h2>💰 Dépôt</h2>
+        <form (ngSubmit)="deposer()">
+          <div class="field">
+            <label>Compte</label>
+            <select name="dc" [(ngModel)]="depot.compteId" required>
+              <option [ngValue]="0" disabled>-- compte --</option>
+              @for (c of comptes(); track c.id) {
+                <option [ngValue]="c.id">{{ c.numeroCompte }} ({{ c.solde | number:'1.0-0' }} {{ c.devise }})</option>
+              }
+            </select>
+          </div>
+          <div class="field"><label>Montant</label><input type="number" name="dm" [(ngModel)]="depot.montant" required /></div>
+          <button class="btn btn-green" type="submit">Déposer</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <h2>🏧 Retrait</h2>
+        <form (ngSubmit)="retirer()">
+          <div class="field">
+            <label>Compte</label>
+            <select name="rc" [(ngModel)]="retrait.compteId" required>
+              <option [ngValue]="0" disabled>-- compte --</option>
+              @for (c of comptes(); track c.id) {
+                <option [ngValue]="c.id">{{ c.numeroCompte }} ({{ c.solde | number:'1.0-0' }} {{ c.devise }})</option>
+              }
+            </select>
+          </div>
+          <div class="field"><label>Montant</label><input type="number" name="rm" [(ngModel)]="retrait.montant" required /></div>
+          <button class="btn" type="submit">Retirer</button>
+        </form>
+      </div>
+    }
+
+    @if (comptes().length >= 2 || estAdminOuOperateur()) {
+      <div class="card">
+        <h2>🔁 Transfert</h2>
+        <form (ngSubmit)="transferer()">
+          <div class="row">
+            <div class="field">
+              <label>Source</label>
+              <select name="ts" [(ngModel)]="transfert.compteSourceId" required>
+                <option [ngValue]="0" disabled>-- source --</option>
+                @for (c of comptes(); track c.id) { <option [ngValue]="c.id">{{ c.numeroCompte }}</option> }
+              </select>
+            </div>
+            <div class="field">
+              <label>Destination</label>
+              <select name="td" [(ngModel)]="transfert.compteDestId" required>
+                <option [ngValue]="0" disabled>-- destination --</option>
+                @for (c of comptes(); track c.id) { <option [ngValue]="c.id">{{ c.numeroCompte }}</option> }
+              </select>
+            </div>
+          </div>
+          <div class="field"><label>Montant</label><input type="number" name="tm" [(ngModel)]="transfert.montant" required /></div>
+          <div class="field"><label>Motif</label><input name="tmo" [(ngModel)]="transfert.motif" /></div>
+          <button class="btn" type="submit">Transférer</button>
+        </form>
+      </div>
+    }
 
     <div class="card">
       <h2>📜 Historique d'un compte</h2>
