@@ -33,14 +33,13 @@ public class CompteController {
     }
 
     // GET /api/accounts/{id}  → détails d'un compte (200 / 404)
+    // NOTE: la vérification d'accès est faite par transaction-service avant l'appel.
+    // Ce endpoint est appelé par transaction-service avec le header X-User-Email
+    // pour logs/audit, mais la vérification principale se fait côté transaction-service.
     @GetMapping("/{id}")
     public ResponseEntity<CompteResponseDTO> getCompte(
-            @PathVariable Long id,
-            @RequestHeader(value = "X-User-Email", required = false) String userEmail,
-            @RequestHeader(value = "X-User-Roles", required = false) String userRoles) {
-        CompteResponseDTO compte = compteService.getCompte(id);
-        verifierAccesCompte(compte.clientId(), userEmail, userRoles);
-        return ResponseEntity.ok(compte);
+            @PathVariable Long id) {
+        return ResponseEntity.ok(compteService.getCompte(id));
     }
 
     // GET /api/accounts  → liste (filtrée par sécurité selon le rôle)

@@ -12,6 +12,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
@@ -21,6 +22,24 @@ import java.util.Map;
 public class GlobalExceptionHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
+    @ExceptionHandler(UnauthorizedException.class)
+    public ResponseEntity<ApiError> handleUnauthorized(
+            UnauthorizedException exception,
+            HttpServletRequest request
+    ) {
+        LOGGER.warn("Unauthorized on {}: {}", request.getRequestURI(), exception.getMessage());
+        return buildError(HttpStatus.UNAUTHORIZED, exception.getMessage(), request, Map.of());
+    }
+
+    @ExceptionHandler(ForbiddenException.class)
+    public ResponseEntity<ApiError> handleForbidden(
+            ForbiddenException exception,
+            HttpServletRequest request
+    ) {
+        LOGGER.warn("Forbidden on {}: {}", request.getRequestURI(), exception.getMessage());
+        return buildError(HttpStatus.FORBIDDEN, exception.getMessage(), request, Map.of());
+    }
 
     @ExceptionHandler(TransactionNotFoundException.class)
     public ResponseEntity<ApiError> handleNotFound(

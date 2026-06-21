@@ -9,6 +9,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * Traçabilité / audit : journalise CHAQUE requête traversant la gateway
  * (méthode, chemin, utilisateur, statut, durée). Centralise l'audit des
@@ -24,6 +27,15 @@ public class AuditLoggingFilter implements GlobalFilter, Ordered {
         var request = exchange.getRequest();
         String user = request.getHeaders().getFirst("X-User-Email");
         long start = System.currentTimeMillis();
+
+        Map<String, String> headersLog = new HashMap<>();
+        request.getHeaders().forEach((name, values) -> {
+            if (name.equals("X-User-Email") || name.equals("X-User-Id") || name.equals("X-User-Roles")
+                    || name.equals("Authorization") || name.equals("Content-Type")) {
+                headersLog.put(name, values.get(0));
+            }
+        });
+        AUDIT.info("INCOMING headers for path {}: {}", request.getURI().getPath(), headersLog);
 
         return chain.filter(exchange).then(Mono.fromRunnable(() -> {
             var status = exchange.getResponse().getStatusCode();

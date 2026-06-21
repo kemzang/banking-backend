@@ -2,7 +2,6 @@ package com.banking.transaction_service.client;
 
 import com.banking.transaction_service.dto.ClientResponseDTO;
 import com.banking.transaction_service.exception.InvalidTransactionException;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientResponseException;
@@ -26,7 +25,7 @@ public class RestCustomerClient implements CustomerClient {
         } catch (RestClientResponseException e) {
             throw new InvalidTransactionException("Client non trouvé pour cet email");
         } catch (Exception e) {
-            throw new InvalidTransactionException("Impossible de vérifier l'accès au compte");
+            throw new InvalidTransactionException("Impossible de vérifier l'accès au compte: " + e.getMessage());
         }
     }
 }

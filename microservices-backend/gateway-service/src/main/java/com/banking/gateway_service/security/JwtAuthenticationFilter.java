@@ -14,6 +14,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -22,6 +25,8 @@ import java.util.List;
 // Il joue le role de "videur" : verifie le JWT a l'entree, bloque sinon.
 @Component
 public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
+
+    private static final Logger LOG = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
 
     // Routes accessibles SANS jeton (inscription / connexion).
     private static final List<String> PUBLIC_PATHS = List.of(
@@ -66,12 +71,18 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
             // 4. On propage l'identite aux services en aval via des en-tetes
             //    (ils n'ont plus a re-verifier le jeton : ils font confiance a la gateway)
             String userId = String.valueOf(claims.get("userId"));
+            String userEmail = claims.getSubject();
+            String userRoles = String.valueOf(claims.get("roles"));
+            LOG.info("JWT validated - userId: {}, email: {}, roles: {}", userId, userEmail, userRoles);
+
             ServerHttpRequest mutated = request.mutate()
-                    .header("X-User-Email", claims.getSubject())
+                    .header("X-User-Email", userEmail)
                     .header("X-User-Id", userId)
-                    .header("X-User-Roles", String.valueOf(claims.get("roles")))
+                    .header("X-User-Roles", userRoles)
                     .build();
 
+            LOG.info("Forwarding headers X-User-Email={}, X-User-Id={}, X-User-Roles={} for path {}",
+                    userEmail, userId, userRoles, path);
             return chain.filter(exchange.mutate().request(mutated).build());
 
         } catch (Exception e) {

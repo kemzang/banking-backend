@@ -7,6 +7,8 @@ import com.banking.transaction_service.dto.DepotRequestDTO;
 import com.banking.transaction_service.dto.RetraitRequestDTO;
 import com.banking.transaction_service.dto.TransactionResponseDTO;
 import com.banking.transaction_service.dto.TransfertRequestDTO;
+import com.banking.transaction_service.exception.ForbiddenException;
+import com.banking.transaction_service.exception.UnauthorizedException;
 import com.banking.transaction_service.service.TransactionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -29,7 +31,6 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -173,7 +174,7 @@ public class TransactionController {
 
     private Long getClientIdFromEmail(String email) {
         if (email == null || email.isBlank()) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Email utilisateur manquant");
+            throw new UnauthorizedException("Email utilisateur manquant");
         }
         return customerClient.getClientByEmail(email).id();
     }
@@ -185,7 +186,7 @@ public class TransactionController {
         Long monClientId = getClientIdFromEmail(userEmail);
         AccountResponseDTO compte = accountClient.getById(compteId);
         if (!monClientId.equals(compte.clientId())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Accès refusé à ce compte");
+            throw new ForbiddenException("Accès refusé à ce compte");
         }
     }
 }
