@@ -3,6 +3,8 @@ package com.banking.transaction_service.exception;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +19,8 @@ import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler(TransactionNotFoundException.class)
     public ResponseEntity<ApiError> handleNotFound(
@@ -100,6 +104,7 @@ public class GlobalExceptionHandler {
             Exception exception,
             HttpServletRequest request
     ) {
+        LOGGER.error("Erreur interne non gérée sur {} : {}", request.getRequestURI(), exception.getMessage(), exception);
         return buildError(
                 HttpStatus.INTERNAL_SERVER_ERROR,
                 "Une erreur interne est survenue",
