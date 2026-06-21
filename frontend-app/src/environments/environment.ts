@@ -5,5 +5,5 @@ export const environment = {
   apiUrl: '/api',
   // ID client OAuth Google (Google Cloud Console). Laisser vide pour desactiver
   // le bouton "Se connecter avec Google".
-  googleClientId: '',
+  googleClientId: '1067870807360-bqodaps1kjnjfaokhonvm66ep3f9s7hu.apps.googleusercontent.com',
 };

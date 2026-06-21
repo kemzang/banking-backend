@@ -35,21 +35,43 @@ export class Login implements AfterViewInit {
   }
 
   ngAfterViewInit(): void {
-    if (!this.googleActif || typeof google === 'undefined') return;
-    google.accounts.id.initialize({
-      client_id: environment.googleClientId,
-      callback: (resp: any) => this.onGoogle(resp),
-    });
-    const el = document.getElementById('googleBtn');
-    if (el) {
-      google.accounts.id.renderButton(el, { theme: 'outline', size: 'large', width: 320 });
+    if (!this.googleActif) return;
+    this.initGoogleButton();
+  }
+
+  private initGoogleButton(): void {
+    if (typeof google !== 'undefined' && google.accounts) {
+      google.accounts.id.initialize({
+        client_id: environment.googleClientId,
+        callback: (resp: any) => this.onGoogle(resp),
+      });
+      const el = document.getElementById('googleBtn');
+      if (el) {
+        google.accounts.id.renderButton(el, { theme: 'outline', size: 'large', width: 320 });
+      }
+    } else {
+      setTimeout(() => this.initGoogleButton(), 500);
     }
   }
 
+  connexionGoogleIndisponible(): void {
+    this.erreur.set('Configurez GOOGLE_CLIENT_ID (.env + environment.ts) pour activer la connexion Google.');
+  }
+
   private onGoogle(resp: any): void {
+    this.erreur.set(null);
+    this.chargement.set(true);
     this.auth.googleLogin(resp.credential).subscribe({
       next: () => this.router.navigate(['/dashboard']),
-      error: () => this.erreur.set('Connexion Google refusée.'),
+      error: (e) => {
+        const msg = e.status === 401
+          ? 'Jeton Google invalide ou expiré. Réessayez.'
+          : e.status === 503
+            ? 'Connexion Google non configurée côté serveur.'
+            : 'Erreur lors de la connexion Google. Réessayez.';
+        this.erreur.set(msg);
+        this.chargement.set(false);
+      },
     });
   }
 }

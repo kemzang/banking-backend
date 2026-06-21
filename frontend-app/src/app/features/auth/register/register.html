@@ -20,6 +20,12 @@
       {{ chargement() ? 'Création...' : "S'inscrire" }}
     </button>
 
+    <div class="sep">ou</div>
+
+    @if (googleActif) {
+      <div id="googleBtnRegister" style="display:flex;justify-content:center"></div>
+    }
+
     <p class="switch">Déjà un compte ? <a routerLink="/login">Se connecter</a></p>
   </form>
 </div>

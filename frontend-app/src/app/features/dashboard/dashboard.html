@@ -1,24 +1,75 @@
 <h1 class="page-title">Tableau de bord</h1>
 <p class="page-sub">Vue d'ensemble de la plateforme bancaire.</p>
 
-<div class="stats">
-  <a class="stat" routerLink="/clients">
-    <span class="num">{{ nbClients() }}</span>
-    <span class="lbl">👤 Clients</span>
-  </a>
-  <a class="stat" routerLink="/comptes">
-    <span class="num">{{ nbComptes() }}</span>
-    <span class="lbl">💳 Comptes</span>
-  </a>
-  <a class="stat" routerLink="/operateurs">
-    <span class="num">{{ nbOperateurs() }}</span>
-    <span class="lbl">🏢 Opérateurs</span>
-  </a>
-  <a class="stat" routerLink="/documents">
-    <span class="num">{{ nbDocuments() }}</span>
-    <span class="lbl">📄 Documents analysés</span>
-  </a>
-</div>
+<!-- Vue OPERATEUR / ADMIN : stats globales -->
+@if (estOperateur) {
+  <div class="stats">
+    <a class="stat" routerLink="/clients">
+      <span class="num">{{ nbClients() }}</span>
+      <span class="lbl">👤 Clients</span>
+    </a>
+    <a class="stat" routerLink="/comptes">
+      <span class="num">{{ nbComptes() }}</span>
+      <span class="lbl">💳 Comptes</span>
+    </a>
+    <a class="stat" routerLink="/operateurs">
+      <span class="num">{{ nbOperateurs() }}</span>
+      <span class="lbl">🏢 Opérateurs</span>
+    </a>
+    <a class="stat" routerLink="/documents">
+      <span class="num">{{ nbDocuments() }}</span>
+      <span class="lbl">📄 Documents analysés</span>
+    </a>
+  </div>
+}
+
+<!-- Vue CLIENT : données personnelles -->
+@if (estClient && client()) {
+  <div class="stats">
+    <div class="stat">
+      <span class="num">{{ mesComptes().length }}</span>
+      <span class="lbl">💳 Mes comptes</span>
+    </div>
+    <div class="stat">
+      <span class="num">{{ soldeTotal() | number:'1.0-2' }}</span>
+      <span class="lbl">💰 Solde total</span>
+    </div>
+    <div class="stat">
+      <span class="num">{{ nbTransactions() }}</span>
+      <span class="lbl">📊 Transactions</span>
+    </div>
+    <div class="stat">
+      <span class="num">{{ nbPrets() }}</span>
+      <span class="lbl">🏦 Prêts</span>
+    </div>
+  </div>
+
+  @if (mesComptes().length > 0) {
+    <div class="card">
+      <h2>Mes comptes</h2>
+      <table class="table">
+        <thead>
+          <tr>
+            <th>N° Compte</th>
+            <th>Type</th>
+            <th>Solde</th>
+            <th>Statut</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (c of mesComptes(); track c.id) {
+            <tr>
+              <td>{{ c.numeroCompte }}</td>
+              <td>{{ c.type }}</td>
+              <td>{{ c.solde | number:'1.0-2' }} {{ c.devise }}</td>
+              <td>{{ c.statut }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+}
 
 <div class="card todo">
   <h2>Modules disponibles</h2>
