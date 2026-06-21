@@ -1,5 +1,6 @@
 package com.banking.loan_service.service;
 
+import com.banking.loan_service.client.AccountClient;
 import com.banking.loan_service.dto.*;
 import com.banking.loan_service.entity.*;
 import com.banking.loan_service.repository.*;
@@ -24,6 +25,7 @@ public class LoanService {
     private final PretRepository pretRepository;
     private final EcheanceRepository echeanceRepository;
     private final RemboursementRepository remboursementRepository;
+    private final AccountClient accountClient;
 
     public DemandePretResponseDTO soumettre(DemandePretRequestDTO request) {
         log.info("Soumission d'une demande de prêt pour le client {}", request.clientId());
@@ -99,8 +101,14 @@ public class LoanService {
         // Générer l'échéancier
         genererEcheancier(pret);
         
-        // TODO: Appeler account-service pour créditer le compte
-        // TODO: Publier événement PretApprouve
+        // Créditer le compte du client avec le montant du prêt
+        try {
+            accountClient.credit(decision.compteId(), demande.getMontantDemande(),
+                    "Déblocage prêt #" + pret.getId());
+            log.info("Compte {} crédité de {} pour le prêt #{}", decision.compteId(), demande.getMontantDemande(), pret.getId());
+        } catch (Exception e) {
+            log.warn("Le prêt a été approuvé mais le crédit du compte a échoué: {}", e.getMessage());
+        }
         
         log.info("Prêt {} créé avec succès pour le client {}", pret.getId(), pret.getClientId());
         
@@ -198,7 +206,7 @@ public class LoanService {
     public DemandePretResponseDTO getDemandePret(Long id) {
         DemandePret demande = demandePretRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Demande de prêt non trouvée: " + id));
-        
+
         return new DemandePretResponseDTO(
                 demande.getId(),
                 demande.getClientId(),
@@ -209,10 +217,36 @@ public class LoanService {
         );
     }
 
+    public List<DemandePretResponseDTO> getAllDemandes() {
+        return demandePretRepository.findAll().stream()
+                .map(d -> new DemandePretResponseDTO(
+                        d.getId(),
+                        d.getClientId(),
+                        d.getMontantDemande(),
+                        d.getDureeMois(),
+                        d.getScoreRisque(),
+                        d.getStatut()
+                ))
+                .toList();
+    }
+
+    public List<DemandePretResponseDTO> getDemandesByClientId(Long clientId) {
+        return demandePretRepository.findByClientId(clientId).stream()
+                .map(d -> new DemandePretResponseDTO(
+                        d.getId(),
+                        d.getClientId(),
+                        d.getMontantDemande(),
+                        d.getDureeMois(),
+                        d.getScoreRisque(),
+                        d.getStatut()
+                ))
+                .toList();
+    }
+
     public PretResponseDTO getPret(Long id) {
         Pret pret = pretRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Prêt non trouvé: " + id));
-        
+
         return new PretResponseDTO(
                 pret.getId(),
                 pret.getClientId(),
@@ -222,6 +256,34 @@ public class LoanService {
                 pret.getCapitalRestant(),
                 pret.getStatut()
         );
+    }
+
+    public List<PretResponseDTO> getAllPrets() {
+        return pretRepository.findAll().stream()
+                .map(p -> new PretResponseDTO(
+                        p.getId(),
+                        p.getClientId(),
+                        p.getMontantAccorde(),
+                        p.getTauxInteret(),
+                        p.getDureeMois(),
+                        p.getCapitalRestant(),
+                        p.getStatut()
+                ))
+                .toList();
+    }
+
+    public List<PretResponseDTO> getPretsByClientId(Long clientId) {
+        return pretRepository.findByClientId(clientId).stream()
+                .map(p -> new PretResponseDTO(
+                        p.getId(),
+                        p.getClientId(),
+                        p.getMontantAccorde(),
+                        p.getTauxInteret(),
+                        p.getDureeMois(),
+                        p.getCapitalRestant(),
+                        p.getStatut()
+                ))
+                .toList();
     }
 
     private BigDecimal calculerScoreRisque(BigDecimal montant, int dureeMois) {

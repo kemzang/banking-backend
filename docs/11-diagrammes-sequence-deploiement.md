@@ -62,25 +62,35 @@ sequenceDiagram
     NO->>NO: enregistre + envoie email
 ```
 
-## 4. Séquence — Prêt (demande → décision → échéancier)
+## 4. Séquence — Prêt (demande → décision → échéancier → crédit compte)
 ```mermaid
 sequenceDiagram
-    actor OP as Opérateur
+    actor CL as Client
+    actor OP as Opérateur/Admin
     participant FE as Frontend
     participant GW as Gateway
     participant LO as loan-service
-    OP->>FE: soumet une demande
+    participant ACC as account-service
+    OP->>FE: soumet une demande pour le client
     FE->>GW: POST /api/loans/applications
     GW->>LO: route
+    LO->>LO: calcule score de risque
     LO-->>FE: DemandePret SOUMISE (+ score risque)
-    OP->>FE: approuve (taux, compte)
+    OP->>FE: approuve (taux, compte de versement)
     FE->>GW: POST /api/loans/applications/{id}/decision
     GW->>LO: route
-    LO->>LO: crée Pret + génère échéancier (amortissement)
+    LO->>LO: crée Pret + génère échéancier (amortissement constant)
+    LO->>ACC: POST /accounts/{compteId}/credit (montant du prêt)
+    ACC-->>LO: solde mis à jour
     LO-->>FE: Pret ACTIF
     FE->>GW: GET /api/loans/{id}/schedule
     GW->>LO: route
     LO-->>FE: échéancier (mensualités)
+    Note over CL,FE: Le client voit ses prêts dans son dashboard
+    CL->>FE: consulte ses prêts
+    FE->>GW: GET /api/loans?clientId={id}
+    GW->>LO: route (filtré par clientId)
+    LO-->>FE: liste des prêts du client
 ```
 
 ## 5. Séquence — OCR alimentant le KYC

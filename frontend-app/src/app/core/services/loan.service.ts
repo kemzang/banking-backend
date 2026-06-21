@@ -44,8 +44,20 @@ export class LoanService {
   soumettre(req: { clientId: number; montantDemande: number; dureeMois: number; motif: string }): Observable<DemandePret> {
     return this.http.post<DemandePret>(`${this.base}/applications`, req);
   }
+  getDemandes(): Observable<DemandePret[]> {
+    return this.http.get<DemandePret[]>(`${this.base}/applications`);
+  }
   getDemande(id: number): Observable<DemandePret> {
     return this.http.get<DemandePret>(`${this.base}/applications/${id}`);
+  }
+  getPrets(): Observable<Pret[]> {
+    return this.http.get<Pret[]>(`${this.base}`);
+  }
+  getMesPrets(clientId: number): Observable<Pret[]> {
+    return this.http.get<Pret[]>(`${this.base}?clientId=${clientId}`);
+  }
+  getMesDemandes(clientId: number): Observable<DemandePret[]> {
+    return this.http.get<DemandePret[]>(`${this.base}/applications?clientId=${clientId}`);
   }
   decider(id: number, decision: { approuver: boolean; tauxInteret: number | null; compteId: number | null; motifRejet: string | null }): Observable<Pret> {
     return this.http.post<Pret>(`${this.base}/applications/${id}/decision`, decision);

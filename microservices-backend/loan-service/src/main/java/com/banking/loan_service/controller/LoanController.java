@@ -7,6 +7,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/loans")
 @RequiredArgsConstructor
@@ -18,6 +20,15 @@ public class LoanController {
     public ResponseEntity<DemandePretResponseDTO> soumettreDemande(@RequestBody DemandePretRequestDTO request) {
         DemandePretResponseDTO response = loanService.soumettre(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @GetMapping("/applications")
+    public ResponseEntity<List<DemandePretResponseDTO>> getAllDemandes(
+            @RequestParam(required = false) Long clientId) {
+        if (clientId != null) {
+            return ResponseEntity.ok(loanService.getDemandesByClientId(clientId));
+        }
+        return ResponseEntity.ok(loanService.getAllDemandes());
     }
 
     @GetMapping("/applications/{id}")
@@ -44,6 +55,15 @@ public class LoanController {
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }
+    }
+
+    @GetMapping
+    public ResponseEntity<List<PretResponseDTO>> getAllPrets(
+            @RequestParam(required = false) Long clientId) {
+        if (clientId != null) {
+            return ResponseEntity.ok(loanService.getPretsByClientId(clientId));
+        }
+        return ResponseEntity.ok(loanService.getAllPrets());
     }
 
     @GetMapping("/{id}/schedule")

@@ -35,13 +35,16 @@ export class Prets implements OnInit {
     if (this.estClient()) {
       this.chargerPourClient();
     } else {
+      this.loan.getDemandes().subscribe({ next: (d) => this.demandes.set(d) });
+      this.loan.getPrets().subscribe({ next: (p) => this.prets.set(p) });
       this.customer.getClients().subscribe({ next: (c) => this.clients.set(c) });
       this.account.list().subscribe({ next: (a) => this.comptes.set(a) });
     }
   }
 
   estClient(): boolean {
-    return this.auth.hasRole('CLIENT');
+    const estAdminOuOperateur = this.auth.hasRole('ADMIN') || this.auth.hasRole('OPERATEUR');
+    return !estAdminOuOperateur && this.auth.hasRole('CLIENT');
   }
 
   private chargerPourClient(): void {
@@ -50,9 +53,8 @@ export class Prets implements OnInit {
     this.customer.getClientParEmail(email).subscribe({
       next: (client) => {
         this.nouvelle.clientId = client.id;
-        // Charger les prêts du client (via les demandes approuvées)
-        // Note: il faudrait un endpoint GET /loans?clientId=X côté backend
-        // Pour l'instant, on affiche juste le formulaire de demande
+        this.loan.getMesPrets(client.id).subscribe({ next: (p) => this.mesPrets.set(p) });
+        this.loan.getMesDemandes(client.id).subscribe({ next: (d) => this.demandes.set(d) });
       },
     });
   }

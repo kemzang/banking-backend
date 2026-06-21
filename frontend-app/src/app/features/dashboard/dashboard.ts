@@ -65,7 +65,6 @@ export class Dashboard implements OnInit {
         this.account.list(c.id).subscribe({
           next: (comptes) => {
             this.mesComptes.set(comptes);
-            // Charger transactions et prêts pour chaque compte
             comptes.forEach((compte) => {
               this.transaction.byAccount(compte.id).subscribe({
                 next: (txs) => {
@@ -74,6 +73,7 @@ export class Dashboard implements OnInit {
                 },
               });
             });
+            this.loan.getMesPrets(c.id).subscribe({ next: (p) => this.mesPrets.set(p) });
           },
         });
       },

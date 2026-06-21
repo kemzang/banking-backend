@@ -58,7 +58,7 @@ flowchart LR
     CUST -->|clientId| LOAN[Loan]
     ACC -->|credit / debit REST| TX[Transaction]
     TX -->|lb:// RestClient| ACC
-    LOAN -->|compteId versement| ACC
+    LOAN -->|compteId versement, crédit REST| ACC
     DOC[Document / OCR] -->|document.verified / KYC| CUST
     TX -->|événement transaction.completed| NOTIF[Notification]
     LOAN -.événement.-> NOTIF
@@ -90,14 +90,15 @@ flowchart LR
 | `transaction.completed` | transaction | notification | RabbitMQ (`banking.events`) ✅ implémenté |
 | `transaction.rejected` | transaction | notification | RabbitMQ |
 | `document.verified` (→ KYC) | ai-document / front | customer | (orchestré côté front actuellement) |
-| `loan.approved` | loan | notification, account | (perspective) |
+| `loan.approved` | loan | account (crédit REST), notification | ✅ REST account-service implémenté |
+| `loan.rejected` | loan | notification | (perspective) |
 | `loan.installment.overdue` | loan | notification | (perspective) |
 
 ## 6. Communications
 
 | Type | Cas | Mécanisme |
 |------|-----|-----------|
-| **Synchrone** | front→services, transaction→account | REST via **API Gateway** + **Eureka** (`lb://`) |
+| **Synchrone** | front→services, transaction→account, loan→account (crédit) | REST via **API Gateway** + **Eureka** (`lb://`) |
 | **Asynchrone** | transaction→notification | **RabbitMQ** (exchange topic `banking.events`) |
 
 ## 7. Justification du découpage
