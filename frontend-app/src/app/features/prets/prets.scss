@@ -1,0 +1,105 @@
+.pret-section-header {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin-bottom: 1.1rem;
+  padding-bottom: 0.85rem;
+  border-bottom: 1px solid var(--color-border);
+}
+.pret-section-header h2 { margin: 0; }
+
+.pret-section-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.pret-section-icon--cyan  { background: var(--color-cyan-dim);  color: var(--color-cyan); }
+.pret-section-icon--amber { background: var(--color-amber-dim); color: var(--color-amber); }
+
+/* Remboursement sub-section */
+.remb-section {
+  margin-top: 0.5rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.remb-label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-muted);
+  margin: 0 0 0.75rem;
+  font-weight: 600;
+}
+
+/* Risk score bar */
+.risk-bar-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.risk-bar {
+  flex: 1;
+  height: 5px;
+  background: var(--color-surface-2);
+  border-radius: 999px;
+  overflow: hidden;
+  min-width: 50px;
+}
+
+.risk-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.5s ease;
+}
+
+.risk-low  { background: var(--color-green); }
+.risk-mid  { background: var(--color-amber); }
+.risk-high { background: var(--color-crimson); }
+
+/* Shared helpers */
+.card-header-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+.card-header-row h2 { margin: 0; }
+
+.count-badge {
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-family: var(--font-mono);
+}
+
+.mono-cell { font-family: var(--font-mono); font-size: 0.84rem; }
+.muted     { color: var(--color-text-muted); }
+.actions-cell { display: flex; gap: 0.4rem; align-items: center; flex-wrap: wrap; white-space: nowrap; }
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 2rem 1rem;
+  color: var(--color-text-muted);
+  text-align: center;
+}
+.empty-state p { margin: 0; font-size: 0.875rem; font-style: italic; }
+
+/* Echéancier retard row */
+.echeance-retard td { color: var(--color-crimson) !important; }
+.echeance-retard    { background: rgba(239,68,68,0.04) !important; }

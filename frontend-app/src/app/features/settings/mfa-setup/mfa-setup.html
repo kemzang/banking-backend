@@ -1,0 +1,287 @@
+<div class="mfa-setup-container">
+  <!-- Background -->
+  <div class="mfa-setup-bg"></div>
+  
+  <!-- Toolbar -->
+  <div class="mfa-setup-toolbar">
+    <div class="mfa-setup-tools">
+      <button class="mfa-setup-tool" (click)="i18n.toggle()" [attr.aria-label]="'Language'">
+        <span>{{ i18n.lang() === 'fr' ? 'EN' : 'FR' }}</span>
+      </button>
+      <button class="mfa-setup-tool" (click)="theme.toggle()" [attr.aria-label]="t('theme_dark')">
+        @if (theme.theme() === 'dark') {
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="5" stroke="currentColor" stroke-width="1.8"/>
+            <path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"
+                  stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+        } @else {
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"
+                  stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+        }
+      </button>
+    </div>
+  </div>
+
+  <!-- Main content -->
+  <div class="mfa-setup-content">
+    
+    <div class="mfa-setup-header">
+      <h1 class="mfa-setup-title">{{ t('mfa_setup_title') }}</h1>
+      
+      <!-- Progress stepper -->
+      <div class="mfa-setup-stepper">
+        @for (step of [1, 2, 3]; track step) {
+          <div class="mfa-setup-step" 
+               [class.active]="currentStep() === step"
+               [class.done]="currentStep() > step">
+            <div class="mfa-setup-step-circle">
+              @if (currentStep() > step) {
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                  <path d="M8 12l3 3 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              } @else {
+                {{ step }}
+              }
+            </div>
+            <div class="mfa-setup-step-label">
+              @switch (step) {
+                @case (1) { {{ t('mfa_setup_step1') }} }
+                @case (2) { {{ t('mfa_setup_step2') }} }
+                @case (3) { {{ t('mfa_setup_step3') }} }
+              }
+            </div>
+            @if (step < 3) {
+              <div class="mfa-setup-step-connector"></div>
+            }
+          </div>
+        }
+      </div>
+    </div>
+
+    <div class="mfa-setup-card">
+      
+      <!-- Step 1: Scan QR Code -->
+      @if (currentStep() === 1) {
+        <div class="mfa-setup-step-content">
+          
+          <div class="mfa-setup-grid">
+            <!-- Left column: Instructions -->
+            <div class="mfa-setup-instructions">
+              <p class="mfa-setup-desc">{{ t('mfa_setup_step1_desc') }}</p>
+              
+              <!-- App suggestions -->
+              <div class="mfa-setup-apps">
+                <div class="mfa-setup-app">
+                  <div class="mfa-setup-app-icon">📱</div>
+                  <span>Google Authenticator</span>
+                </div>
+                <div class="mfa-setup-app">
+                  <div class="mfa-setup-app-icon">🔐</div>
+                  <span>Authy</span>
+                </div>
+              </div>
+
+              <!-- Manual entry accordion -->
+              <div class="mfa-setup-manual">
+                <button 
+                  type="button" 
+                  class="mfa-setup-manual-toggle"
+                  (click)="toggleManualEntry()">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                    <path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" 
+                          stroke-linecap="round" stroke-linejoin="round"
+                          [style.transform]="showManualEntry() ? 'rotate(90deg)' : 'rotate(0deg)'"/>
+                  </svg>
+                  {{ t('mfa_setup_manual') }}
+                </button>
+                
+                @if (showManualEntry()) {
+                  <div class="mfa-setup-manual-content">
+                    <p class="mfa-setup-manual-desc">{{ t('mfa_setup_manual_desc') }}</p>
+                    <div class="mfa-setup-secret">
+                      <code>{{ formattedSecret() }}</code>
+                      <button 
+                        type="button" 
+                        class="mfa-setup-copy" 
+                        (click)="copySecret()"
+                        [attr.aria-label]="'Copy secret'">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                          <rect x="9" y="9" width="13" height="13" rx="2" ry="2" stroke="currentColor" stroke-width="2"/>
+                          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
+
+            <!-- Right column: QR Code -->
+            <div class="mfa-setup-qr">
+              @if (setupData()?.qrCodeUrl) {
+                <div class="mfa-setup-qr-container">
+                  <img 
+                    [src]="setupData()!.qrCodeUrl" 
+                    alt="QR Code MFA" 
+                    width="200" 
+                    height="200"
+                    class="mfa-setup-qr-image" 
+                  />
+                </div>
+                <p class="mfa-setup-qr-caption">{{ t('mfa_setup_scan_desc') }}</p>
+              } @else {
+                <div class="mfa-setup-loading">
+                  <div class="mfa-setup-spinner"></div>
+                  {{ t('loading') }}
+                </div>
+              }
+            </div>
+          </div>
+
+          <button 
+            type="button" 
+            class="mfa-setup-next" 
+            (click)="nextStep()"
+            [disabled]="!setupData()">
+            {{ t('mfa_setup_next') }}
+          </button>
+        </div>
+      }
+
+      <!-- Step 2: Verify Setup -->
+      @if (currentStep() === 2) {
+        <div class="mfa-setup-step-content">
+          <p class="mfa-setup-desc">{{ t('mfa_setup_step2_desc') }}</p>
+
+          @if (verificationError()) {
+            <div class="mfa-setup-error" role="alert">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+                <path d="M12 8v4M12 16h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+              {{ verificationError() }}
+            </div>
+          }
+
+          <!-- 6-digit verification input -->
+          <div class="mfa-setup-verification">
+            <div class="mfa-setup-digits">
+              @for (digit of verificationCode(); track $index) {
+                <input
+                  [id]="'verify-digit-' + $index"
+                  type="text"
+                  inputmode="numeric"
+                  maxlength="1"
+                  [value]="digit"
+                  (input)="onVerificationInput($index, $event)"
+                  (keydown)="onVerificationKeyDown($index, $event)"
+                  [disabled]="loading()"
+                  class="mfa-setup-digit"
+                  autocomplete="one-time-code"
+                />
+              }
+            </div>
+
+            <button 
+              type="button" 
+              class="mfa-setup-verify" 
+              [disabled]="loading() || verificationCode().some(d => !d)"
+              (click)="verifySetup()">
+              @if (loading()) {
+                <span class="mfa-setup-spinner"></span>
+                {{ t('loading') }}
+              } @else {
+                {{ t('mfa_setup_enable') }}
+              }
+            </button>
+          </div>
+        </div>
+      }
+
+      <!-- Step 3: Backup Codes -->
+      @if (currentStep() === 3) {
+        <div class="mfa-setup-step-content">
+          
+          <!-- Warning banner -->
+          <div class="mfa-setup-warning">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+              <path d="M12 9v4M12 17h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+            </svg>
+            <span>{{ t('mfa_setup_backup_warn') }}</span>
+          </div>
+
+          <h3 class="mfa-setup-backup-title">{{ t('mfa_setup_backup_title') }}</h3>
+
+          <!-- Backup codes grid -->
+          <div class="mfa-setup-backup-codes">
+            @for (code of setupData()?.backupCodes; track code) {
+              <div class="mfa-setup-backup-code">
+                <code>{{ code }}</code>
+                <button 
+                  type="button" 
+                  class="mfa-setup-copy-code" 
+                  (click)="copyBackupCode(code)"
+                  [attr.aria-label]="'Copy code'">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2" stroke="currentColor" stroke-width="2"/>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" stroke="currentColor" stroke-width="2"/>
+                  </svg>
+                </button>
+              </div>
+            }
+          </div>
+
+          <!-- Actions -->
+          <div class="mfa-setup-backup-actions">
+            <button 
+              type="button" 
+              class="mfa-setup-copy-all" 
+              (click)="copyAllBackupCodes()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2" stroke="currentColor" stroke-width="2"/>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" stroke="currentColor" stroke-width="2"/>
+              </svg>
+              {{ t('mfa_setup_copy_all') }}
+            </button>
+
+            <button 
+              type="button" 
+              class="mfa-setup-download" 
+              (click)="downloadBackupCodes()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7,10 12,15 17,10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+              {{ t('mfa_setup_backup_download') }}
+            </button>
+          </div>
+
+          <!-- Confirmation checkbox -->
+          <label class="mfa-setup-confirm">
+            <input 
+              type="checkbox" 
+              [checked]="backupCodesConfirmed()"
+              (change)="backupCodesConfirmed.set($any($event.target).checked)"
+            />
+            <span>{{ t('mfa_setup_backup_confirm') }}</span>
+          </label>
+
+          <!-- Finish button -->
+          <button 
+            type="button" 
+            class="mfa-setup-finish" 
+            [disabled]="!backupCodesConfirmed()"
+            (click)="finishSetup()">
+            {{ t('mfa_setup_finish') }}
+          </button>
+        </div>
+      }
+
+    </div>
+  </div>
+</div>

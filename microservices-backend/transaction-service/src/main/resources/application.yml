@@ -6,8 +6,8 @@ spring:
     name: transaction-service
   datasource:
     url: ${DB_URL:jdbc:postgresql://localhost:5432/bank_transaction_db}
-    username: ${DB_USERNAME:postgres}
-    password: ${DB_PASSWORD:sigl}
+    username: ${DB_USERNAME:bank}
+    password: ${DB_PASSWORD:Princesse10}
   jpa:
     hibernate:
       ddl-auto: update

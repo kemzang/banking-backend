@@ -1,39 +1,76 @@
 <h1 class="page-title">Transactions</h1>
 <p class="page-sub">Dépôts, retraits, transferts et historique par compte.</p>
 
-@if (erreur()) { <div class="alert alert-error">{{ erreur() }}</div> }
-@if (succes()) { <div class="alert alert-ok">{{ succes() }}</div> }
+@if (erreur()) {
+  <div class="alert alert-error">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+      <path d="M12 8v4M12 16h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    </svg>
+    {{ erreur() }}
+  </div>
+}
+@if (succes()) {
+  <div class="alert alert-ok">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    {{ succes() }}
+  </div>
+}
 
+<!-- Transaction créée : résultat -->
 @if (transactionCreee(); as transaction) {
-  <div class="card transaction-created">
-    <h2>Transaction créée</h2>
-    <div class="created-grid">
-      <span><b>Référence</b> {{ transaction.reference }}</span>
-      <span><b>Type</b> {{ transaction.type }}</span>
-      <span><b>Montant</b> {{ transaction.montant | number:'1.0-2' }} {{ transaction.devise }}</span>
-      <span><b>Statut</b> <span [class]="badge(transaction.statut)">{{ transaction.statut }}</span></span>
+  <div class="card tx-result">
+    <div class="tx-result-icon">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <div class="tx-result-body">
+      <strong>Transaction enregistrée</strong>
+      <div class="tx-result-grid">
+        <span><label>Référence</label><b class="mono-cell">{{ transaction.reference }}</b></span>
+        <span><label>Type</label><b>{{ transaction.type }}</b></span>
+        <span><label>Montant</label><b class="mono-cell">{{ transaction.montant | number:'1.0-2' }} {{ transaction.devise }}</b></span>
+        <span><label>Statut</label><span [class]="badge(transaction.statut)">{{ transaction.statut }}</span></span>
+      </div>
     </div>
   </div>
 }
 
 @if (chargementComptes()) {
-  <div class="card"><p class="empty">Chargement des comptes...</p></div>
+  <div class="card"><div class="skeleton" style="height:60px;border-radius:8px"></div></div>
 } @else if (comptes().length === 0) {
   <div class="card">
-    <p class="empty">Aucun compte disponible. Créez d'abord un compte dans la page « Comptes ».</p>
+    <div class="empty-state">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <rect x="2" y="5" width="20" height="14" rx="2.5" stroke="currentColor" stroke-width="1.5"/>
+      </svg>
+      <p>Aucun compte disponible. Créez d'abord un compte dans la page « Comptes ».</p>
+    </div>
   </div>
 } @else {
-  <div class="transactions-layout">
-    <section class="operations-grid">
+  <div class="tx-layout">
+
+    <!-- Opérations -->
+    <div class="ops-grid">
+
+      <!-- Dépôt -->
       <div class="card">
-        <h2>Dépôt</h2>
+        <div class="op-header op-header--green">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M12 5v14M5 12l7-7 7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <h2>Dépôt</h2>
+        </div>
         <form [formGroup]="depotForm" (ngSubmit)="deposer()">
           <div class="field">
             <label>Compte à créditer</label>
             <select formControlName="compteId">
-              <option [ngValue]="0" disabled>-- choisir un compte --</option>
+              <option [ngValue]="0" disabled>Sélectionner un compte</option>
               @for (c of comptes(); track c.id) {
-                <option [ngValue]="c.id">{{ c.numeroCompte }} - {{ c.solde | number:'1.0-0' }} {{ c.devise }}</option>
+                <option [ngValue]="c.id">{{ c.numeroCompte }} — {{ c.solde | number:'1.0-0' }} {{ c.devise }}</option>
               }
             </select>
             @if (depotInvalide('compteId')) { <small class="field-error">Le compte est obligatoire.</small> }
@@ -41,30 +78,41 @@
           <div class="row">
             <div class="field">
               <label>Montant</label>
-              <input type="number" formControlName="montant" min="0.01" step="0.01" />
-              @if (depotInvalide('montant')) { <small class="field-error">Le montant doit être supérieur à 0.</small> }
+              <input type="number" formControlName="montant" min="0.01" step="0.01" placeholder="0.00" />
+              @if (depotInvalide('montant')) { <small class="field-error">Montant doit être &gt; 0.</small> }
             </div>
             <div class="field">
               <label>Devise</label>
-              <input formControlName="devise" />
-              @if (depotInvalide('devise')) { <small class="field-error">La devise est obligatoire.</small> }
+              <input formControlName="devise" placeholder="XAF" />
             </div>
           </div>
-          <button class="btn btn-green" type="submit" [disabled]="operationEnCours()">
-            {{ operationEnCours() ? 'Envoi...' : 'Déposer' }}
+          <button class="btn btn-green" type="submit" style="width:100%" [disabled]="operationEnCours()">
+            @if (operationEnCours()) { <span class="btn-spinner" aria-hidden="true"></span> Envoi… }
+            @else {
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M12 5v14M5 12l7-7 7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              Déposer
+            }
           </button>
         </form>
       </div>
 
+      <!-- Retrait -->
       <div class="card">
-        <h2>Retrait</h2>
+        <div class="op-header op-header--crimson">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M12 19V5M5 12l7 7 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <h2>Retrait</h2>
+        </div>
         <form [formGroup]="retraitForm" (ngSubmit)="retirer()">
           <div class="field">
             <label>Compte à débiter</label>
             <select formControlName="compteId">
-              <option [ngValue]="0" disabled>-- choisir un compte --</option>
+              <option [ngValue]="0" disabled>Sélectionner un compte</option>
               @for (c of comptes(); track c.id) {
-                <option [ngValue]="c.id">{{ c.numeroCompte }} - {{ c.solde | number:'1.0-0' }} {{ c.devise }}</option>
+                <option [ngValue]="c.id">{{ c.numeroCompte }} — {{ c.solde | number:'1.0-0' }} {{ c.devise }}</option>
               }
             </select>
             @if (retraitInvalide('compteId')) { <small class="field-error">Le compte est obligatoire.</small> }
@@ -72,106 +120,118 @@
           <div class="row">
             <div class="field">
               <label>Montant</label>
-              <input type="number" formControlName="montant" min="0.01" step="0.01" />
-              @if (retraitInvalide('montant')) { <small class="field-error">Le montant doit être supérieur à 0.</small> }
+              <input type="number" formControlName="montant" min="0.01" step="0.01" placeholder="0.00" />
+              @if (retraitInvalide('montant')) { <small class="field-error">Montant doit être &gt; 0.</small> }
             </div>
             <div class="field">
               <label>Devise</label>
-              <input formControlName="devise" />
-              @if (retraitInvalide('devise')) { <small class="field-error">La devise est obligatoire.</small> }
+              <input formControlName="devise" placeholder="XAF" />
             </div>
           </div>
-          <button class="btn" type="submit" [disabled]="operationEnCours()">
-            {{ operationEnCours() ? 'Envoi...' : 'Retirer' }}
+          <button class="btn" type="submit" style="width:100%;background:var(--color-crimson);color:#fff" [disabled]="operationEnCours()">
+            @if (operationEnCours()) { <span class="btn-spinner" aria-hidden="true"></span> Envoi… }
+            @else {
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M12 19V5M5 12l7 7 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              Retirer
+            }
           </button>
         </form>
       </div>
 
+      <!-- Transfert -->
       <div class="card transfer-card">
-        <h2>Transfert</h2>
+        <div class="op-header op-header--cyan">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M7 16V4m0 0L4 7m3-3 3 3M17 8v12m0 0 3-3m-3 3-3-3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <h2>Transfert</h2>
+        </div>
         <form [formGroup]="transfertForm" (ngSubmit)="transferer()">
           <div class="row">
             <div class="field">
               <label>Compte source</label>
               <select formControlName="compteSourceId">
-                <option [ngValue]="0" disabled>-- source --</option>
+                <option [ngValue]="0" disabled>Source</option>
                 @for (c of comptes(); track c.id) {
-                  <option [ngValue]="c.id">{{ c.numeroCompte }} - {{ c.devise }}</option>
+                  <option [ngValue]="c.id">{{ c.numeroCompte }} — {{ c.devise }}</option>
                 }
               </select>
-              @if (transfertInvalide('compteSourceId')) {
-                <small class="field-error">Le compte source est obligatoire.</small>
-              }
+              @if (transfertInvalide('compteSourceId')) { <small class="field-error">Obligatoire.</small> }
             </div>
             <div class="field">
               <label>Compte destination</label>
               <select formControlName="compteDestId">
-                <option [ngValue]="0" disabled>-- destination --</option>
+                <option [ngValue]="0" disabled>Destination</option>
                 @for (c of comptes(); track c.id) {
-                  <option [ngValue]="c.id">{{ c.numeroCompte }} - {{ c.devise }}</option>
+                  <option [ngValue]="c.id">{{ c.numeroCompte }} — {{ c.devise }}</option>
                 }
               </select>
-              @if (transfertInvalide('compteDestId')) {
-                <small class="field-error">Le compte destination est obligatoire.</small>
-              }
-              @if (transfertMemeCompte()) {
-                <small class="field-error">La source et la destination doivent être différentes.</small>
-              }
+              @if (transfertInvalide('compteDestId')) { <small class="field-error">Obligatoire.</small> }
+              @if (transfertMemeCompte()) { <small class="field-error">Source ≠ destination.</small> }
             </div>
           </div>
           <div class="row">
             <div class="field">
               <label>Montant</label>
-              <input type="number" formControlName="montant" min="0.01" step="0.01" />
-              @if (transfertInvalide('montant')) {
-                <small class="field-error">Le montant doit être supérieur à 0.</small>
-              }
+              <input type="number" formControlName="montant" min="0.01" step="0.01" placeholder="0.00" />
+              @if (transfertInvalide('montant')) { <small class="field-error">Montant doit être &gt; 0.</small> }
             </div>
             <div class="field">
               <label>Devise</label>
-              <input formControlName="devise" />
-              @if (transfertInvalide('devise')) {
-                <small class="field-error">La devise est obligatoire.</small>
-              }
+              <input formControlName="devise" placeholder="XAF" />
             </div>
           </div>
           <div class="field">
             <label>Motif</label>
-            <input formControlName="motif" placeholder="Ex. Paiement fournisseur" />
-            @if (transfertInvalide('motif')) {
-              <small class="field-error">Le motif ne doit pas dépasser 500 caractères.</small>
-            }
+            <input formControlName="motif" placeholder="Ex : paiement fournisseur" />
           </div>
-          <button class="btn" type="submit" [disabled]="operationEnCours()">
-            {{ operationEnCours() ? 'Envoi...' : 'Transférer' }}
+          <button class="btn" type="submit" style="width:100%" [disabled]="operationEnCours()">
+            @if (operationEnCours()) { <span class="btn-spinner" aria-hidden="true"></span> Envoi… }
+            @else {
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              Transférer
+            }
           </button>
         </form>
       </div>
-    </section>
+    </div>
 
-    <section class="card history-card">
+    <!-- Historique -->
+    <div class="card history-card">
       <div class="history-header">
         <div>
-          <h2>Historique d'un compte</h2>
-          <p>Les transactions validées et rejetées sont conservées.</p>
+          <h2>Historique</h2>
+          <p>Transactions validées et rejetées par compte</p>
         </div>
-        <div class="field compact-field">
+        <div class="field" style="margin-bottom:0;min-width:240px">
           <label>Filtrer par compte</label>
-          <select name="historiqueCompte" [(ngModel)]="compteHisto" (ngModelChange)="chargerHistorique()">
-            <option [ngValue]="0" disabled>-- choisir un compte --</option>
+          <select [(ngModel)]="compteHisto" (ngModelChange)="chargerHistorique()">
+            <option [ngValue]="0" disabled>Choisir un compte</option>
             @for (c of comptes(); track c.id) {
-              <option [ngValue]="c.id">{{ c.numeroCompte }} - {{ c.devise }}</option>
+              <option [ngValue]="c.id">{{ c.numeroCompte }} — {{ c.devise }}</option>
             }
           </select>
         </div>
       </div>
 
       @if (!compteHisto) {
-        <p class="empty">Sélectionnez un compte pour consulter son historique.</p>
+        <div class="empty-state">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M7 16V4M17 8v12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            <circle cx="12" cy="12" r="1" fill="currentColor"/>
+          </svg>
+          <p>Sélectionnez un compte pour consulter son historique.</p>
+        </div>
       } @else if (chargementHistorique()) {
-        <p class="empty">Chargement de l'historique...</p>
+        <div class="skeleton" style="height:100px;border-radius:8px"></div>
       } @else if (historique().length === 0) {
-        <p class="empty">Aucune transaction trouvée pour ce compte.</p>
+        <div class="empty-state">
+          <p>Aucune transaction trouvée pour ce compte.</p>
+        </div>
       } @else {
         <div class="table-scroll">
           <table>
@@ -191,21 +251,21 @@
             <tbody>
               @for (t of historique(); track t.id) {
                 <tr [class.rejected-row]="ligneRejetee(t)">
-                  <td class="ref">{{ t.reference }}</td>
+                  <td class="ref mono-cell">{{ t.reference }}</td>
                   <td>{{ t.type }}</td>
-                  <td><b>{{ t.montant | number:'1.0-2' }}</b></td>
+                  <td class="mono-cell"><strong>{{ t.montant | number:'1.0-2' }}</strong></td>
                   <td>{{ t.devise }}</td>
-                  <td>{{ compteLabel(t.compteSourceId) }}</td>
-                  <td>{{ compteLabel(t.compteDestId) }}</td>
+                  <td class="muted">{{ compteLabel(t.compteSourceId) }}</td>
+                  <td class="muted">{{ compteLabel(t.compteDestId) }}</td>
                   <td><span [class]="badge(t.statut)">{{ t.statut }}</span></td>
-                  <td class="motif">{{ t.motif || '-' }}</td>
-                  <td>{{ t.dateOperation | date:'short' }}</td>
+                  <td class="motif-cell">{{ t.motif || '—' }}</td>
+                  <td class="muted">{{ t.dateOperation | date:'dd/MM/yy HH:mm' }}</td>
                 </tr>
               }
             </tbody>
           </table>
         </div>
       }
-    </section>
+    </div>
   </div>
 }

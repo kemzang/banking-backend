@@ -1,0 +1,176 @@
+/* ============================================================
+   Shared styles for all role login pages
+   ============================================================ */
+
+/* Common page title/sub inside right panel */
+.af-page-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #fff;
+  margin: 0 0 0.3rem;
+  letter-spacing: -0.02em;
+}
+
+html:not(.dark) .af-page-title { color: #0F172A; }
+
+.af-page-sub {
+  font-size: 0.84rem;
+  color: rgba(255,255,255,0.4);
+  margin: 0 0 1.35rem;
+}
+
+html:not(.dark) .af-page-sub { color: rgba(15,23,42,0.45); }
+
+.af-page-sub--restricted {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.78rem;
+  color: rgba(139,92,246,0.8);
+
+  &::before {
+    content: '';
+    display: inline-block; width: 6px; height: 6px; border-radius: 50%;
+    background: #8B5CF6;
+  }
+}
+
+/* ── Client left panel ────────────────────────────────── */
+.lc-left { display: flex; flex-direction: column; gap: 0; }
+
+.lc-icon { margin-bottom: 1.75rem; }
+
+.lc-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 2.2rem; font-weight: 800;
+  color: #fff; letter-spacing: -0.03em;
+  margin: 0 0 1.5rem; line-height: 1.15;
+}
+
+html:not(.dark) .lc-title { color: #0F172A; }
+
+.lc-features {
+  list-style: none; padding: 0; margin: 0;
+  display: flex; flex-direction: column; gap: 0.85rem;
+}
+
+.lc-features li {
+  display: flex; align-items: center; gap: 0.7rem;
+  font-size: 0.9rem;
+  color: rgba(255,255,255,0.65);
+}
+
+html:not(.dark) .lc-features li { color: rgba(15,23,42,0.6); }
+
+/* ── Operator left panel ──────────────────────────────── */
+.lo-left { display: flex; flex-direction: column; gap: 0; }
+
+.lo-icon { margin-bottom: 1.75rem; }
+
+.lo-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 2.2rem; font-weight: 800;
+  color: #fff; letter-spacing: -0.03em;
+  margin: 0 0 1.5rem; line-height: 1.15;
+}
+
+html:not(.dark) .lo-title { color: #0F172A; }
+
+.lo-types {
+  list-style: none; padding: 0; margin: 0 0 1.25rem;
+  display: flex; flex-direction: column; gap: 0.75rem;
+}
+
+.lo-types li {
+  display: flex; align-items: center; gap: 0.65rem;
+  font-size: 0.9rem; color: rgba(255,255,255,0.6);
+}
+
+html:not(.dark) .lo-types li { color: rgba(15,23,42,0.55); }
+
+.lo-note {
+  font-size: 0.78rem;
+  color: rgba(245,158,11,0.65);
+  background: rgba(245,158,11,0.07);
+  border: 1px solid rgba(245,158,11,0.15);
+  border-radius: 8px;
+  padding: 0.6rem 0.85rem;
+  margin: 0;
+}
+
+.lo-info-box {
+  display: flex; align-items: flex-start; gap: 0.55rem;
+  margin-top: 1rem;
+  padding: 0.7rem 0.9rem;
+  background: rgba(245,158,11,0.07);
+  border: 1px solid rgba(245,158,11,0.18);
+  border-radius: 8px;
+  font-size: 0.8rem;
+  color: rgba(245,158,11,0.8);
+}
+
+html:not(.dark) .lo-info-box { background: rgba(245,158,11,0.06); }
+
+/* ── Admin left panel ─────────────────────────────────── */
+.la-left { display: flex; flex-direction: column; gap: 0; }
+
+.la-icon { margin-bottom: 1.75rem; }
+
+.la-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 2.1rem; font-weight: 800;
+  color: #fff; letter-spacing: -0.03em;
+  margin: 0 0 1.5rem; line-height: 1.15;
+}
+
+html:not(.dark) .la-title { color: #0F172A; }
+
+.la-badges {
+  list-style: none; padding: 0; margin: 0;
+  display: flex; flex-direction: column; gap: 0.75rem;
+}
+
+.la-badges li {
+  display: flex; align-items: center; gap: 0.65rem;
+  font-size: 0.875rem;
+  color: rgba(255,255,255,0.55);
+  padding: 0.55rem 0.75rem;
+  background: rgba(139,92,246,0.06);
+  border: 1px solid rgba(139,92,246,0.12);
+  border-radius: 8px;
+}
+
+html:not(.dark) .la-badges li { color: rgba(15,23,42,0.55); background: rgba(139,92,246,0.04); }
+
+.la-mfa-banner {
+  display: flex; align-items: flex-start; gap: 0.55rem;
+  margin-bottom: 1.2rem;
+  padding: 0.7rem 0.9rem;
+  background: rgba(245,158,11,0.08);
+  border: 1px solid rgba(245,158,11,0.2);
+  border-radius: 8px;
+  font-size: 0.8rem;
+  color: rgba(245,158,11,0.85);
+}
+
+.la-no-forgot {
+  display: flex; align-items: center; gap: 0.4rem;
+  margin-top: 0.85rem;
+  font-size: 0.78rem;
+  color: rgba(139,92,246,0.6);
+  text-align: center;
+  justify-content: center;
+}
+
+/* ── Mount animations ─────────────────────────────────── */
+@keyframes fade-from-left {
+  from { opacity: 0; transform: translateX(-20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.anim-fade-left {
+  opacity: 0;
+  animation: fade-from-left 0.45s ease-out forwards;
+  animation-delay: var(--delay, 0ms);
+}

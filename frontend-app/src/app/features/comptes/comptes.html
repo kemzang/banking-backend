@@ -1,48 +1,93 @@
 <h1 class="page-title">Comptes</h1>
 <p class="page-sub">Ouverture et gestion des comptes financiers, soldes et statuts.</p>
 
-@if (erreur()) { <div class="alert alert-error">{{ erreur() }}</div> }
-@if (succes()) { <div class="alert alert-ok">{{ succes() }}</div> }
+@if (erreur()) {
+  <div class="alert alert-error">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+      <path d="M12 8v4M12 16h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    </svg>
+    {{ erreur() }}
+  </div>
+}
+@if (succes()) {
+  <div class="alert alert-ok">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    {{ succes() }}
+  </div>
+}
 
 <div class="grid-2">
+  <!-- Liste -->
   <div class="card">
-    <h2>Liste des comptes ({{ comptes().length }})</h2>
+    <div class="card-header">
+      <h2>Comptes</h2>
+      <span class="count-badge">{{ comptes().length }}</span>
+    </div>
     @if (comptes().length === 0) {
-      <p class="empty">Aucun compte pour l'instant.</p>
+      <div class="empty-state">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <rect x="2" y="5" width="20" height="14" rx="2.5" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M2 10h20" stroke="currentColor" stroke-width="1.5"/>
+        </svg>
+        <p>Aucun compte pour l'instant.</p>
+      </div>
     } @else {
-      <table>
-        <thead>
-          <tr><th>N° compte</th><th>Client</th><th>Type</th><th>Solde</th><th>Statut</th><th>Actions</th></tr>
-        </thead>
-        <tbody>
-          @for (c of comptes(); track c.id) {
+      <div class="table-scroll">
+        <table>
+          <thead>
             <tr>
-              <td>{{ c.numeroCompte }}</td>
-              <td>{{ nomClient(c.clientId) }}</td>
-              <td>{{ c.type }}</td>
-              <td><b>{{ c.solde | number:'1.0-2' }}</b> {{ c.devise }}</td>
-              <td><span [class]="badgeClass(c.statut)">{{ c.statut }}</span></td>
-              <td>
-                <a class="btn btn-sm btn-ghost" [routerLink]="['/comptes', c.id]">Détails</a>
-                @if (c.statut === 'ACTIF') {
-                  <button class="btn btn-sm btn-ghost" (click)="suspendre(c)">Suspendre</button>
-                  <button class="btn btn-sm btn-ghost" (click)="cloturer(c)">Clôturer</button>
-                }
-              </td>
+              <th>N° compte</th>
+              <th>Client</th>
+              <th>Type</th>
+              <th>Solde</th>
+              <th>Statut</th>
+              <th>Actions</th>
             </tr>
-          }
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            @for (c of comptes(); track c.id) {
+              <tr>
+                <td class="mono-cell">{{ c.numeroCompte }}</td>
+                <td>{{ nomClient(c.clientId) }}</td>
+                <td>
+                  <span class="type-badge type-badge--{{ c.type.toLowerCase() }}">{{ c.type }}</span>
+                </td>
+                <td class="mono-cell"><strong>{{ c.solde | number:'1.0-2' }}</strong> <span class="devise">{{ c.devise }}</span></td>
+                <td><span [class]="badgeClass(c.statut)">{{ c.statut }}</span></td>
+                <td class="actions-cell">
+                  <a class="btn btn-sm btn-ghost" [routerLink]="['/comptes', c.id]">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z" stroke="currentColor" stroke-width="2"/>
+                      <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
+                    </svg>
+                    Détails
+                  </a>
+                  @if (c.statut === 'ACTIF') {
+                    <button class="btn btn-sm btn-ghost" (click)="suspendre(c)">Suspendre</button>
+                    <button class="btn btn-sm btn-ghost" (click)="cloturer(c)">Clôturer</button>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
     }
   </div>
 
+  <!-- Formulaire -->
   <div class="card">
-    <h2>Ouvrir un compte</h2>
+    <div class="card-header">
+      <h2>Ouvrir un compte</h2>
+    </div>
     <form (ngSubmit)="ouvrir()">
       <div class="field">
         <label>Client</label>
         <select name="clientId" [(ngModel)]="form.clientId" required>
-          <option [ngValue]="0" disabled>-- choisir --</option>
+          <option [ngValue]="0" disabled>Sélectionner un client</option>
           @for (cl of clients(); track cl.id) {
             <option [ngValue]="cl.id">{{ cl.prenom }} {{ cl.nom }}</option>
           }
@@ -67,10 +112,22 @@
         </div>
       </div>
       <div class="row">
-        <div class="field"><label>Plafond journalier</label><input type="number" name="plaf" [(ngModel)]="form.plafondJournalier" /></div>
-        <div class="field"><label>Découvert autorisé</label><input type="number" name="dec" [(ngModel)]="form.decouvertAutorise" /></div>
+        <div class="field">
+          <label>Plafond journalier</label>
+          <input type="number" name="plaf" [(ngModel)]="form.plafondJournalier" placeholder="0" />
+        </div>
+        <div class="field">
+          <label>Découvert autorisé</label>
+          <input type="number" name="dec" [(ngModel)]="form.decouvertAutorise" placeholder="0" />
+        </div>
       </div>
-      <button type="submit" class="btn">Ouvrir le compte</button>
+      <button type="submit" class="btn" style="width:100%;margin-top:0.5rem">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+          <path d="M12 8v8M8 12h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        Ouvrir le compte
+      </button>
     </form>
   </div>
 </div>

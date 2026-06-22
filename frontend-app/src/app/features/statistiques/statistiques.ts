@@ -10,6 +10,7 @@ interface StatType { type: string; nb: number; total: number; }
   selector: 'app-statistiques',
   imports: [DecimalPipe],
   templateUrl: './statistiques.html',
+  styleUrl: './statistiques.scss',
 })
 export class Statistiques implements OnInit {
   private customer = inject(CustomerService);
@@ -49,5 +50,14 @@ export class Statistiques implements OnInit {
       map.set(c.type, e);
     });
     this.parType.set([...map.values()]);
+  }
+
+  kycBadge(statut: string): string {
+    const map: Record<string, string> = {
+      VALIDE:   'badge badge-valide',
+      REJETE:   'badge badge-rejete',
+      EN_ATTENTE: 'badge badge-attente',
+    };
+    return map[statut] ?? 'badge badge-attente';
   }
 }

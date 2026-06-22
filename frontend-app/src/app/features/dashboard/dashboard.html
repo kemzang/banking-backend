@@ -2,33 +2,138 @@
 <p class="page-sub">Vue d'ensemble de la plateforme bancaire.</p>
 
 <div class="stats">
-  <a class="stat" routerLink="/clients">
-    <span class="num">{{ nbClients() }}</span>
-    <span class="lbl">👤 Clients</span>
+  <a class="stat-card" routerLink="/clients">
+    <div class="stat-icon stat-icon--blue">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <circle cx="8" cy="7" r="4" stroke="currentColor" stroke-width="1.8"/>
+        <path d="M2 21c0-3.866 2.686-7 6-7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        <path d="M17 11a4 4 0 1 1 0-8 4 4 0 0 1 0 8Z" stroke="currentColor" stroke-width="1.8"/>
+        <path d="M22 21c0-3.866-2.239-7-5-7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <span class="stat-num">{{ nbClients() }}</span>
+    <span class="stat-lbl">Clients</span>
+    <span class="stat-link">
+      Voir tout
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </span>
   </a>
-  <a class="stat" routerLink="/comptes">
-    <span class="num">{{ nbComptes() }}</span>
-    <span class="lbl">💳 Comptes</span>
+
+  <a class="stat-card" routerLink="/comptes">
+    <div class="stat-icon stat-icon--cyan">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <rect x="2" y="5" width="20" height="14" rx="2.5" stroke="currentColor" stroke-width="1.8"/>
+        <path d="M2 10h20" stroke="currentColor" stroke-width="1.8"/>
+        <circle cx="7" cy="15" r="1.5" fill="currentColor"/>
+        <rect x="11" y="13.5" width="5" height="3" rx="1" stroke="currentColor" stroke-width="1.5"/>
+      </svg>
+    </div>
+    <span class="stat-num">{{ nbComptes() }}</span>
+    <span class="stat-lbl">Comptes</span>
+    <span class="stat-link">
+      Voir tout
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </span>
   </a>
-  <a class="stat" routerLink="/operateurs">
-    <span class="num">{{ nbOperateurs() }}</span>
-    <span class="lbl">🏢 Opérateurs</span>
+
+  <a class="stat-card" routerLink="/operateurs">
+    <div class="stat-icon stat-icon--amber">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+        <rect x="9" y="12" width="6" height="9" stroke="currentColor" stroke-width="1.8" rx="1"/>
+      </svg>
+    </div>
+    <span class="stat-num">{{ nbOperateurs() }}</span>
+    <span class="stat-lbl">Opérateurs</span>
+    <span class="stat-link">
+      Voir tout
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </span>
   </a>
-  <a class="stat" routerLink="/documents">
-    <span class="num">{{ nbDocuments() }}</span>
-    <span class="lbl">📄 Documents analysés</span>
+
+  <a class="stat-card" routerLink="/documents">
+    <div class="stat-icon stat-icon--green">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+        <path d="M14 2v6h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M9 13h6M9 17h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <span class="stat-num">{{ nbDocuments() }}</span>
+    <span class="stat-lbl">Documents OCR</span>
+    <span class="stat-link">
+      Voir tout
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </span>
   </a>
 </div>
 
-<div class="card todo">
+<div class="card modules-card">
   <h2>Modules disponibles</h2>
-  <ul>
-    <li>✅ Authentification (connexion / inscription / rôles)</li>
-    <li>✅ Gestion des clients + validation KYC</li>
-    <li>✅ Gestion des opérateurs</li>
-    <li>✅ Gestion des comptes (ouverture, solde, suspension/clôture)</li>
-    <li>✅ Transactions (dépôt, retrait, transfert)</li>
-    <li>✅ Prêts (demande, décision, échéancier, remboursement)</li>
-    <li>✅ Analyse de documents par OCR (service IA)</li>
-  </ul>
+  <div class="modules-grid">
+    <div class="module-item">
+      <div class="module-check">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <span>Authentification (connexion / inscription / rôles)</span>
+    </div>
+    <div class="module-item">
+      <div class="module-check">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <span>Gestion des clients + validation KYC</span>
+    </div>
+    <div class="module-item">
+      <div class="module-check">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <span>Gestion des opérateurs</span>
+    </div>
+    <div class="module-item">
+      <div class="module-check">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <span>Gestion des comptes (ouverture, solde, suspension)</span>
+    </div>
+    <div class="module-item">
+      <div class="module-check">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <span>Transactions (dépôt, retrait, transfert)</span>
+    </div>
+    <div class="module-item">
+      <div class="module-check">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <span>Prêts (demande, décision, échéancier, remboursement)</span>
+    </div>
+    <div class="module-item">
+      <div class="module-check">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <span>Analyse de documents par OCR (service IA)</span>
+    </div>
+  </div>
 </div>

@@ -1,71 +1,122 @@
-<a class="back-link" routerLink="/comptes">← Retour aux comptes</a>
+<a class="back-link" routerLink="/comptes">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>
+  Retour aux comptes
+</a>
 
 <h1 class="page-title">Détail du compte</h1>
-<p class="page-sub">Vue orientée démonstration : solde, statut, actions rapides et historique transactionnel.</p>
+<p class="page-sub">Solde, informations et historique transactionnel.</p>
 
-@if (erreur()) { <div class="alert alert-error">{{ erreur() }}</div> }
+@if (erreur()) {
+  <div class="alert alert-error">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+      <path d="M12 8v4M12 16h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    </svg>
+    {{ erreur() }}
+  </div>
+}
 
 @if (chargement()) {
-  <div class="card"><p class="empty">Chargement du compte...</p></div>
+  <div class="card">
+    <div class="skeleton" style="height:80px;border-radius:8px;margin-bottom:1rem"></div>
+    <div class="skeleton" style="height:40px;border-radius:8px;width:60%"></div>
+  </div>
 } @else if (compte(); as c) {
   <div class="detail-layout">
+
+    <!-- Hero -->
     <section class="card account-hero">
-      <div>
+      <div class="hero-left">
         <span class="eyebrow">Compte #{{ c.id }}</span>
-        <h2>{{ c.numeroCompte }}</h2>
-        <p>{{ c.type }} · Client #{{ c.clientId }} · Opérateur #{{ c.operateurId }}</p>
+        <h2 class="account-num">{{ c.numeroCompte }}</h2>
+        <p class="account-meta">
+          <span class="type-badge type-badge--{{ c.type.toLowerCase() }}">{{ c.type }}</span>
+          &nbsp;·&nbsp; Client #{{ c.clientId }}
+          &nbsp;·&nbsp; Opérateur #{{ c.operateurId }}
+        </p>
       </div>
       <div class="balance-box">
-        <span>Solde actuel</span>
-        <strong>{{ c.solde | number:'1.0-2' }} {{ c.devise }}</strong>
+        <span class="balance-label">Solde actuel</span>
+        <strong class="balance-amount">{{ c.solde | number:'1.0-2' }} <span class="balance-devise">{{ c.devise }}</span></strong>
         <span [class]="badgeCompte(c.statut)">{{ c.statut }}</span>
       </div>
     </section>
 
+    <!-- Quick actions -->
     <section class="quick-actions">
       <a class="card action-card" routerLink="/transactions">
-        <b>Faire un dépôt</b>
-        <span>Créditer ce compte via transaction-service.</span>
+        <div class="action-icon action-icon--green">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M12 5v14M5 12l7-7 7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <b>Dépôt</b>
+        <span>Créditer ce compte</span>
       </a>
       <a class="card action-card" routerLink="/transactions">
-        <b>Faire un retrait</b>
-        <span>Débiter ce compte avec contrôle du solde.</span>
+        <div class="action-icon action-icon--crimson">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M12 19V5M5 12l7 7 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <b>Retrait</b>
+        <span>Débiter ce compte</span>
       </a>
       <a class="card action-card" routerLink="/transactions">
-        <b>Faire un transfert</b>
-        <span>Envoyer des fonds vers un autre compte.</span>
+        <div class="action-icon action-icon--cyan">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M7 16V4m0 0L4 7m3-3 3 3M17 8v12m0 0 3-3m-3 3-3-3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <b>Transfert</b>
+        <span>Envoyer des fonds</span>
       </a>
       <a class="card action-card" href="#historique">
-        <b>Voir l'historique</b>
-        <span>Consulter les transactions validées et rejetées.</span>
+        <div class="action-icon action-icon--amber">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+            <path d="M12 6v6l4 2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <b>Historique</b>
+        <span>Voir les transactions</span>
       </a>
     </section>
 
+    <!-- Info grid -->
     <section class="card">
       <h2>Informations du compte</h2>
       <div class="info-grid">
-        <span><b>ID</b>{{ c.id }}</span>
-        <span><b>Numéro</b>{{ c.numeroCompte }}</span>
-        <span><b>Client ID</b>{{ c.clientId }}</span>
-        <span><b>Opérateur ID</b>{{ c.operateurId }}</span>
-        <span><b>Devise</b>{{ c.devise }}</span>
-        <span><b>Type</b>{{ c.type }}</span>
-        <span><b>Plafond journalier</b>{{ c.plafondJournalier ?? '-' }}</span>
-        <span><b>Découvert autorisé</b>{{ c.decouvertAutorise | number:'1.0-2' }}</span>
-        <span><b>Date d'ouverture</b>{{ c.dateOuverture | date:'short' }}</span>
+        <div class="info-item"><span class="info-label">ID</span><span class="info-val">{{ c.id }}</span></div>
+        <div class="info-item"><span class="info-label">Numéro</span><span class="info-val mono-cell">{{ c.numeroCompte }}</span></div>
+        <div class="info-item"><span class="info-label">Client ID</span><span class="info-val">{{ c.clientId }}</span></div>
+        <div class="info-item"><span class="info-label">Opérateur</span><span class="info-val">#{{ c.operateurId }}</span></div>
+        <div class="info-item"><span class="info-label">Devise</span><span class="info-val">{{ c.devise }}</span></div>
+        <div class="info-item"><span class="info-label">Type</span><span class="info-val">{{ c.type }}</span></div>
+        <div class="info-item"><span class="info-label">Plafond / jour</span><span class="info-val mono-cell">{{ c.plafondJournalier ?? '—' }}</span></div>
+        <div class="info-item"><span class="info-label">Découvert</span><span class="info-val mono-cell">{{ c.decouvertAutorise | number:'1.0-2' }}</span></div>
+        <div class="info-item"><span class="info-label">Ouverture</span><span class="info-val">{{ c.dateOuverture | date:'dd/MM/yyyy' }}</span></div>
       </div>
     </section>
 
-    <section id="historique" class="card history-card">
+    <!-- Historique -->
+    <section id="historique" class="card">
       <div class="history-title">
         <h2>Historique des transactions</h2>
-        <span>{{ transactions().length }} transaction(s)</span>
+        <span class="count-badge">{{ transactions().length }}</span>
       </div>
 
       @if (chargementHistorique()) {
-        <p class="empty">Chargement de l'historique...</p>
+        <div class="skeleton" style="height:120px;border-radius:8px"></div>
       } @else if (transactions().length === 0) {
-        <p class="empty">Aucune transaction trouvée pour ce compte.</p>
+        <div class="empty-state">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M7 16V4M17 8v12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+          <p>Aucune transaction pour ce compte.</p>
+        </div>
       } @else {
         <div class="table-scroll">
           <table>
@@ -84,14 +135,14 @@
             <tbody>
               @for (t of transactions(); track t.id) {
                 <tr [class.rejected-row]="ligneRejetee(t)">
-                  <td class="ref">{{ t.reference }}</td>
+                  <td class="ref mono-cell">{{ t.reference }}</td>
                   <td>{{ t.type }}</td>
-                  <td><b>{{ t.montant | number:'1.0-2' }}</b> {{ t.devise }}</td>
+                  <td class="mono-cell"><strong>{{ t.montant | number:'1.0-2' }}</strong> {{ t.devise }}</td>
                   <td>{{ compteLabel(t.compteSourceId) }}</td>
                   <td>{{ compteLabel(t.compteDestId) }}</td>
                   <td><span [class]="badgeTransaction(t.statut)">{{ t.statut }}</span></td>
-                  <td>{{ t.motif || '-' }}</td>
-                  <td>{{ t.dateOperation | date:'short' }}</td>
+                  <td class="motif-cell">{{ t.motif || '—' }}</td>
+                  <td>{{ t.dateOperation | date:'dd/MM/yy HH:mm' }}</td>
                 </tr>
               }
             </tbody>
@@ -99,5 +150,6 @@
         </div>
       }
     </section>
+
   </div>
 }

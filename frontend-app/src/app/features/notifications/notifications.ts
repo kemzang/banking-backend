@@ -1,11 +1,12 @@
 import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
-import { DecimalPipe } from '@angular/common';
+import { DatePipe, DecimalPipe } from '@angular/common';
 import { Notification, NotificationService } from '../../core/services/notification.service';
 
 @Component({
   selector: 'app-notifications',
-  imports: [DecimalPipe],
+  imports: [DecimalPipe, DatePipe],
   templateUrl: './notifications.html',
+  styleUrl: './notifications.scss',
 })
 export class Notifications implements OnInit, OnDestroy {
   private notif = inject(NotificationService);
@@ -34,5 +35,14 @@ export class Notifications implements OnInit, OnDestroy {
   badge(statut: string): string {
     const s = statut === 'VALIDEE' ? 'valide' : statut === 'REJETEE' ? 'rejete' : 'attente';
     return `badge badge-${s}`;
+  }
+
+  typeIconClass(type: string): string {
+    const map: Record<string, string> = {
+      DEPOT: 'type-icon type-icon--depot',
+      RETRAIT: 'type-icon type-icon--retrait',
+      TRANSFERT: 'type-icon type-icon--transfert',
+    };
+    return map[type] ?? 'type-icon type-icon--transfert';
   }
 }

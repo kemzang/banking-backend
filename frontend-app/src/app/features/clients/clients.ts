@@ -6,6 +6,7 @@ import { Client, ClientRequest, CustomerService, Operateur } from '../../core/se
   selector: 'app-clients',
   imports: [FormsModule],
   templateUrl: './clients.html',
+  styleUrl: './clients.scss',
 })
 export class Clients implements OnInit {
   private customer = inject(CustomerService);

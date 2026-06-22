@@ -1,56 +1,109 @@
 <h1 class="page-title">Clients</h1>
 <p class="page-sub">Inscription et gestion des clients, validation KYC.</p>
 
-@if (erreur()) { <div class="alert alert-error">{{ erreur() }}</div> }
-@if (succes()) { <div class="alert alert-ok">{{ succes() }}</div> }
+@if (erreur()) {
+  <div class="alert alert-error">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+      <path d="M12 8v4M12 16h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    </svg>
+    {{ erreur() }}
+  </div>
+}
+@if (succes()) {
+  <div class="alert alert-ok">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    {{ succes() }}
+  </div>
+}
 
 <div class="grid-2">
+  <!-- Liste -->
   <div class="card">
-    <h2>Liste des clients ({{ clients().length }})</h2>
+    <div class="card-header-row">
+      <h2>Clients</h2>
+      <span class="count-badge">{{ clients().length }}</span>
+    </div>
     @if (clients().length === 0) {
-      <p class="empty">Aucun client pour l'instant.</p>
+      <div class="empty-state">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M2 21c0-3.866 2.686-7 6-7h2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        <p>Aucun client pour l'instant.</p>
+      </div>
     } @else {
-      <table>
-        <thead>
-          <tr><th>ID</th><th>Nom</th><th>Email</th><th>KYC</th><th>Actions</th></tr>
-        </thead>
-        <tbody>
-          @for (c of clients(); track c.id) {
+      <div class="table-scroll">
+        <table>
+          <thead>
             <tr>
-              <td>{{ c.id }}</td>
-              <td>{{ c.prenom }} {{ c.nom }}</td>
-              <td>{{ c.email }}</td>
-              <td><span [class]="badgeClass(c.statutKyc)">{{ c.statutKyc }}</span></td>
-              <td>
-                <button class="btn btn-sm btn-green" (click)="changerKyc(c, 'VALIDE')">Valider</button>
-                <button class="btn btn-sm btn-ghost" (click)="changerKyc(c, 'REJETE')">Rejeter</button>
-              </td>
+              <th>ID</th>
+              <th>Nom</th>
+              <th>Email</th>
+              <th>KYC</th>
+              <th>Actions</th>
             </tr>
-          }
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            @for (c of clients(); track c.id) {
+              <tr>
+                <td class="mono-cell muted">#{{ c.id }}</td>
+                <td class="client-name">{{ c.prenom }} {{ c.nom }}</td>
+                <td class="muted">{{ c.email }}</td>
+                <td><span [class]="badgeClass(c.statutKyc)">{{ c.statutKyc }}</span></td>
+                <td class="actions-cell">
+                  <button class="btn btn-sm btn-green" (click)="changerKyc(c, 'VALIDE')">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                      <path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    Valider
+                  </button>
+                  <button class="btn btn-sm btn-ghost" (click)="changerKyc(c, 'REJETE')">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                      <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                    Rejeter
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
     }
   </div>
 
+  <!-- Formulaire -->
   <div class="card">
     <h2>Nouveau client</h2>
     <form (ngSubmit)="creer()">
       <div class="field">
         <label>Opérateur</label>
         <select name="operateurId" [(ngModel)]="form.operateurId" required>
-          <option [ngValue]="0" disabled>-- choisir --</option>
+          <option [ngValue]="0" disabled>Sélectionner un opérateur</option>
           @for (op of operateurs(); track op.id) {
             <option [ngValue]="op.id">{{ op.nom }}</option>
           }
         </select>
       </div>
       <div class="row">
-        <div class="field"><label>Nom</label><input name="nom" [(ngModel)]="form.nom" required /></div>
-        <div class="field"><label>Prénom</label><input name="prenom" [(ngModel)]="form.prenom" required /></div>
+        <div class="field"><label>Nom</label><input name="nom" [(ngModel)]="form.nom" required placeholder="Dupont" /></div>
+        <div class="field"><label>Prénom</label><input name="prenom" [(ngModel)]="form.prenom" required placeholder="Jean" /></div>
       </div>
-      <div class="field"><label>Date de naissance</label><input type="date" name="dn" [(ngModel)]="form.dateNaissance" required /></div>
-      <div class="field"><label>Email</label><input type="email" name="email" [(ngModel)]="form.email" required /></div>
-      <div class="field"><label>Téléphone</label><input name="tel" [(ngModel)]="form.telephone" /></div>
+      <div class="field">
+        <label>Date de naissance</label>
+        <input type="date" name="dn" [(ngModel)]="form.dateNaissance" required />
+      </div>
+      <div class="field">
+        <label>Email</label>
+        <input type="email" name="email" [(ngModel)]="form.email" required placeholder="jean@mail.com" />
+      </div>
+      <div class="field">
+        <label>Téléphone</label>
+        <input name="tel" [(ngModel)]="form.telephone" placeholder="+237699000000" />
+      </div>
       <div class="row">
         <div class="field"><label>N° pièce</label><input name="ni" [(ngModel)]="form.numeroIdentite" /></div>
         <div class="field">
@@ -65,7 +118,15 @@
         <div class="field"><label>Ville</label><input name="ville" [(ngModel)]="form.adresse.ville" /></div>
         <div class="field"><label>Pays</label><input name="pays" [(ngModel)]="form.adresse.pays" /></div>
       </div>
-      <button type="submit" class="btn">Créer le client</button>
+      <button type="submit" class="btn" style="width:100%;margin-top:0.25rem">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          <circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="2"/>
+          <line x1="19" y1="8" x2="19" y2="14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          <line x1="22" y1="11" x2="16" y2="11" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        Créer le client
+      </button>
     </form>
   </div>
 </div>

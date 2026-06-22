@@ -1,27 +1,77 @@
 <h1 class="page-title">Notifications</h1>
-<p class="page-sub">Notifications générées en <b>temps réel</b> par les opérations (via RabbitMQ → service Node).
-  La liste se rafraîchit automatiquement.</p>
+<p class="page-sub">Événements générés en temps réel par les opérations (RabbitMQ → Node.js). Rafraîchissement automatique.</p>
 
-@if (erreur()) { <div class="alert alert-error">{{ erreur() }}</div> }
+@if (erreur()) {
+  <div class="alert alert-error">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+      <path d="M12 8v4M12 16h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    </svg>
+    {{ erreur() }}
+  </div>
+}
 
 <div class="card">
-  <h2>Reçues ({{ items().length }})</h2>
+  <div class="notif-header">
+    <h2>Reçues</h2>
+    <span class="count-badge">{{ items().length }}</span>
+    <div class="live-indicator">
+      <span class="pulse-dot"></span>
+      En direct
+    </div>
+  </div>
+
   @if (items().length === 0) {
-    <p class="empty">Aucune notification. Effectuez un dépôt/retrait/transfert pour en générer une.</p>
+    <div class="empty-state">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+      <p>Aucune notification. Effectuez un dépôt, retrait ou transfert pour en générer une.</p>
+    </div>
   } @else {
-    <table>
-      <thead><tr><th>Référence</th><th>Type</th><th>Montant</th><th>Statut</th><th>Reçue à</th></tr></thead>
-      <tbody>
-        @for (n of items(); track n.id) {
+    <div class="table-scroll">
+      <table>
+        <thead>
           <tr>
-            <td>{{ n.reference }}</td>
-            <td>{{ n.type }}</td>
-            <td>{{ n.montant | number:'1.0-0' }} {{ n.devise }}</td>
-            <td><span [class]="badge(n.statut)">{{ n.statut }}</span></td>
-            <td>{{ n.receivedAt }}</td>
+            <th>Type</th>
+            <th>Référence</th>
+            <th>Montant</th>
+            <th>Statut</th>
+            <th>Reçue à</th>
           </tr>
-        }
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          @for (n of items(); track n.id) {
+            <tr>
+              <td>
+                <div class="type-cell">
+                  <div class="type-icon" [class]="typeIconClass(n.type)">
+                    @if (n.type === 'DEPOT') {
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="M12 5v14M5 12l7-7 7 7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                    } @else if (n.type === 'RETRAIT') {
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="M12 19V5M5 12l7 7 7-7" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                    } @else {
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                        <path d="M7 16V4m0 0L4 7m3-3 3 3M17 8v12m0 0 3-3m-3 3-3-3" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                    }
+                  </div>
+                  {{ n.type }}
+                </div>
+              </td>
+              <td class="mono-cell ref">{{ n.reference }}</td>
+              <td class="mono-cell">{{ n.montant | number:'1.0-0' }} <span class="muted">{{ n.devise }}</span></td>
+              <td><span [class]="badge(n.statut)">{{ n.statut }}</span></td>
+              <td class="muted time-cell">{{ n.receivedAt | date:'dd/MM/yy HH:mm:ss' }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
   }
 </div>

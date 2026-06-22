@@ -1,0 +1,374 @@
+/* ============================================================
+   Register page specific styles
+   ============================================================ */
+
+/* Left panel content */
+.reg-left {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.reg-icon {
+  margin-bottom: 1.75rem;
+}
+
+.reg-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -0.03em;
+  margin: 0 0 0.75rem;
+  line-height: 1.15;
+}
+
+html:not(.dark) .reg-title {
+  color: #0F172A;
+}
+
+.reg-subtitle {
+  font-size: 1rem;
+  color: rgba(255,255,255,0.6);
+  margin: 0 0 2rem;
+}
+
+html:not(.dark) .reg-subtitle {
+  color: rgba(15,23,42,0.6);
+}
+
+.reg-features {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.reg-features li {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  font-size: 0.9rem;
+  color: rgba(255,255,255,0.65);
+}
+
+html:not(.dark) .reg-features li {
+  color: rgba(15,23,42,0.6);
+}
+
+/* Right panel content */
+.reg-page-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #fff;
+  margin: 0 0 0.3rem;
+  letter-spacing: -0.02em;
+}
+
+html:not(.dark) .reg-page-title {
+  color: #0F172A;
+}
+
+.reg-page-sub {
+  font-size: 0.84rem;
+  color: rgba(255,255,255,0.4);
+  margin: 0 0 1.5rem;
+}
+
+html:not(.dark) .reg-page-sub {
+  color: rgba(15,23,42,0.45);
+}
+
+/* Form styles */
+.reg-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.reg-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+@media (max-width: 640px) {
+  .reg-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.reg-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.reg-field label {
+  font-size: 0.73rem;
+  color: rgba(255,255,255,0.45);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+html:not(.dark) .reg-field label {
+  color: rgba(15,23,42,0.5);
+}
+
+.reg-field input {
+  padding: 0.65rem 0.9rem;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  color: #F9FAFB;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.reg-field input::placeholder {
+  color: rgba(255,255,255,0.25);
+}
+
+.reg-field input:focus {
+  border-color: #00D4FF;
+  box-shadow: 0 0 0 3px rgba(0,212,255,0.1);
+}
+
+.reg-field input.error {
+  border-color: #EF4444;
+  box-shadow: 0 0 0 3px rgba(239,68,68,0.1);
+}
+
+.reg-field input.success {
+  border-color: #10B981;
+  box-shadow: 0 0 0 3px rgba(16,185,129,0.1);
+}
+
+.reg-field input:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+html:not(.dark) .reg-field input {
+  background: rgba(0,0,0,0.03);
+  border-color: rgba(0,0,0,0.1);
+  color: #0F172A;
+}
+
+html:not(.dark) .reg-field input::placeholder {
+  color: rgba(15,23,42,0.3);
+}
+
+.reg-hint {
+  font-size: 0.74rem;
+  color: rgba(255,255,255,0.35);
+}
+
+html:not(.dark) .reg-hint {
+  color: rgba(15,23,42,0.4);
+}
+
+.reg-error {
+  font-size: 0.74rem;
+  color: #EF4444;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+/* Password wrapper */
+.reg-password-wrapper {
+  position: relative;
+}
+
+.reg-password-wrapper input {
+  padding-right: 2.5rem;
+}
+
+.reg-eye {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: rgba(255,255,255,0.3);
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  transition: color 0.15s;
+}
+
+.reg-eye:hover {
+  color: rgba(255,255,255,0.7);
+}
+
+html:not(.dark) .reg-eye {
+  color: rgba(15,23,42,0.3);
+}
+
+html:not(.dark) .reg-eye:hover {
+  color: rgba(15,23,42,0.7);
+}
+
+/* Password strength bar */
+.reg-strength-bar {
+  display: flex;
+  gap: 0.25rem;
+  margin-top: 0.5rem;
+}
+
+.reg-strength-segment {
+  flex: 1;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255,255,255,0.1);
+  transition: background-color 0.2s;
+}
+
+html:not(.dark) .reg-strength-segment {
+  background: rgba(0,0,0,0.1);
+}
+
+.reg-strength-segment.active.bg-red-500 {
+  background: #EF4444;
+}
+
+.reg-strength-segment.active.bg-amber-500 {
+  background: #F59E0B;
+}
+
+.reg-strength-segment.active.bg-lime-500 {
+  background: #84CC16;
+}
+
+.reg-strength-segment.active.bg-cyan-500 {
+  background: #00D4FF;
+}
+
+.reg-strength-label {
+  font-size: 0.75rem;
+  margin-top: 0.25rem;
+  font-weight: 500;
+}
+
+/* Requirements checklist */
+.reg-requirements {
+  list-style: none;
+  padding: 0;
+  margin: 0.5rem 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.reg-requirements li {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.74rem;
+  color: rgba(255,255,255,0.4);
+  transition: color 0.15s;
+}
+
+.reg-requirements li.met {
+  color: #10B981;
+}
+
+.reg-requirements li:not(.met) {
+  color: #EF4444;
+}
+
+html:not(.dark) .reg-requirements li {
+  color: rgba(15,23,42,0.4);
+}
+
+/* Submit button */
+.reg-submit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.75rem;
+  margin-top: 0.5rem;
+  border: none;
+  border-radius: 9px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+  background: #00D4FF;
+  color: #0A0E1A;
+  cursor: pointer;
+  transition: all 0.18s ease-in-out;
+}
+
+.reg-submit:hover:not(:disabled) {
+  background: #22E0FF;
+  box-shadow: 0 0 20px rgba(0,212,255,0.3);
+  transform: translateY(-1px);
+}
+
+.reg-submit:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+/* Spinner */
+.reg-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(10,14,26,0.25);
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: reg-spin 0.7s linear infinite;
+}
+
+@keyframes reg-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Sign in link */
+.reg-signin {
+  text-align: center;
+  font-size: 0.84rem;
+  color: rgba(255,255,255,0.4);
+  margin: 0.5rem 0 0;
+}
+
+.reg-signin a {
+  color: #00D4FF;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.reg-signin a:hover {
+  opacity: 0.8;
+}
+
+html:not(.dark) .reg-signin {
+  color: rgba(15,23,42,0.45);
+}
+
+html:not(.dark) .reg-signin a {
+  color: #0284C7;
+}
+
+/* Mount animations */
+@keyframes fade-from-left {
+  from { opacity: 0; transform: translateX(-20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.anim-fade-left {
+  opacity: 0;
+  animation: fade-from-left 0.45s ease-out forwards;
+  animation-delay: var(--delay, 0ms);
+}

@@ -1,0 +1,48 @@
+<div class="auth-split" [attr.data-accent]="accent">
+
+  <!-- ── Toolbar ────────────────────────────────── -->
+  <div class="split-toolbar">
+    <a routerLink="/auth" class="split-back">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+        <path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      {{ t('login_back') }}
+    </a>
+    <div class="split-tools">
+      <button class="stool" (click)="i18n.toggle()" aria-label="Language">
+        <span>{{ i18n.lang() === 'fr' ? 'EN' : 'FR' }}</span>
+      </button>
+      <button class="stool" (click)="theme.toggle()" [attr.aria-label]="t('theme_dark')">
+        @if (theme.theme() === 'dark') {
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="5" stroke="currentColor" stroke-width="1.8"/>
+            <path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"
+                  stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+        } @else {
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"
+                  stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+        }
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Left panel (branded) ───────────────────── -->
+  <div class="split-left">
+    <div class="split-orb split-orb-1"></div>
+    <div class="split-orb split-orb-2"></div>
+    <ng-content select="[slot=left]" />
+    <p class="split-footer">{{ t('landing_footer') }}</p>
+  </div>
+
+  <!-- ── Right panel (form) ─────────────────────── -->
+  <div class="split-right">
+    <div class="split-card">
+      <ng-content select="[slot=right]" />
+    </div>
+  </div>
+
+</div>

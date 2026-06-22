@@ -10,6 +10,7 @@ import { AuthService } from '../../core/services/auth.service';
   selector: 'app-comptes',
   imports: [FormsModule, DecimalPipe, RouterLink],
   templateUrl: './comptes.html',
+  styleUrl: './comptes.scss',
 })
 export class Comptes implements OnInit {
   private account = inject(AccountService);

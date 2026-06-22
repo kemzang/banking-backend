@@ -6,6 +6,7 @@ import { CustomerService, Operateur } from '../../core/services/customer.service
   selector: 'app-operateurs',
   imports: [FormsModule],
   templateUrl: './operateurs.html',
+  styleUrl: './operateurs.scss',
 })
 export class Operateurs implements OnInit {
   private customer = inject(CustomerService);
@@ -38,5 +39,14 @@ export class Operateurs implements OnInit {
       },
       error: (e) => this.erreur.set(e.status === 409 ? 'Ce code est déjà utilisé.' : 'Erreur lors de la création.'),
     });
+  }
+
+  typeBadge(type: string): string {
+    const map: Record<string, string> = {
+      BANQUE: 'badge badge-encours',
+      MICROFINANCE: 'badge badge-valide',
+      MOBILE: 'badge badge-attente',
+    };
+    return map[type] ?? 'badge badge-inactive';
   }
 }

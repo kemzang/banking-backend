@@ -1,6 +1,8 @@
 import { Component, inject, signal } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from '../core/services/auth.service';
+import { I18nService } from '../core/services/i18n.service';
+import { ThemeService } from '../core/services/theme.service';
 import { UserResponse } from '../core/models/auth.models';
 
 @Component({
@@ -10,8 +12,10 @@ import { UserResponse } from '../core/models/auth.models';
   styleUrl: './layout.scss',
 })
 export class Layout {
-  private auth = inject(AuthService);
-  private router = inject(Router);
+  private auth    = inject(AuthService);
+  private router  = inject(Router);
+  readonly i18n   = inject(I18nService);
+  readonly theme  = inject(ThemeService);
 
   user = signal<UserResponse | null>(null);
 
@@ -19,16 +23,13 @@ export class Layout {
     this.auth.me().subscribe({ next: (u) => this.user.set(u) });
   }
 
-  // Helpers de role pour afficher/masquer les entrees de menu
-  estAdmin(): boolean {
-    return this.auth.hasRole('ADMIN');
-  }
-  estOperateur(): boolean {
-    return this.auth.hasRole('ADMIN', 'OPERATEUR');
-  }
+  estAdmin(): boolean     { return this.auth.hasRole('ADMIN'); }
+  estOperateur(): boolean { return this.auth.hasRole('ADMIN', 'OPERATEUR'); }
 
   deconnexion(): void {
     this.auth.logout();
-    this.router.navigate(['/login']);
+    this.router.navigate(['/auth']);
   }
+
+  t(key: Parameters<I18nService['t']>[0]) { return this.i18n.t(key); }
 }

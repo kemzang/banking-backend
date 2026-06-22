@@ -1,29 +1,60 @@
 <h1 class="page-title">Opérateurs financiers</h1>
 <p class="page-sub">Banques, microfinances et opérateurs mobiles de la plateforme.</p>
 
-@if (erreur()) { <div class="alert alert-error">{{ erreur() }}</div> }
+@if (erreur()) {
+  <div class="alert alert-error">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+      <path d="M12 8v4M12 16h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    </svg>
+    {{ erreur() }}
+  </div>
+}
 
 <div class="grid-2">
+  <!-- Liste -->
   <div class="card">
-    <h2>Liste ({{ operateurs().length }})</h2>
+    <div class="card-header-row">
+      <h2>Opérateurs</h2>
+      <span class="count-badge">{{ operateurs().length }}</span>
+    </div>
     @if (operateurs().length === 0) {
-      <p class="empty">Aucun opérateur pour l'instant.</p>
+      <div class="empty-state">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" stroke="currentColor" stroke-width="1.5"/>
+          <rect x="9" y="12" width="6" height="9" stroke="currentColor" stroke-width="1.5" rx="1"/>
+        </svg>
+        <p>Aucun opérateur pour l'instant.</p>
+      </div>
     } @else {
-      <table>
-        <thead><tr><th>ID</th><th>Nom</th><th>Type</th><th>Code</th></tr></thead>
-        <tbody>
-          @for (op of operateurs(); track op.id) {
-            <tr><td>{{ op.id }}</td><td>{{ op.nom }}</td><td>{{ op.type }}</td><td>{{ op.code }}</td></tr>
-          }
-        </tbody>
-      </table>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr><th>ID</th><th>Nom</th><th>Type</th><th>Code</th></tr>
+          </thead>
+          <tbody>
+            @for (op of operateurs(); track op.id) {
+              <tr>
+                <td class="mono-cell muted">#{{ op.id }}</td>
+                <td class="op-name">{{ op.nom }}</td>
+                <td><span [class]="typeBadge(op.type)">{{ op.type }}</span></td>
+                <td class="mono-cell">{{ op.code }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
     }
   </div>
 
+  <!-- Formulaire -->
   <div class="card">
     <h2>Nouvel opérateur</h2>
     <form (ngSubmit)="creer()">
-      <div class="field"><label>Nom</label><input name="nom" [(ngModel)]="nom" required placeholder="AfricaBank" /></div>
+      <div class="field">
+        <label>Nom</label>
+        <input name="nom" [(ngModel)]="nom" required placeholder="AfricaBank" />
+      </div>
       <div class="field">
         <label>Type</label>
         <select name="type" [(ngModel)]="type">
@@ -32,8 +63,17 @@
           <option value="MOBILE">MOBILE</option>
         </select>
       </div>
-      <div class="field"><label>Code</label><input name="code" [(ngModel)]="code" required placeholder="AFB001" /></div>
-      <button type="submit" class="btn">Créer</button>
+      <div class="field">
+        <label>Code unique</label>
+        <input name="code" [(ngModel)]="code" required placeholder="AFB001" />
+      </div>
+      <button type="submit" class="btn" style="width:100%;margin-top:0.25rem">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+          <path d="M12 8v8M8 12h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        Créer l'opérateur
+      </button>
     </form>
   </div>
 </div>

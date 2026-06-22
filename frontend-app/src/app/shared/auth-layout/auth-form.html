@@ -1,0 +1,131 @@
+<!-- MFA overlay -->
+@if (mfaVisible()) {
+  <app-mfa-modal [email]="mfaEmail()" (verified)="onMfaSuccess()" (cancelled)="onMfaClose()"/>
+}
+
+<!-- Tabs -->
+@if (showTabs) {
+  <div class="af-tabs">
+    <button class="af-tab" [class.af-tab--active]="tab() === 'pwd'" (click)="tab.set('pwd')">
+      {{ t('client_tab_pwd') }}
+    </button>
+    @if (googleActif) {
+      <button class="af-tab" [class.af-tab--active]="tab() === 'google'" (click)="tab.set('google')">
+        {{ t('client_tab_google') }}
+      </button>
+    }
+  </div>
+}
+
+<!-- Error -->
+@if (erreur()) {
+  <div class="af-alert" role="alert">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+      <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+      <path d="M12 8v4M12 16h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    </svg>
+    <span>{{ erreur() }}</span>
+    @if (hintRoute()) {
+      <a [routerLink]="hintRoute()" class="af-hint-link">{{ hintLabel() }}</a>
+    }
+  </div>
+}
+
+<!-- ── TAB: Password ──────────────────────────────── -->
+@if (tab() === 'pwd') {
+  <form (ngSubmit)="submit()" novalidate autocomplete="on">
+
+    <div class="af-field">
+      <label for="af-email">{{ t('login_email') }}</label>
+      <div class="af-input-wrap">
+        <svg class="af-icon" width="15" height="15" viewBox="0 0 24 24" fill="none">
+          <rect x="2" y="4" width="20" height="16" rx="2" stroke="currentColor" stroke-width="1.8"/>
+          <path d="m2 7 10 7 10-7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+        <input id="af-email" type="email" name="email" [(ngModel)]="email"
+               required placeholder="votre@email.com" autocomplete="email"
+               [disabled]="chargement() || rateBlocked()" />
+      </div>
+    </div>
+
+    <div class="af-field">
+      <label for="af-pwd">{{ t('login_pwd') }}</label>
+      <div class="af-input-wrap">
+        <svg class="af-icon" width="15" height="15" viewBox="0 0 24 24" fill="none">
+          <rect x="5" y="11" width="14" height="10" rx="2" stroke="currentColor" stroke-width="1.8"/>
+          <path d="M8 11V7a4 4 0 0 1 8 0v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+        <input id="af-pwd" [type]="showPwd() ? 'text' : 'password'"
+               name="motDePasse" [(ngModel)]="motDePasse"
+               required placeholder="••••••••" autocomplete="current-password"
+               [disabled]="chargement() || rateBlocked()" />
+        <button type="button" class="af-eye" (click)="showPwd.set(!showPwd())" aria-label="toggle password">
+          @if (showPwd()) {
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+              <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+              <line x1="1" y1="1" x2="23" y2="23" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            </svg>
+          } @else {
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z" stroke="currentColor" stroke-width="1.8"/>
+              <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.8"/>
+            </svg>
+          }
+        </button>
+      </div>
+    </div>
+
+    <!-- Operator code field -->
+    @if (showOpCode) {
+      <div class="af-field">
+        <label for="af-opcode">{{ t('op_code_label') }}</label>
+        <input id="af-opcode" type="text" name="opCode"
+               [(ngModel)]="opCode"
+               [placeholder]="t('op_code_placeholder')"
+               style="text-transform:uppercase"
+               autocomplete="off"
+               [disabled]="chargement()" />
+        <small class="af-hint">{{ t('op_code_hint') }}</small>
+      </div>
+    }
+
+    <!-- Forgot + Remember row -->
+    <div class="af-meta-row">
+      <label class="af-check">
+        <input type="checkbox" [(ngModel)]="rememberMe" name="remember" />
+        <span>{{ t('login_remember') }}</span>
+      </label>
+      @if (showForgot) {
+        <a routerLink="/forgot-password" class="af-forgot">{{ t('login_forgot') }}</a>
+      }
+    </div>
+
+    <button type="submit" class="af-submit af-submit--{{ accent }}"
+            [disabled]="chargement() || rateBlocked()">
+      @if (chargement()) {
+        <span class="af-spinner" aria-hidden="true"></span>
+        {{ t('login_loading') }}
+      } @else if (rateBlocked()) {
+        {{ t('login_err_retry') }} {{ rateCountdown() }}s
+      } @else {
+        {{ t('login_submit') }}
+      }
+    </button>
+
+    @if (showRegister) {
+      <div class="af-sep"><span>{{ t('login_or') }}</span></div>
+      <p class="af-register-link">
+        {{ t('client_no_account') }}
+        <a routerLink="/register">{{ t('client_register') }}</a>
+      </p>
+    }
+  </form>
+}
+
+<!-- ── TAB: Google ────────────────────────────────── -->
+@if (tab() === 'google') {
+  <div class="af-google-section">
+    <p class="af-google-desc">{{ t('client_google_desc') }}</p>
+    <div id="googleBtnSlot"></div>
+  </div>
+}

@@ -1,0 +1,153 @@
+/* ── Accent CSS variables per role ─────────────────────── */
+.auth-split[data-accent="cyan"]   { --acc: #00D4FF; --acc-dim: rgba(0,212,255,0.1);   --acc-glow: rgba(0,212,255,0.2);   --grad-end: #0C2A3A; }
+.auth-split[data-accent="amber"]  { --acc: #F59E0B; --acc-dim: rgba(245,158,11,0.1);  --acc-glow: rgba(245,158,11,0.2);  --grad-end: #2A1A00; }
+.auth-split[data-accent="violet"] { --acc: #8B5CF6; --acc-dim: rgba(139,92,246,0.1);  --acc-glow: rgba(139,92,246,0.2);  --grad-end: #1A0A2A; }
+
+/* ── Shell ──────────────────────────────────────────────── */
+.auth-split {
+  display: grid;
+  grid-template-columns: 58fr 42fr;
+  min-height: 100dvh;
+  position: relative;
+  background: #0A0E1A;
+}
+
+html:not(.dark) .auth-split { background: #F0F4F8; }
+
+/* ── Toolbar ─────────────────────────────────────────────── */
+.split-toolbar {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.85rem 1.5rem;
+  z-index: 200;
+  pointer-events: none; /* children re-enable */
+}
+
+.split-back {
+  pointer-events: all;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: rgba(255,255,255,0.5);
+  text-decoration: none;
+  transition: color 0.15s;
+  padding: 0.4rem 0.7rem;
+  border-radius: 7px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+
+  &:hover { color: var(--acc, #00D4FF); border-color: var(--acc-dim, rgba(0,212,255,0.2)); }
+}
+
+html:not(.dark) .split-back {
+  color: rgba(15,23,42,0.5);
+  background: rgba(0,0,0,0.04);
+  border-color: rgba(0,0,0,0.08);
+
+  &:hover { color: var(--acc, #0284C7); }
+}
+
+.split-tools {
+  pointer-events: all;
+  display: flex;
+  gap: 0.4rem;
+}
+
+.stool {
+  display: flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.55);
+  cursor: pointer;
+  font-size: 0.68rem; font-weight: 700;
+  font-family: 'Outfit', sans-serif;
+  letter-spacing: 0.05em;
+  transition: all 0.15s;
+
+  &:hover { background: rgba(255,255,255,0.1); color: #fff; }
+}
+
+html:not(.dark) .stool {
+  background: rgba(0,0,0,0.05);
+  border-color: rgba(0,0,0,0.1);
+  color: rgba(15,23,42,0.55);
+
+  &:hover { background: rgba(0,0,0,0.1); color: #0F172A; }
+}
+
+/* ── Left panel ──────────────────────────────────────────── */
+.split-left {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 5.5rem 3.5rem 2.5rem;
+  overflow: hidden;
+  background: linear-gradient(160deg, #0A0E1A 0%, var(--grad-end, #0C2A3A) 100%);
+}
+
+html:not(.dark) .split-left {
+  background: linear-gradient(160deg, #E2EAF4 0%, #d0e4f0 100%);
+}
+
+/* Orbs */
+.split-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(70px);
+  pointer-events: none;
+  background: radial-gradient(circle, var(--acc-glow, rgba(0,212,255,0.15)), transparent 70%);
+}
+
+.split-orb-1 { width: 420px; height: 420px; top: -100px; left: -80px; animation: orb-a 16s ease-in-out infinite alternate; }
+.split-orb-2 { width: 280px; height: 280px; bottom: -60px; right: 60px; animation: orb-b 20s ease-in-out infinite alternate; }
+
+@keyframes orb-a { from { transform: translate(0,0) scale(1); } to { transform: translate(30px,20px) scale(1.08); } }
+@keyframes orb-b { from { transform: translate(0,0); } to { transform: translate(-20px,-15px); } }
+
+.split-footer {
+  position: absolute;
+  bottom: 1.5rem; left: 3.5rem;
+  font-size: 0.72rem;
+  color: rgba(255,255,255,0.2);
+  margin: 0;
+}
+
+html:not(.dark) .split-footer { color: rgba(15,23,42,0.3); }
+
+/* ── Right panel ─────────────────────────────────────────── */
+.split-right {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5rem 2.5rem 2.5rem;
+  border-left: 1px solid rgba(255,255,255,0.05);
+  background: rgba(17,24,39,0.65);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+html:not(.dark) .split-right {
+  background: rgba(255,255,255,0.85);
+  border-left-color: rgba(0,0,0,0.07);
+}
+
+.split-card {
+  width: 100%;
+  max-width: 420px;
+}
+
+/* ── Mobile ──────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .auth-split  { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
+  .split-left  { padding: 4.5rem 1.5rem 1.75rem; min-height: 0; }
+  .split-right { border-left: none; border-top: 1px solid rgba(255,255,255,0.06); padding: 1.75rem 1.25rem 2rem; }
+  .split-footer { display: none; }
+}

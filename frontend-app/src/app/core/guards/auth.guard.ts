@@ -2,25 +2,24 @@ import { inject } from '@angular/core';
 import { ActivatedRouteSnapshot, CanActivateFn, Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 
-// Empeche d'acceder a une page protegee sans etre connecte.
+/** Vérifie connexion + expiry JWT à chaque navigation */
 export const authGuard: CanActivateFn = () => {
-  const auth = inject(AuthService);
+  const auth   = inject(AuthService);
   const router = inject(Router);
-  if (auth.connecte()) {
-    return true;
+
+  if (!auth.hasValidToken()) {
+    if (auth.token) auth.logout();
+    return router.parseUrl('/auth?expired=1');
   }
-  router.navigate(['/login']);
-  return false;
+  return true;
 };
 
-// Restreint l'acces selon les roles (route.data.roles = ['ADMIN', ...]).
+/** Vérifie le rôle requis (route.data.roles) */
 export const roleGuard: CanActivateFn = (route: ActivatedRouteSnapshot) => {
-  const auth = inject(AuthService);
+  const auth   = inject(AuthService);
   const router = inject(Router);
   const requis = (route.data?.['roles'] as string[]) ?? [];
-  if (requis.length === 0 || auth.hasRole(...requis)) {
-    return true;
-  }
-  router.navigate(['/dashboard']);
-  return false;
+
+  if (requis.length === 0 || auth.hasRole(...requis)) return true;
+  return router.parseUrl('/dashboard');
 };

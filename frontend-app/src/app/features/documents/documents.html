@@ -1,10 +1,26 @@
-<h1 class="page-title">Documents — Reconnaissance OCR</h1>
-<p class="page-sub">Téléversez une image (CNI, justificatif…) : le service IA extrait automatiquement le texte.</p>
+<h1 class="page-title">Documents — OCR</h1>
+<p class="page-sub">Téléversez une image (CNI, passeport…) : le service IA extrait automatiquement le texte.</p>
 
-@if (erreur()) { <div class="alert alert-error">{{ erreur() }}</div> }
-@if (succes()) { <div class="alert alert-ok">{{ succes() }}</div> }
+@if (erreur()) {
+  <div class="alert alert-error">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+      <path d="M12 8v4M12 16h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    </svg>
+    {{ erreur() }}
+  </div>
+}
+@if (succes()) {
+  <div class="alert alert-ok">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    {{ succes() }}
+  </div>
+}
 
 <div class="grid-2">
+  <!-- Upload card -->
   <div class="card">
     <h2>Analyser un document</h2>
 
@@ -12,7 +28,7 @@
       <div class="field">
         <label>Client concerné</label>
         <select name="cl" [(ngModel)]="clientId">
-          <option [ngValue]="0" disabled>-- client --</option>
+          <option [ngValue]="0" disabled>Sélectionner</option>
           @for (c of clients(); track c.id) {
             <option [ngValue]="c.id">{{ c.prenom }} {{ c.nom }}</option>
           }
@@ -23,53 +39,124 @@
         <select name="td" [(ngModel)]="typeDoc">
           <option value="CNI">CNI</option>
           <option value="PASSEPORT">Passeport</option>
-          <option value="JUSTIF_DOMICILE">Justificatif de domicile</option>
-          <option value="BULLETIN_SALAIRE">Bulletin de salaire</option>
+          <option value="JUSTIF_DOMICILE">Justificatif domicile</option>
+          <option value="BULLETIN_SALAIRE">Bulletin salaire</option>
         </select>
       </div>
     </div>
 
-    <div class="dropzone">
+    <!-- Dropzone -->
+    <div class="dropzone" [class.dropzone--active]="!!fichier">
       <input type="file" id="file" accept="image/*" (change)="onFichier($event)" />
-      <label for="file">📎 {{ fichier ? fichier.name : 'Choisir une image (PNG, JPG)' }}</label>
+      <label for="file">
+        @if (fichier) {
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+            <path d="M14 2v6h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span class="dropzone-filename">{{ fichier.name }}</span>
+        } @else {
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M17 8l-5-5-5 5M12 3v12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span>Cliquer ou déposer une image ici</span>
+          <small>PNG, JPG — max 5 Mo</small>
+        }
+      </label>
     </div>
 
     @if (apercu()) {
-      <img class="apercu" [src]="apercu()" alt="aperçu" />
+      <div class="preview-wrap">
+        <img [src]="apercu()" alt="Aperçu du document" />
+      </div>
     }
 
-    <button class="btn" (click)="analyser()" [disabled]="!fichier || chargement()">
-      {{ chargement() ? 'Analyse en cours...' : 'Lancer l\'analyse OCR' }}
+    <button class="btn" style="width:100%;margin-top:0.5rem" (click)="analyser()" [disabled]="!fichier || chargement()">
+      @if (chargement()) {
+        <span class="btn-spinner" aria-hidden="true"></span>
+        Analyse en cours…
+      } @else {
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/>
+          <path d="m21 21-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        Lancer l'analyse OCR
+      }
     </button>
 
     @if (resultat(); as r) {
-      <div class="resultat">
-        <h3>Texte extrait</h3>
-        <pre>{{ r.extracted_text || '(aucun texte détecté)' }}</pre>
-        <p class="meta">Confiance : <b>{{ (r.confidence_score * 100) | number:'1.0-0' }}%</b> · Statut : {{ r.status }}</p>
-        <!-- Alimente le processus metier : validation du KYC du client -->
-        <button class="btn btn-green" (click)="validerKyc()">✔ Valider le KYC du client</button>
+      <div class="ocr-result">
+        <div class="ocr-result-header">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+            <path d="M9 13h6M9 17h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+          <span>Texte extrait</span>
+          <div class="confidence-pill">
+            Confiance : <strong>{{ (r.confidence_score * 100) | number:'1.0-0' }}%</strong>
+          </div>
+        </div>
+        <pre class="ocr-text">{{ r.extracted_text || '(aucun texte détecté)' }}</pre>
+        <div class="ocr-footer">
+          <span class="badge badge-valide">{{ r.status }}</span>
+          <button class="btn btn-green btn-sm" (click)="validerKyc()">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Valider le KYC client
+          </button>
+        </div>
       </div>
     }
   </div>
 
+  <!-- Historique -->
   <div class="card">
-    <h2>Historique ({{ historique().length }})</h2>
+    <div class="card-header-row">
+      <h2>Historique</h2>
+      <span class="count-badge">{{ historique().length }}</span>
+    </div>
     @if (historique().length === 0) {
-      <p class="empty">Aucune analyse pour l'instant.</p>
+      <div class="empty-state">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+        </svg>
+        <p>Aucune analyse pour l'instant.</p>
+      </div>
     } @else {
-      <table>
-        <thead><tr><th>ID</th><th>Fichier</th><th>Conf.</th></tr></thead>
-        <tbody>
-          @for (h of historique(); track h.id) {
+      <div class="table-scroll">
+        <table>
+          <thead>
             <tr>
-              <td>{{ h.id }}</td>
-              <td>{{ h.original_filename }}</td>
-              <td>{{ (h.confidence_score * 100) | number:'1.0-0' }}%</td>
+              <th>ID</th>
+              <th>Fichier</th>
+              <th>Confiance</th>
             </tr>
-          }
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            @for (h of historique(); track h.id) {
+              <tr>
+                <td class="mono-cell muted">#{{ h.id }}</td>
+                <td class="filename-cell">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true" style="color:var(--color-text-muted);flex-shrink:0">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+                  </svg>
+                  {{ h.original_filename }}
+                </td>
+                <td>
+                  <div class="conf-bar-wrap">
+                    <div class="conf-bar">
+                      <div class="conf-fill" [style.width.%]="(h.confidence_score * 100)"></div>
+                    </div>
+                    <span class="mono-cell">{{ (h.confidence_score * 100) | number:'1.0-0' }}%</span>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
     }
   </div>
 </div>

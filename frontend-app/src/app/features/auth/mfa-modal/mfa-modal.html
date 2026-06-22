@@ -1,0 +1,116 @@
+<div class="mfa-overlay" role="dialog" aria-modal="true" aria-labelledby="mfa-title">
+  <div class="mfa-card">
+
+    <!-- Header -->
+    <div class="mfa-header">
+      <div class="mfa-shield">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z" stroke="#00D4FF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M9 12l2 2 4-4" stroke="#00D4FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div>
+        <h2 id="mfa-title">Vérification en deux étapes</h2>
+        <p>Entrez le code généré par votre application d'authentification</p>
+      </div>
+    </div>
+
+    @if (erreur()) {
+      <div class="mfa-alert" role="alert">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+          <path d="M12 8v4M12 16h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        {{ erreur() }}
+      </div>
+    }
+
+    <!-- TOTP mode -->
+    @if (mode() === 'totp') {
+      <div class="otp-row" [class.otp-shake]="shake()">
+        @for (d of digits(); track $index; let i = $index) {
+          <input
+            #otpInput
+            type="text"
+            inputmode="numeric"
+            maxlength="1"
+            class="otp-box"
+            [value]="d"
+            [attr.aria-label]="'Chiffre ' + (i + 1)"
+            (input)="onDigitInput(i, $event)"
+            (keydown)="onKeyDown(i, $event)"
+            (paste)="onPaste($event)"
+            autocomplete="one-time-code"
+          />
+        }
+      </div>
+
+      <div class="mfa-timer">
+        @if (!resendActive()) {
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+            <path d="M12 6v6l4 2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          Code valide encore <strong>{{ countdown() }}s</strong>
+        } @else {
+          <button type="button" class="resend-btn" (click)="resend()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M3 3v5h5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Renvoyer le code
+          </button>
+        }
+      </div>
+
+      <button class="mfa-btn" [disabled]="chargement() || otpCode.length !== 6" (click)="verify()">
+        @if (chargement()) {
+          <span class="spinner" aria-hidden="true"></span> Vérification…
+        } @else {
+          Vérifier
+        }
+      </button>
+
+      <button type="button" class="backup-link" (click)="switchMode('backup')">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+          <rect x="3" y="11" width="18" height="11" rx="2" stroke="currentColor" stroke-width="1.8"/>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+        Utiliser un code de secours
+      </button>
+    }
+
+    <!-- Backup code mode -->
+    @if (mode() === 'backup') {
+      <div class="backup-section">
+        <label class="backup-label">Code de secours (8 caractères)</label>
+        <input
+          type="text"
+          class="backup-input"
+          [ngModel]="backupCode()"
+          (ngModelChange)="backupCode.set($event.toUpperCase())"
+          maxlength="8"
+          placeholder="XXXXXXXX"
+          autocomplete="off"
+          spellcheck="false"
+        />
+      </div>
+
+      <button class="mfa-btn" [disabled]="chargement() || backupCode().length !== 8" (click)="verify()">
+        @if (chargement()) {
+          <span class="spinner" aria-hidden="true"></span> Vérification…
+        } @else {
+          Utiliser ce code
+        }
+      </button>
+
+      <button type="button" class="backup-link" (click)="switchMode('totp')">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+          <path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Retour au code TOTP
+      </button>
+    }
+
+  </div>
+</div>

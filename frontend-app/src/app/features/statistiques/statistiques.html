@@ -1,40 +1,130 @@
 <h1 class="page-title">Statistiques</h1>
-<p class="page-sub">Rapports agrégés de la plateforme (clients, comptes, encours, notifications).</p>
+<p class="page-sub">Rapports agrégés de la plateforme — clients, comptes, encours, notifications.</p>
 
-<div class="stats" style="display:grid;grid-template-columns:repeat(4,1fr);gap:1.25rem;margin-bottom:1.5rem">
-  <div class="card"><span style="font-size:2rem;font-weight:700;color:#2563eb">{{ nbClients() }}</span><div>👤 Clients</div></div>
-  <div class="card"><span style="font-size:2rem;font-weight:700;color:#2563eb">{{ nbComptes() }}</span><div>💳 Comptes</div></div>
-  <div class="card"><span style="font-size:2rem;font-weight:700;color:#16a34a">{{ soldeTotal() | number:'1.0-0' }}</span><div>💰 Encours total (XAF)</div></div>
-  <div class="card"><span style="font-size:2rem;font-weight:700;color:#2563eb">{{ nbNotifs() }}</span><div>🔔 Notifications</div></div>
+<!-- KPI cards -->
+<div class="kpi-grid">
+  <div class="kpi-card">
+    <div class="kpi-icon kpi-icon--blue">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <circle cx="8" cy="7" r="4" stroke="currentColor" stroke-width="1.8"/>
+        <path d="M2 21c0-3.866 2.686-7 6-7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        <path d="M17 11a4 4 0 1 1 0-8 4 4 0 0 1 0 8Z" stroke="currentColor" stroke-width="1.8"/>
+        <path d="M22 21c0-3.866-2.239-7-5-7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <span class="kpi-num">{{ nbClients() }}</span>
+    <span class="kpi-lbl">Clients</span>
+  </div>
+
+  <div class="kpi-card">
+    <div class="kpi-icon kpi-icon--cyan">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <rect x="2" y="5" width="20" height="14" rx="2.5" stroke="currentColor" stroke-width="1.8"/>
+        <path d="M2 10h20" stroke="currentColor" stroke-width="1.8"/>
+        <circle cx="7" cy="15" r="1.5" fill="currentColor"/>
+      </svg>
+    </div>
+    <span class="kpi-num">{{ nbComptes() }}</span>
+    <span class="kpi-lbl">Comptes</span>
+  </div>
+
+  <div class="kpi-card">
+    <div class="kpi-icon kpi-icon--green">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.8"/>
+        <path d="M12 8v4l3 3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        <path d="M9.5 9.5C9.5 8.12 10.62 7 12 7s2.5 1.12 2.5 2.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <span class="kpi-num mono-cell">{{ soldeTotal() | number:'1.0-0' }}</span>
+    <span class="kpi-lbl">Encours total (XAF)</span>
+  </div>
+
+  <div class="kpi-card">
+    <div class="kpi-icon kpi-icon--amber">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <span class="kpi-num">{{ nbNotifs() }}</span>
+    <span class="kpi-lbl">Notifications</span>
+  </div>
 </div>
 
+<!-- Tables -->
 <div class="grid-2">
+  <!-- Encours par type -->
   <div class="card">
-    <h2>Encours par type de compte</h2>
+    <div class="stat-section-header">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M3 3v18h18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M7 16l4-4 4 4 4-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <h2>Encours par type de compte</h2>
+    </div>
     @if (parType().length === 0) {
-      <p class="empty">Aucune donnée.</p>
+      <div class="empty-state">
+        <p>Aucune donnée disponible.</p>
+      </div>
     } @else {
       <table>
-        <thead><tr><th>Type</th><th>Nb comptes</th><th>Solde cumulé</th></tr></thead>
+        <thead>
+          <tr><th>Type</th><th>Nb comptes</th><th>Solde cumulé</th></tr>
+        </thead>
         <tbody>
           @for (t of parType(); track t.type) {
-            <tr><td>{{ t.type }}</td><td>{{ t.nb }}</td><td>{{ t.total | number:'1.0-0' }} XAF</td></tr>
+            <tr>
+              <td>
+                <span class="type-badge type-badge--{{ t.type.toLowerCase() }}">{{ t.type }}</span>
+              </td>
+              <td class="mono-cell">{{ t.nb }}</td>
+              <td class="mono-cell">
+                <strong>{{ t.total | number:'1.0-0' }}</strong>
+                <span class="muted"> XAF</span>
+              </td>
+            </tr>
           }
         </tbody>
       </table>
     }
   </div>
 
+  <!-- Clients par KYC -->
   <div class="card">
-    <h2>Clients par statut KYC</h2>
+    <div class="stat-section-header">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="2"/>
+        <path d="M6 20v-1a6 6 0 0 1 12 0v1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        <path d="M16 11l2 2 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <h2>Clients par statut KYC</h2>
+    </div>
     @if (parStatutKyc().length === 0) {
-      <p class="empty">Aucune donnée.</p>
+      <div class="empty-state">
+        <p>Aucune donnée disponible.</p>
+      </div>
     } @else {
       <table>
-        <thead><tr><th>Statut KYC</th><th>Nb clients</th></tr></thead>
+        <thead>
+          <tr><th>Statut KYC</th><th>Nb clients</th><th>Part</th></tr>
+        </thead>
         <tbody>
           @for (k of parStatutKyc(); track k.statut) {
-            <tr><td>{{ k.statut }}</td><td>{{ k.nb }}</td></tr>
+            <tr>
+              <td>
+                <span [class]="kycBadge(k.statut)">{{ k.statut }}</span>
+              </td>
+              <td class="mono-cell">{{ k.nb }}</td>
+              <td>
+                <div class="pct-bar-wrap">
+                  <div class="pct-bar">
+                    <div class="pct-fill" [style.width.%]="(k.nb / nbClients()) * 100"></div>
+                  </div>
+                  <span class="mono-cell muted">{{ nbClients() > 0 ? ((k.nb / nbClients()) * 100 | number:'1.0-0') : 0 }}%</span>
+                </div>
+              </td>
+            </tr>
           }
         </tbody>
       </table>

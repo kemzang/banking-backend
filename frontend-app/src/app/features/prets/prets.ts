@@ -9,6 +9,7 @@ import { AccountService, Compte } from '../../core/services/account.service';
   selector: 'app-prets',
   imports: [FormsModule, DecimalPipe],
   templateUrl: './prets.html',
+  styleUrl: './prets.scss',
 })
 export class Prets implements OnInit {
   private loan = inject(LoanService);

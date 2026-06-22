@@ -1,0 +1,167 @@
+<div class="mfa-container">
+  <!-- Background -->
+  <div class="mfa-bg" [attr.data-theme]="theme.theme()"></div>
+  
+  <!-- Toolbar -->
+  <div class="mfa-toolbar">
+    <div class="mfa-tools">
+      <button class="mfa-tool" (click)="i18n.toggle()" [attr.aria-label]="'Language'">
+        <span>{{ i18n.lang() === 'fr' ? 'EN' : 'FR' }}</span>
+      </button>
+      <button class="mfa-tool" (click)="theme.toggle()" [attr.aria-label]="t('theme_dark')">
+        @if (theme.theme() === 'dark') {
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="5" stroke="currentColor" stroke-width="1.8"/>
+            <path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"
+                  stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+        } @else {
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"
+                  stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+        }
+      </button>
+    </div>
+  </div>
+
+  <!-- Main card -->
+  <div class="mfa-card">
+    
+    <!-- Header -->
+    <div class="mfa-header">
+      <!-- Animated shield icon -->
+      <div class="mfa-icon">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" class="mfa-shield">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" 
+                stroke="#00D4FF" stroke-width="2" fill="rgba(0,212,255,0.1)"/>
+          <path d="M9 12l2 2 4-4" stroke="#00D4FF" stroke-width="2" 
+                stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      
+      <h1 class="mfa-title">{{ t('mfa_title') }}</h1>
+      <p class="mfa-subtitle">{{ t('mfa_subtitle') }}</p>
+      <div class="mfa-email">{{ email() }}</div>
+    </div>
+
+    @if (error()) {
+      <div class="mfa-error" role="alert">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+          <path d="M12 8v4M12 16h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        {{ error() }}
+      </div>
+    }
+
+    <!-- TOTP Mode -->
+    @if (!useBackupCode()) {
+      <div class="mfa-form">
+        <label class="mfa-label">{{ t('mfa_code_label') }}</label>
+        
+        <!-- 6-digit input boxes -->
+        <div class="mfa-digits" [class.shake]="shakeAnimation()">
+          @for (digit of digits(); track $index) {
+            <input
+              [id]="'digit-' + $index"
+              type="text"
+              inputmode="numeric"
+              maxlength="1"
+              [value]="digit"
+              (input)="onDigitInput($index, $event)"
+              (keydown)="onDigitKeyDown($index, $event)"
+              (paste)="onDigitPaste($event)"
+              [disabled]="loading() || attempts() >= maxAttempts"
+              class="mfa-digit"
+              autocomplete="one-time-code"
+            />
+          }
+        </div>
+
+        <!-- Progress bar -->
+        <div class="mfa-timer-bar" [style.animation-duration]="resendTimer() + 's'"></div>
+
+        <!-- Resend button -->
+        <button 
+          type="button" 
+          class="mfa-resend" 
+          [disabled]="!canResend() || loading()"
+          (click)="resendCode()">
+          @if (canResend()) {
+            {{ t('mfa_resend') }}
+          } @else {
+            {{ t('mfa_resend_in', { n: resendTimer().toString() }) }}
+          }
+        </button>
+
+        <!-- Verify button -->
+        <button 
+          type="button" 
+          class="mfa-verify" 
+          [disabled]="loading() || attempts() >= maxAttempts || digits().some(d => !d)"
+          (click)="verifyTotp()">
+          @if (loading()) {
+            <span class="mfa-spinner"></span>
+            {{ t('loading') }}
+          } @else {
+            {{ t('mfa_verify') }}
+          }
+        </button>
+
+        <!-- Toggle to backup mode -->
+        <button type="button" class="mfa-backup-link" (click)="toggleBackupMode()">
+          {{ t('mfa_backup') }}
+        </button>
+      </div>
+    }
+
+    <!-- Backup Code Mode -->
+    @if (useBackupCode()) {
+      <div class="mfa-form">
+        <label class="mfa-label" for="backupCode">{{ t('mfa_backup') }}</label>
+        
+        <input
+          id="backupCode"
+          type="text"
+          maxlength="8"
+          [value]="backupCode()"
+          (input)="backupCode.set($any($event.target).value.toUpperCase())"
+          [placeholder]="t('mfa_backup_placeholder')"
+          [disabled]="loading() || attempts() >= maxAttempts"
+          class="mfa-backup-input"
+          [class.shake]="shakeAnimation()"
+          autocomplete="one-time-code"
+        />
+
+        <button 
+          type="button" 
+          class="mfa-verify" 
+          [disabled]="loading() || attempts() >= maxAttempts || !backupCode().trim()"
+          (click)="verifyBackupCode()">
+          @if (loading()) {
+            <span class="mfa-spinner"></span>
+            {{ t('loading') }}
+          } @else {
+            {{ t('mfa_verify') }}
+          }
+        </button>
+
+        <!-- Toggle back to TOTP mode -->
+        <button type="button" class="mfa-backup-link" (click)="toggleBackupMode()">
+          {{ t('mfa_use_auth') }}
+        </button>
+      </div>
+    }
+
+    <!-- Back to login -->
+    <button type="button" class="mfa-back" (click)="backToLogin()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+        <path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      {{ t('back') }}
+    </button>
+
+  </div>
+</div>

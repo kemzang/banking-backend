@@ -1,0 +1,57 @@
+<app-auth-layout accent="cyan">
+
+  <!-- ── LEFT ──────────────────────────────────────── -->
+  <div slot="left" class="lc-left">
+    <!-- Wallet illustration -->
+    <div class="lc-icon anim-fade-left" style="--delay:0ms">
+      <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+        <rect x="4" y="16" width="56" height="38" rx="8" stroke="#00D4FF" stroke-width="2.5"/>
+        <path d="M4 26h56" stroke="#00D4FF" stroke-width="2.5"/>
+        <rect x="40" y="33" width="14" height="10" rx="3" fill="rgba(0,212,255,0.15)" stroke="#00D4FF" stroke-width="2"/>
+        <circle cx="47" cy="38" r="2.5" fill="#00D4FF"/>
+        <rect x="10" y="8" width="28" height="10" rx="4" stroke="rgba(0,212,255,0.4)" stroke-width="2"/>
+      </svg>
+    </div>
+
+    <h1 class="lc-title anim-fade-left" style="--delay:60ms">{{ t('client_portal') }}</h1>
+
+    <ul class="lc-features">
+      <li class="anim-fade-left" style="--delay:120ms">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="10" fill="rgba(0,212,255,0.1)" stroke="#00D4FF" stroke-width="1.5"/>
+          <path d="M8 12l3 3 5-5" stroke="#00D4FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        {{ t('client_feat1') }}
+      </li>
+      <li class="anim-fade-left" style="--delay:180ms">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="10" fill="rgba(0,212,255,0.1)" stroke="#00D4FF" stroke-width="1.5"/>
+          <path d="M8 12l3 3 5-5" stroke="#00D4FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        {{ t('client_feat2') }}
+      </li>
+      <li class="anim-fade-left" style="--delay:240ms">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="10" fill="rgba(0,212,255,0.1)" stroke="#00D4FF" stroke-width="1.5"/>
+          <path d="M8 12l3 3 5-5" stroke="#00D4FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        {{ t('client_feat3') }}
+      </li>
+    </ul>
+  </div>
+
+  <!-- ── RIGHT ─────────────────────────────────────── -->
+  <div slot="right">
+    <h2 class="af-page-title">{{ t('client_title') }}</h2>
+
+    <app-auth-form
+      portal="client"
+      accent="cyan"
+      [showTabs]="true"
+      [showForgot]="true"
+      [showRegister]="true"
+      [showOpCode]="false">
+    </app-auth-form>
+  </div>
+
+</app-auth-layout>

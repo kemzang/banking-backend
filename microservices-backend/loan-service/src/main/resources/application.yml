@@ -7,8 +7,8 @@ spring:
   
   datasource:
     url: jdbc:postgresql://localhost:5432/bank_loan_db
-    username: ${DB_USERNAME:bankuser}
-    password: ${DB_PASSWORD:bankpass}
+    username: ${DB_USERNAME:bank}
+    password: ${DB_PASSWORD:Princesse10}
     driver-class-name: org.postgresql.Driver
   
   jpa:

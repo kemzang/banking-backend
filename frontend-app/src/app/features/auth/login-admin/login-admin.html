@@ -1,0 +1,74 @@
+<app-auth-layout accent="violet">
+
+  <!-- ── LEFT ──────────────────────────────────────── -->
+  <div slot="left" class="la-left">
+    <div class="la-icon anim-fade-left" style="--delay:0ms">
+      <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+        <path d="M32 6L8 16v18c0 14 10 24 24 28 14-4 24-14 24-28V16L32 6Z"
+              stroke="#8B5CF6" stroke-width="2.5" stroke-linejoin="round"
+              fill="rgba(139,92,246,0.08)"/>
+        <path d="M22 32l8 8 14-14" stroke="#8B5CF6" stroke-width="3"
+              stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+
+    <h1 class="la-title anim-fade-left" style="--delay:60ms">{{ t('admin_portal') }}</h1>
+
+    <ul class="la-badges anim-fade-left" style="--delay:120ms">
+      <li>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z" stroke="#8B5CF6" stroke-width="2" fill="rgba(139,92,246,0.1)"/>
+        </svg>
+        {{ t('admin_badge1') }}
+      </li>
+      <li>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+          <path d="M9 12l2 2 4-4" stroke="#8B5CF6" stroke-width="2" stroke-linecap="round"/>
+          <circle cx="12" cy="12" r="10" stroke="#8B5CF6" stroke-width="1.8"/>
+        </svg>
+        {{ t('admin_badge2') }}
+      </li>
+      <li>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="10" stroke="#8B5CF6" stroke-width="1.8"/>
+          <path d="M12 6v6l4 2" stroke="#8B5CF6" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        {{ t('admin_badge3') }}
+      </li>
+    </ul>
+  </div>
+
+  <!-- ── RIGHT ─────────────────────────────────────── -->
+  <div slot="right">
+    <h2 class="af-page-title">{{ t('admin_title') }}</h2>
+    <p class="af-page-sub af-page-sub--restricted">{{ t('admin_subtitle') }}</p>
+
+    <!-- MFA notice banner -->
+    <div class="la-mfa-banner">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+        <path d="M12 9v4M12 17h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+      </svg>
+      {{ t('admin_mfa_notice') }}
+    </div>
+
+    <app-auth-form
+      portal="admin"
+      accent="violet"
+      [showTabs]="false"
+      [showForgot]="false"
+      [showRegister]="false"
+      [showOpCode]="false">
+    </app-auth-form>
+
+    <!-- No forgot notice -->
+    <p class="la-no-forgot">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+        <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.8"/>
+        <path d="M12 8v4M12 16h.01" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+      </svg>
+      {{ t('admin_no_forgot') }}
+    </p>
+  </div>
+
+</app-auth-layout>
