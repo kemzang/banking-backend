@@ -1,13 +1,14 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DecimalPipe } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { AccountService, Compte, CompteRequest } from '../../core/services/account.service';
 import { Client, CustomerService } from '../../core/services/customer.service';
 import { AuthService } from '../../core/services/auth.service';
 
 @Component({
   selector: 'app-comptes',
-  imports: [FormsModule, DecimalPipe],
+  imports: [FormsModule, DecimalPipe, RouterLink],
   templateUrl: './comptes.html',
 })
 export class Comptes implements OnInit {

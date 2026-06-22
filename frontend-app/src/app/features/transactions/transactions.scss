@@ -1,0 +1,103 @@
+.transactions-layout {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.transaction-created {
+  margin-bottom: 1rem;
+}
+
+.created-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+  color: #475569;
+  font-size: 0.9rem;
+}
+
+.created-grid b {
+  color: #0f172a;
+  display: block;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.operations-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.5rem;
+}
+
+.transfer-card {
+  grid-column: 1 / -1;
+}
+
+.history-card {
+  overflow: hidden;
+}
+
+.history-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.history-header h2 {
+  margin-bottom: 0.25rem;
+}
+
+.history-header p {
+  color: #64748b;
+  font-size: 0.86rem;
+  margin: 0;
+}
+
+.compact-field {
+  min-width: 260px;
+  margin-bottom: 0;
+}
+
+.table-scroll {
+  overflow-x: auto;
+}
+
+.ref {
+  color: #1d4ed8;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.motif {
+  max-width: 240px;
+}
+
+.field-error {
+  color: #b91c1c;
+  font-size: 0.76rem;
+  margin-top: 0.3rem;
+}
+
+.rejected-row {
+  background: #fff7f7;
+}
+
+.rejected-row:hover {
+  background: #fee2e2;
+}
+
+@media (max-width: 900px) {
+  .operations-grid,
+  .history-header,
+  .created-grid {
+    grid-template-columns: 1fr;
+    flex-direction: column;
+  }
+
+  .compact-field {
+    width: 100%;
+    min-width: 0;
+  }
+}

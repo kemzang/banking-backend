@@ -1,0 +1,103 @@
+<a class="back-link" routerLink="/comptes">← Retour aux comptes</a>
+
+<h1 class="page-title">Détail du compte</h1>
+<p class="page-sub">Vue orientée démonstration : solde, statut, actions rapides et historique transactionnel.</p>
+
+@if (erreur()) { <div class="alert alert-error">{{ erreur() }}</div> }
+
+@if (chargement()) {
+  <div class="card"><p class="empty">Chargement du compte...</p></div>
+} @else if (compte(); as c) {
+  <div class="detail-layout">
+    <section class="card account-hero">
+      <div>
+        <span class="eyebrow">Compte #{{ c.id }}</span>
+        <h2>{{ c.numeroCompte }}</h2>
+        <p>{{ c.type }} · Client #{{ c.clientId }} · Opérateur #{{ c.operateurId }}</p>
+      </div>
+      <div class="balance-box">
+        <span>Solde actuel</span>
+        <strong>{{ c.solde | number:'1.0-2' }} {{ c.devise }}</strong>
+        <span [class]="badgeCompte(c.statut)">{{ c.statut }}</span>
+      </div>
+    </section>
+
+    <section class="quick-actions">
+      <a class="card action-card" routerLink="/transactions">
+        <b>Faire un dépôt</b>
+        <span>Créditer ce compte via transaction-service.</span>
+      </a>
+      <a class="card action-card" routerLink="/transactions">
+        <b>Faire un retrait</b>
+        <span>Débiter ce compte avec contrôle du solde.</span>
+      </a>
+      <a class="card action-card" routerLink="/transactions">
+        <b>Faire un transfert</b>
+        <span>Envoyer des fonds vers un autre compte.</span>
+      </a>
+      <a class="card action-card" href="#historique">
+        <b>Voir l'historique</b>
+        <span>Consulter les transactions validées et rejetées.</span>
+      </a>
+    </section>
+
+    <section class="card">
+      <h2>Informations du compte</h2>
+      <div class="info-grid">
+        <span><b>ID</b>{{ c.id }}</span>
+        <span><b>Numéro</b>{{ c.numeroCompte }}</span>
+        <span><b>Client ID</b>{{ c.clientId }}</span>
+        <span><b>Opérateur ID</b>{{ c.operateurId }}</span>
+        <span><b>Devise</b>{{ c.devise }}</span>
+        <span><b>Type</b>{{ c.type }}</span>
+        <span><b>Plafond journalier</b>{{ c.plafondJournalier ?? '-' }}</span>
+        <span><b>Découvert autorisé</b>{{ c.decouvertAutorise | number:'1.0-2' }}</span>
+        <span><b>Date d'ouverture</b>{{ c.dateOuverture | date:'short' }}</span>
+      </div>
+    </section>
+
+    <section id="historique" class="card history-card">
+      <div class="history-title">
+        <h2>Historique des transactions</h2>
+        <span>{{ transactions().length }} transaction(s)</span>
+      </div>
+
+      @if (chargementHistorique()) {
+        <p class="empty">Chargement de l'historique...</p>
+      } @else if (transactions().length === 0) {
+        <p class="empty">Aucune transaction trouvée pour ce compte.</p>
+      } @else {
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Référence</th>
+                <th>Type</th>
+                <th>Montant</th>
+                <th>Source</th>
+                <th>Destination</th>
+                <th>Statut</th>
+                <th>Motif</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (t of transactions(); track t.id) {
+                <tr [class.rejected-row]="ligneRejetee(t)">
+                  <td class="ref">{{ t.reference }}</td>
+                  <td>{{ t.type }}</td>
+                  <td><b>{{ t.montant | number:'1.0-2' }}</b> {{ t.devise }}</td>
+                  <td>{{ compteLabel(t.compteSourceId) }}</td>
+                  <td>{{ compteLabel(t.compteDestId) }}</td>
+                  <td><span [class]="badgeTransaction(t.statut)">{{ t.statut }}</span></td>
+                  <td>{{ t.motif || '-' }}</td>
+                  <td>{{ t.dateOperation | date:'short' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </section>
+  </div>
+}

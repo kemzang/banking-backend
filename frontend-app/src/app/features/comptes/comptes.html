@@ -23,6 +23,7 @@
               <td><b>{{ c.solde | number:'1.0-2' }}</b> {{ c.devise }}</td>
               <td><span [class]="badgeClass(c.statut)">{{ c.statut }}</span></td>
               <td>
+                <a class="btn btn-sm btn-ghost" [routerLink]="['/comptes', c.id]">Détails</a>
                 @if (c.statut === 'ACTIF') {
                   <button class="btn btn-sm btn-ghost" (click)="suspendre(c)">Suspendre</button>
                   <button class="btn btn-sm btn-ghost" (click)="cloturer(c)">Clôturer</button>
