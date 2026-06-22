@@ -32,6 +32,12 @@ class TransactionControllerTest {
     @Mock
     private TransactionService transactionService;
 
+    @Mock
+    private com.banking.transaction_service.client.AccountClient accountClient;
+
+    @Mock
+    private com.banking.transaction_service.client.CustomerClient customerClient;
+
     private MockMvc mockMvc;
     private ObjectMapper objectMapper;
 
@@ -40,7 +46,7 @@ class TransactionControllerTest {
         objectMapper = new ObjectMapper();
         objectMapper.findAndRegisterModules();
         mockMvc = MockMvcBuilders
-                .standaloneSetup(new TransactionController(transactionService))
+                .standaloneSetup(new TransactionController(transactionService, accountClient, customerClient))
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .build();
     }

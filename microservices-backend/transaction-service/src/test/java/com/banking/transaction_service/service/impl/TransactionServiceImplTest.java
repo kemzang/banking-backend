@@ -131,9 +131,9 @@ class TransactionServiceImplTest {
     @Test
     void transfertDebitsAmountWithCommissionBeforeCredit() {
         when(accountClient.getById(1L))
-                .thenReturn(new AccountResponseDTO(1L, 10L, "XAF"));
+                .thenReturn(new AccountResponseDTO(1L, 1L, 10L, "XAF"));
         when(accountClient.getById(2L))
-                .thenReturn(new AccountResponseDTO(2L, 20L, "XAF"));
+                .thenReturn(new AccountResponseDTO(2L, 2L, 20L, "XAF"));
 
         TransactionResponseDTO response = transactionService.transfert(
                 new TransfertRequestDTO(
@@ -180,7 +180,7 @@ class TransactionServiceImplTest {
     @Test
     void retraitWithDifferentCurrencyIsRejected() {
         when(accountClient.getById(1L))
-                .thenReturn(new AccountResponseDTO(1L, 10L, "EUR"));
+                .thenReturn(new AccountResponseDTO(1L, 1L, 10L, "EUR"));
 
         assertThrows(
                 DeviseIncompatibleException.class,
@@ -202,9 +202,9 @@ class TransactionServiceImplTest {
     @Test
     void sameOperatorTransferHasNoCommission() {
         when(accountClient.getById(1L))
-                .thenReturn(new AccountResponseDTO(1L, 10L, "XAF"));
+                .thenReturn(new AccountResponseDTO(1L, 1L, 10L, "XAF"));
         when(accountClient.getById(2L))
-                .thenReturn(new AccountResponseDTO(2L, 10L, "XAF"));
+                .thenReturn(new AccountResponseDTO(2L, 2L, 10L, "XAF"));
 
         TransactionResponseDTO response = transactionService.transfert(
                 new TransfertRequestDTO(
@@ -223,9 +223,9 @@ class TransactionServiceImplTest {
     @Test
     void creditFailureAfterDebitRequestsSagaCompensation() {
         when(accountClient.getById(1L))
-                .thenReturn(new AccountResponseDTO(1L, 10L, "XAF"));
+                .thenReturn(new AccountResponseDTO(1L, 1L, 10L, "XAF"));
         when(accountClient.getById(2L))
-                .thenReturn(new AccountResponseDTO(2L, 20L, "XAF"));
+                .thenReturn(new AccountResponseDTO(2L, 2L, 20L, "XAF"));
         AccountServiceException failure = new AccountServiceException(
                 HttpStatus.BAD_GATEWAY,
                 "Echec du credit",
@@ -268,7 +268,7 @@ class TransactionServiceImplTest {
     @Test
     void retraitDebitsAccountAndValidatesTransaction() {
         when(accountClient.getById(1L))
-                .thenReturn(new AccountResponseDTO(1L, 10L, "XAF"));
+                .thenReturn(new AccountResponseDTO(1L, 1L, 10L, "XAF"));
 
         TransactionResponseDTO response = transactionService.retrait(
                 new RetraitRequestDTO(1L, new BigDecimal("10000.00"), "XAF")
@@ -281,7 +281,7 @@ class TransactionServiceImplTest {
     @Test
     void retraitWithInsufficientBalanceIsRejected() {
         when(accountClient.getById(1L))
-                .thenReturn(new AccountResponseDTO(1L, 10L, "XAF"));
+                .thenReturn(new AccountResponseDTO(1L, 1L, 10L, "XAF"));
         doThrow(new SoldeInsuffisantException("Solde insuffisant"))
                 .when(accountClient)
                 .debit(1L, new BigDecimal("10000.00"));
@@ -307,9 +307,9 @@ class TransactionServiceImplTest {
     @Test
     void transfertDoesNotCreditWhenDebitFails() {
         when(accountClient.getById(1L))
-                .thenReturn(new AccountResponseDTO(1L, 10L, "XAF"));
+                .thenReturn(new AccountResponseDTO(1L, 1L, 10L, "XAF"));
         when(accountClient.getById(2L))
-                .thenReturn(new AccountResponseDTO(2L, 20L, "XAF"));
+                .thenReturn(new AccountResponseDTO(2L, 2L, 20L, "XAF"));
         doThrow(new SoldeInsuffisantException("Solde insuffisant"))
                 .when(accountClient)
                 .debit(1L, new BigDecimal("1005.00"));

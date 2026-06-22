@@ -1,10 +1,12 @@
-# Image d'execution. Le .jar est construit AU PREALABLE sur la machine
-# (./mvnw -DskipTests package) puis copie ici — aucun telechargement Maven
-# n'a lieu pendant le build Docker (evite les soucis de reseau/DNS).
+# Build stage: package the Spring Boot application using Maven wrapper.
+FROM maven:3.9.9-eclipse-temurin-17 AS build
+WORKDIR /app
+COPY . .
+RUN chmod +x ./mvnw && ./mvnw -DskipTests package
+
+# Runtime stage: execute the built JAR.
 FROM eclipse-temurin:17-jre
 WORKDIR /app
-COPY target/*.jar app.jar
-
+COPY --from=build /app/target/*.jar app.jar
 EXPOSE 8084
-
 ENTRYPOINT ["java", "-Dspring.profiles.active=docker", "-jar", "app.jar"]
