@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 
 import pytesseract
@@ -8,6 +9,7 @@ from app.config import settings
 from app.core.exceptions import AppException
 from app.models.document_analysis import DocumentAnalysis
 from app.repositories.document_repository import DocumentRepository
+from app.services.document_extraction_service import DocumentExtractionService
 from app.services.image_preprocessing_service import ImagePreprocessingService
 from app.utils.file_utils import delete_file, save_upload_file
 
@@ -20,17 +22,21 @@ class OcrService:
         repository: DocumentRepository,
         preprocessing_service: ImagePreprocessingService | None = None,
         upload_dir: Path | None = None,
+        extraction_service: DocumentExtractionService | None = None,
     ) -> None:
         self.repository = repository
         self.preprocessing_service = (
             preprocessing_service or ImagePreprocessingService()
         )
         self.upload_dir = upload_dir or settings.upload_dir
+        self.extraction_service = extraction_service or DocumentExtractionService()
 
         if settings.tesseract_cmd:
             pytesseract.pytesseract.tesseract_cmd = settings.tesseract_cmd
 
-    async def extract(self, file: UploadFile) -> DocumentAnalysis:
+    async def extract(
+        self, file: UploadFile, client_id: int | None = None
+    ) -> DocumentAnalysis:
         saved_path: Path | None = None
 
         try:
@@ -46,12 +52,20 @@ class OcrService:
                 processed_image,
             )
 
+            raw_text = extracted_text.strip()
+            doc_type, structured = await run_in_threadpool(
+                self.extraction_service.process, raw_text,
+            )
+
             return self.repository.create(
                 original_filename=original_filename,
                 stored_filename=stored_filename,
-                extracted_text=extracted_text.strip(),
+                extracted_text=raw_text,
                 confidence_score=0.0,
                 status="completed",
+                client_id=client_id,
+                document_type=doc_type,
+                structured_data=json.dumps(structured) if structured else None,
             )
         except AppException:
             if saved_path:
@@ -97,3 +111,6 @@ class OcrService:
                 errors={"id": analysis_id},
             )
         return analysis
+
+    def get_by_client(self, client_id: int) -> list[DocumentAnalysis]:
+        return self.repository.find_by_client_id(client_id)

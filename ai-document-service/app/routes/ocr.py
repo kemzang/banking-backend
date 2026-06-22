@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, File, UploadFile
+from fastapi import APIRouter, Depends, File, Form, Query, UploadFile
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
@@ -37,9 +37,13 @@ async def extract_text(
         UploadFile,
         File(description="Image PNG, JPG ou JPEG à analyser"),
     ],
+    client_id: Annotated[
+        int | None,
+        Form(description="Identifiant du client associe au document"),
+    ] = None,
     service: OcrService = Depends(get_ocr_service),
 ) -> dict:
-    analysis = await service.extract(file)
+    analysis = await service.extract(file, client_id=client_id)
     data = OcrAnalysisResponse.model_validate(analysis).model_dump(mode="json")
     return success_response(
         message="OCR effectué avec succès",
@@ -82,5 +86,28 @@ def get_history_item(
     data = OcrAnalysisResponse.model_validate(analysis).model_dump(mode="json")
     return success_response(
         message="Analyse OCR récupérée avec succès",
+        data=data,
+    )
+
+
+@router.get(
+    "/analysis/client/{client_id}",
+    response_model=OcrHistorySuccessResponse,
+    summary="Consulter les analyses OCR d'un client",
+    responses={
+        404: {"model": ErrorResponse, "description": "Aucune analyse trouvee"},
+    },
+)
+def get_client_analyses(
+    client_id: int,
+    service: OcrService = Depends(get_ocr_service),
+) -> dict:
+    analyses = service.get_by_client(client_id)
+    data = [
+        OcrAnalysisResponse.model_validate(item).model_dump(mode="json")
+        for item in analyses
+    ]
+    return success_response(
+        message=f"Analyses OCR du client {client_id} récupérées avec succès",
         data=data,
     )

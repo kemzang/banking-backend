@@ -44,7 +44,8 @@ export class Documents implements OnInit {
     this.erreur.set(null);
     this.succes.set(null);
     this.chargement.set(true);
-    this.docService.extract(this.fichier).subscribe({
+    const cid = this.clientId > 0 ? this.clientId : undefined;
+    this.docService.extract(this.fichier, cid).subscribe({
       next: (res) => {
         this.resultat.set(res);
         this.chargement.set(false);
@@ -71,6 +72,10 @@ export class Documents implements OnInit {
 
   chargerHistorique(): void {
     this.docService.history().subscribe({ next: (h) => this.historique.set(h) });
+  }
+
+  objectKeys(obj: Record<string, unknown> | null): string[] {
+    return obj ? Object.keys(obj) : [];
   }
 }
 

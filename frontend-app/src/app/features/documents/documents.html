@@ -47,7 +47,17 @@
         <h3>Texte extrait</h3>
         <pre>{{ r.extracted_text || '(aucun texte détecté)' }}</pre>
         <p class="meta">Confiance : <b>{{ (r.confidence_score * 100) | number:'1.0-0' }}%</b> · Statut : {{ r.status }}</p>
-        <!-- Alimente le processus metier : validation du KYC du client -->
+        @if (r.document_type) {
+          <p class="meta">Type détecté : <b>{{ r.document_type }}</b></p>
+        }
+        @if (r.structured_fields; as fields) {
+          <h4>Données structurées</h4>
+          <div class="row">
+            @for (key of objectKeys(fields); track key) {
+              <div class="field"><label>{{ key }}</label><span>{{ fields[key] }}</span></div>
+            }
+          </div>
+        }
         <button class="btn btn-green" (click)="validerKyc()">✔ Valider le KYC du client</button>
       </div>
     }

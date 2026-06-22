@@ -18,6 +18,34 @@
     </form>
   </div>
 
+  @if (documentsClient().length > 0) {
+    <div class="card" style="margin-top:1.5rem">
+      <h2>Mes documents analysés ({{ documentsClient().length }})</h2>
+      <table>
+        <thead><tr><th>Fichier</th><th>Type</th><th>Statut</th><th>Date</th><th>Données extraites</th></tr></thead>
+        <tbody>
+          @for (doc of documentsClient(); track doc.id) {
+            <tr>
+              <td>{{ doc.original_filename }}</td>
+              <td>{{ labelTypeDoc(doc.document_type) }}</td>
+              <td><span class="badge badge-attente">{{ doc.status }}</span></td>
+              <td>{{ doc.created_at | date:'short' }}</td>
+              <td>
+                @if (doc.structured_fields; as fields) {
+                  @for (key of objectKeys(fields); track key) {
+                    <span class="badge badge-valide">{{ key }}: {{ fields[key] }}</span>
+                  }
+                } @else {
+                  <span class="page-sub">Aucune donnée structurée</span>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
   @if (mesPrets().length > 0) {
     <div class="card" style="margin-top:1.5rem">
       <h2>Mes prêts ({{ mesPrets().length }})</h2>
@@ -69,7 +97,7 @@
       <form (ngSubmit)="soumettre()">
         <div class="field">
           <label>Client</label>
-          <select name="cl" [(ngModel)]="nouvelle.clientId" required>
+          <select name="cl" [(ngModel)]="nouvelle.clientId" required (ngModelChange)="onClientChange($event)">
             <option [ngValue]="0" disabled>-- client --</option>
             @for (cl of clients(); track cl.id) { <option [ngValue]="cl.id">{{ cl.prenom }} {{ cl.nom }}</option> }
           </select>
@@ -110,6 +138,34 @@
       </div>
     </div>
   </div>
+
+  @if (documentsClient().length > 0) {
+    <div class="card" style="margin-top:1.5rem">
+      <h2>Documents OCR du client sélectionné ({{ documentsClient().length }})</h2>
+      <table>
+        <thead><tr><th>Fichier</th><th>Type</th><th>Statut</th><th>Date</th><th>Données extraites</th></tr></thead>
+        <tbody>
+          @for (doc of documentsClient(); track doc.id) {
+            <tr>
+              <td>{{ doc.original_filename }}</td>
+              <td>{{ labelTypeDoc(doc.document_type) }}</td>
+              <td><span class="badge badge-attente">{{ doc.status }}</span></td>
+              <td>{{ doc.created_at | date:'short' }}</td>
+              <td>
+                @if (doc.structured_fields; as fields) {
+                  @for (key of objectKeys(fields); track key) {
+                    <span class="badge badge-valide">{{ key }}: {{ fields[key] }}</span>
+                  }
+                } @else {
+                  <span class="page-sub">Aucune donnée structurée</span>
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
 
   <!-- Demandes -->
   <div class="card" style="margin-top:1.5rem">

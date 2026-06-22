@@ -1,6 +1,9 @@
 server:
   port: 8084
 
+ai-document-service:
+  url: ${AI_DOCUMENT_SERVICE_URL:http://ai-document-service:8001}
+
 spring:
   application:
     name: loan-service

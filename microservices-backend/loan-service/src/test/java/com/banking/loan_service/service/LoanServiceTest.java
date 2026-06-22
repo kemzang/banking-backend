@@ -1,5 +1,7 @@
 package com.banking.loan_service.service;
 
+import com.banking.loan_service.client.AccountClient;
+import com.banking.loan_service.client.DocumentClient;
 import com.banking.loan_service.dto.*;
 import com.banking.loan_service.entity.*;
 import com.banking.loan_service.repository.*;
@@ -11,6 +13,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -32,6 +35,12 @@ class LoanServiceTest {
     @Mock
     private RemboursementRepository remboursementRepository;
 
+    @Mock
+    private AccountClient accountClient;
+
+    @Mock
+    private DocumentClient documentClient;
+
     @InjectMocks
     private LoanService loanService;
 
@@ -39,12 +48,12 @@ class LoanServiceTest {
     void testSoumettreDemande() {
         // Given
         DemandePretRequestDTO request = new DemandePretRequestDTO(
-                1L, 
-                BigDecimal.valueOf(1000000), 
-                12, 
+                1L,
+                BigDecimal.valueOf(1000000),
+                12,
                 "Achat véhicule"
         );
-        
+
         DemandePret demandeSauvee = DemandePret.builder()
                 .id(1L)
                 .clientId(1L)
@@ -56,6 +65,7 @@ class LoanServiceTest {
                 .dateSoumission(LocalDateTime.now())
                 .build();
 
+        when(documentClient.getAnalysesByClient(1L)).thenReturn(Collections.emptyList());
         when(demandePretRepository.save(any(DemandePret.class))).thenReturn(demandeSauvee);
 
         // When
@@ -69,7 +79,8 @@ class LoanServiceTest {
         assertEquals(12, response.dureeMois());
         assertEquals(StatutDemande.SOUMISE, response.statut());
         assertNotNull(response.scoreRisque());
-        
+
+        verify(documentClient, times(1)).getAnalysesByClient(1L);
         verify(demandePretRepository, times(1)).save(any(DemandePret.class));
     }
 

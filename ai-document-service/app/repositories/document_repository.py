@@ -1,3 +1,5 @@
+import json
+
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -17,6 +19,9 @@ class DocumentRepository:
         extracted_text: str | None = None,
         confidence_score: float = 0.0,
         status: str = "completed",
+        client_id: int | None = None,
+        document_type: str | None = None,
+        structured_data: str | None = None,
     ) -> DocumentAnalysis:
         analysis = DocumentAnalysis(
             original_filename=original_filename,
@@ -24,6 +29,9 @@ class DocumentRepository:
             extracted_text=extracted_text,
             confidence_score=confidence_score,
             status=status,
+            client_id=client_id,
+            document_type=document_type,
+            structured_data=structured_data,
         )
         try:
             self.db.add(analysis)
@@ -43,3 +51,14 @@ class DocumentRepository:
 
     def find_by_id(self, analysis_id: int) -> DocumentAnalysis | None:
         return self.db.get(DocumentAnalysis, analysis_id)
+
+    def find_by_client_id(self, client_id: int) -> list[DocumentAnalysis]:
+        statement = (
+            select(DocumentAnalysis)
+            .where(DocumentAnalysis.client_id == client_id)
+            .order_by(
+                DocumentAnalysis.created_at.desc(),
+                DocumentAnalysis.id.desc(),
+            )
+        )
+        return list(self.db.scalars(statement).all())

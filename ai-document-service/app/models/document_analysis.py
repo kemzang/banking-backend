@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import DateTime, Float, String, Text, func
+from sqlalchemy import DateTime, Float, Integer, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.database import Base
@@ -36,6 +36,19 @@ class DocumentAnalysis(Base):
         String(50),
         nullable=False,
         default="completed",
+    )
+    client_id: Mapped[int | None] = mapped_column(
+        Integer,
+        nullable=True,
+        index=True,
+    )
+    document_type: Mapped[str | None] = mapped_column(
+        String(50),
+        nullable=True,
+    )
+    structured_data: Mapped[str | None] = mapped_column(
+        Text,
+        nullable=True,
     )
     created_at: Mapped[datetime] = mapped_column(
         DateTime,

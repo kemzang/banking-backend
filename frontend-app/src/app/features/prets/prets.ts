@@ -1,14 +1,15 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { DecimalPipe } from '@angular/common';
+import { DatePipe, DecimalPipe } from '@angular/common';
 import { DemandePret, Echeancier, LoanService, Pret } from '../../core/services/loan.service';
 import { Client, CustomerService } from '../../core/services/customer.service';
 import { AccountService, Compte } from '../../core/services/account.service';
 import { AuthService } from '../../core/services/auth.service';
+import { DocumentService, OcrAnalysis } from '../../core/services/document.service';
 
 @Component({
   selector: 'app-prets',
-  imports: [FormsModule, DecimalPipe],
+  imports: [FormsModule, DecimalPipe, DatePipe],
   templateUrl: './prets.html',
 })
 export class Prets implements OnInit {
@@ -16,15 +17,17 @@ export class Prets implements OnInit {
   private customer = inject(CustomerService);
   private account = inject(AccountService);
   private auth = inject(AuthService);
+  private docService = inject(DocumentService);
 
   clients = signal<Client[]>([]);
   comptes = signal<Compte[]>([]);
   demandes = signal<DemandePret[]>([]);
   prets = signal<Pret[]>([]);
-  mesPrets = signal<Pret[]>([]); // Prêts du CLIENT connecté
+  mesPrets = signal<Pret[]>([]);
   echeancier = signal<Echeancier | null>(null);
   erreur = signal<string | null>(null);
   succes = signal<string | null>(null);
+  documentsClient = signal<OcrAnalysis[]>([]);
 
   nouvelle = { clientId: 0, montantDemande: 0, dureeMois: 12, motif: '' };
   tauxInteret = 0.12;
@@ -55,8 +58,24 @@ export class Prets implements OnInit {
         this.nouvelle.clientId = client.id;
         this.loan.getMesPrets(client.id).subscribe({ next: (p) => this.mesPrets.set(p) });
         this.loan.getMesDemandes(client.id).subscribe({ next: (d) => this.demandes.set(d) });
+        this.chargerDocuments(client.id);
       },
     });
+  }
+
+  chargerDocuments(clientId: number): void {
+    this.docService.getByClient(clientId).subscribe({
+      next: (docs) => this.documentsClient.set(docs),
+      error: () => this.documentsClient.set([]),
+    });
+  }
+
+  onClientChange(clientId: number): void {
+    if (clientId > 0) {
+      this.chargerDocuments(clientId);
+    } else {
+      this.documentsClient.set([]);
+    }
   }
 
   soumettre(): void {
@@ -106,6 +125,20 @@ export class Prets implements OnInit {
   nomClient(id: number): string {
     const c = this.clients().find((x) => x.id === id);
     return c ? `${c.prenom} ${c.nom}` : `#${id}`;
+  }
+
+  labelTypeDoc(type: string | null): string {
+    const labels: Record<string, string> = {
+      salaire: 'Bulletin de salaire',
+      releve_bancaire: 'Relevé bancaire',
+      cni: 'Pièce d\'identité',
+      inconnu: 'Non identifié',
+    };
+    return type ? (labels[type] || type) : 'Non identifié';
+  }
+
+  objectKeys(obj: Record<string, unknown> | null): string[] {
+    return obj ? Object.keys(obj) : [];
   }
 
   badgeD(s: string): string {

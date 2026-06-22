@@ -183,7 +183,7 @@ services:
     build: ./notification-service
     container_name: bank-notification
     ports:
-      - "3000:3000"
+      - "3002:3000"
     environment:
       RABBITMQ_URL: amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASSWORD:-guest}@rabbitmq:5672
       # SMTP optionnel : sans ces variables, le service utilise Ethereal (mailbox de test)
