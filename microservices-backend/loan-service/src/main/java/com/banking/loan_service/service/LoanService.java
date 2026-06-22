@@ -35,7 +35,7 @@ public class LoanService {
         log.info("Soumission d'une demande de prêt pour le client {}", request.clientId());
 
         List<DocumentAnalysisDTO> documents = documentClient.getAnalysesByClient(request.clientId());
-        log.info("Client {} a {} document(s) OCR analyse(s)", request.clientId(), documents.size());
+        log.info("Client {} a {} document(s) OCR analysé(s)", request.clientId(), documents.size());
 
         BigDecimal scoreRisque = calculerScoreRisque(
                 request.montantDemande(), request.dureeMois(), documents);

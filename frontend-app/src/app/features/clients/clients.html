@@ -12,12 +12,11 @@
     } @else {
       <table>
         <thead>
-          <tr><th>ID</th><th>Nom</th><th>Email</th><th>KYC</th><th>Actions</th></tr>
+          <tr><th>Nom</th><th>Email</th><th>KYC</th><th>Actions</th></tr>
         </thead>
         <tbody>
           @for (c of clients(); track c.id) {
             <tr>
-              <td>{{ c.id }}</td>
               <td>{{ c.prenom }} {{ c.nom }}</td>
               <td>{{ c.email }}</td>
               <td><span [class]="badgeClass(c.statutKyc)">{{ c.statutKyc }}</span></td>

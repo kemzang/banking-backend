@@ -10,10 +10,10 @@
       <p class="empty">Aucun opérateur pour l'instant.</p>
     } @else {
       <table>
-        <thead><tr><th>ID</th><th>Nom</th><th>Type</th><th>Code</th></tr></thead>
+        <thead><tr><th>Nom</th><th>Type</th><th>Code</th></tr></thead>
         <tbody>
           @for (op of operateurs(); track op.id) {
-            <tr><td>{{ op.id }}</td><td>{{ op.nom }}</td><td>{{ op.type }}</td><td>{{ op.code }}</td></tr>
+            <tr><td>{{ op.nom }}</td><td>{{ op.type }}</td><td>{{ op.code }}</td></tr>
           }
         </tbody>
       </table>

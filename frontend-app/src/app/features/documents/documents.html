@@ -69,11 +69,10 @@
       <p class="empty">Aucune analyse pour l'instant.</p>
     } @else {
       <table>
-        <thead><tr><th>ID</th><th>Fichier</th><th>Conf.</th></tr></thead>
+        <thead><tr><th>Fichier</th><th>Conf.</th></tr></thead>
         <tbody>
           @for (h of historique(); track h.id) {
             <tr>
-              <td>{{ h.id }}</td>
               <td>{{ h.original_filename }}</td>
               <td>{{ (h.confidence_score * 100) | number:'1.0-0' }}%</td>
             </tr>

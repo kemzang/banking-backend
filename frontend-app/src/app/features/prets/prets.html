@@ -50,11 +50,10 @@
     <div class="card" style="margin-top:1.5rem">
       <h2>Mes prêts ({{ mesPrets().length }})</h2>
       <table>
-        <thead><tr><th>ID</th><th>Montant</th><th>Taux</th><th>Capital restant</th><th>Statut</th><th>Actions</th></tr></thead>
+        <thead><tr><th>Montant</th><th>Taux</th><th>Capital restant</th><th>Statut</th><th>Actions</th></tr></thead>
         <tbody>
           @for (p of mesPrets(); track p.id) {
             <tr>
-              <td>{{ p.id }}</td>
               <td>{{ p.montantAccorde | number:'1.0-0' }}</td>
               <td>{{ p.tauxInteret }}</td>
               <td>{{ p.capitalRestant | number:'1.0-0' }}</td>
@@ -174,11 +173,11 @@
       <p class="empty">Aucune demande soumise dans cette session.</p>
     } @else {
       <table>
-        <thead><tr><th>ID</th><th>Client</th><th>Montant</th><th>Durée</th><th>Score</th><th>Statut</th><th>Décision</th></tr></thead>
+        <thead><tr><th>Client</th><th>Montant</th><th>Durée</th><th>Score</th><th>Statut</th><th>Décision</th></tr></thead>
         <tbody>
           @for (d of demandes(); track d.id) {
             <tr>
-              <td>{{ d.id }}</td><td>{{ nomClient(d.clientId) }}</td>
+              <td>{{ nomClient(d.clientId) }}</td>
               <td>{{ d.montantDemande | number:'1.0-0' }}</td><td>{{ d.dureeMois }} mois</td>
               <td>{{ d.scoreRisque }}</td>
               <td><span [class]="badgeD(d.statut)">{{ d.statut }}</span></td>
@@ -202,11 +201,11 @@
       <p class="empty">Aucun prêt accordé dans cette session.</p>
     } @else {
       <table>
-        <thead><tr><th>ID</th><th>Client</th><th>Montant</th><th>Taux</th><th>Capital restant</th><th>Statut</th><th>Actions</th></tr></thead>
+        <thead><tr><th>Client</th><th>Montant</th><th>Taux</th><th>Capital restant</th><th>Statut</th><th>Actions</th></tr></thead>
         <tbody>
           @for (p of prets(); track p.id) {
             <tr>
-              <td>{{ p.id }}</td><td>{{ nomClient(p.clientId) }}</td>
+              <td>{{ nomClient(p.clientId) }}</td>
               <td>{{ p.montantAccorde | number:'1.0-0' }}</td><td>{{ p.tauxInteret }}</td>
               <td>{{ p.capitalRestant | number:'1.0-0' }}</td>
               <td><span [class]="badgeD(p.statut === 'SOLDE' ? 'APPROUVEE' : p.statut)">{{ p.statut }}</span></td>

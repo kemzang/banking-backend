@@ -170,6 +170,7 @@ services:
       # de application-docker.yml ; on fournit juste les identifiants BDD.
       DB_USERNAME: ${DB_USER:-bank}
       DB_PASSWORD: ${DB_PASSWORD:-bank}
+      AI_DOCUMENT_SERVICE_URL: http://ai-document-service:8001
     depends_on:
       postgres:
         condition: service_healthy
