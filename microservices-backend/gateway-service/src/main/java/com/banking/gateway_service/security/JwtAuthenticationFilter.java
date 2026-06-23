@@ -17,6 +17,7 @@ import reactor.core.publisher.Mono;
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.stream.Collectors;
 
 // Filtre GLOBAL : s'execute pour CHAQUE requete qui traverse la gateway.
 // Il joue le role de "videur" : verifie le JWT a l'entree, bloque sinon.
@@ -66,11 +67,27 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
             // 4. On propage l'identite aux services en aval via des en-tetes
             //    (ils n'ont plus a re-verifier le jeton : ils font confiance a la gateway)
             String userId = String.valueOf(claims.get("userId"));
-            ServerHttpRequest mutated = request.mutate()
-                    .header("X-User-Email", claims.getSubject())
-                    .header("X-User-Id", userId)
-                    .header("X-User-Roles", String.valueOf(claims.get("roles")))
-                    .build();
+            Object rolesClaim = claims.get("roles");
+            if (claims.getSubject() == null || claims.getSubject().isBlank()
+                    || claims.get("userId") == null || !(rolesClaim instanceof List<?> roleList)) {
+                return unauthorized(exchange);
+            }
+            String roles = roleList.stream().map(String::valueOf).collect(Collectors.joining(","));
+            Object operatorId = claims.get("operatorId");
+
+            ServerHttpRequest mutated = request.mutate().headers(headers -> {
+                // Ne jamais accepter une identite injectee directement par le client.
+                headers.remove("X-User-Email");
+                headers.remove("X-User-Id");
+                headers.remove("X-User-Roles");
+                headers.remove("X-Operator-Id");
+                headers.set("X-User-Email", claims.getSubject());
+                headers.set("X-User-Id", userId);
+                headers.set("X-User-Roles", roles);
+                if (operatorId != null) {
+                    headers.set("X-Operator-Id", String.valueOf(operatorId));
+                }
+            }).build();
 
             return chain.filter(exchange.mutate().request(mutated).build());
 
@@ -81,7 +98,7 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
     }
 
     private boolean isPublic(String path) {
-        return PUBLIC_PATHS.stream().anyMatch(path::startsWith);
+        return PUBLIC_PATHS.contains(path);
     }
 
     private Mono<Void> unauthorized(ServerWebExchange exchange) {

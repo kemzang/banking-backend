@@ -44,7 +44,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         try {
             String email = jwtService.extractEmail(token);
             if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                Utilisateur u = utilisateurRepository.findByEmail(email).orElse(null);
+                Utilisateur u = utilisateurRepository.findByEmailIgnoreCase(email).orElse(null);
                 if (u != null && jwtService.isValid(token)) {
                     // On convertit les roles en autorites Spring (prefixe ROLE_ obligatoire)
                     var authorities = u.getRoles().stream()

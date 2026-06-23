@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -37,9 +38,10 @@ public class CompteController {
     public ResponseEntity<CompteResponseDTO> getCompte(
             @PathVariable Long id,
             @RequestHeader(value = "X-User-Email", required = false) String userEmail,
-            @RequestHeader(value = "X-User-Roles", required = false) String userRoles) {
+            @RequestHeader(value = "X-User-Roles", required = false) String userRoles,
+            @RequestHeader(value = "X-Operator-Id", required = false) Long operatorId) {
         CompteResponseDTO compte = compteService.getCompte(id);
-        verifierAccesCompte(compte.clientId(), userEmail, userRoles);
+        verifierAccesCompte(compte, userEmail, userRoles, operatorId);
         return ResponseEntity.ok(compte);
     }
 
@@ -48,15 +50,23 @@ public class CompteController {
     public ResponseEntity<List<CompteResponseDTO>> lister(
             @RequestParam(required = false) Long clientId,
             @RequestHeader(value = "X-User-Email", required = false) String userEmail,
-            @RequestHeader(value = "X-User-Roles", required = false) String userRoles) {
+            @RequestHeader(value = "X-User-Roles", required = false) String userRoles,
+            @RequestHeader(value = "X-Operator-Id", required = false) Long operatorId) {
         
         List<CompteResponseDTO> result;
         
-        if (estAdminOuOperateur(userRoles)) {
-            // Admin/Operateur : peut tout voir ou filtrer par clientId
+        if (estAdmin(userRoles)) {
             result = (clientId != null)
                     ? compteService.listerParClient(clientId)
                     : compteService.listerTous();
+        } else if (estOperateur(userRoles)) {
+            requireOperatorId(operatorId);
+            List<CompteResponseDTO> comptes = (clientId != null)
+                    ? compteService.listerParClient(clientId)
+                    : compteService.listerTous();
+            result = comptes.stream()
+                    .filter(compte -> operatorId.equals(compte.operateurId()))
+                    .toList();
         } else {
             // Client : ne voit que ses propres comptes
             Long monClientId = getClientIdFromEmail(userEmail);
@@ -71,9 +81,10 @@ public class CompteController {
     public ResponseEntity<SoldeResponseDTO> getSolde(
             @PathVariable Long id,
             @RequestHeader(value = "X-User-Email", required = false) String userEmail,
-            @RequestHeader(value = "X-User-Roles", required = false) String userRoles) {
+            @RequestHeader(value = "X-User-Roles", required = false) String userRoles,
+            @RequestHeader(value = "X-Operator-Id", required = false) Long operatorId) {
         CompteResponseDTO compte = compteService.getCompte(id);
-        verifierAccesCompte(compte.clientId(), userEmail, userRoles);
+        verifierAccesCompte(compte, userEmail, userRoles, operatorId);
         return ResponseEntity.ok(compteService.getSolde(id));
     }
 
@@ -81,8 +92,10 @@ public class CompteController {
     @PatchMapping("/{id}/suspend")
     public ResponseEntity<CompteResponseDTO> suspendre(
             @PathVariable Long id,
-            @RequestHeader(value = "X-User-Roles", required = false) String userRoles) {
+            @RequestHeader(value = "X-User-Roles", required = false) String userRoles,
+            @RequestHeader(value = "X-Operator-Id", required = false) Long operatorId) {
         verifierRoleAdminOuOperateur(userRoles);
+        verifierOperatorScope(compteService.getCompte(id), userRoles, operatorId);
         return ResponseEntity.ok(compteService.suspendre(id));
     }
 
@@ -90,8 +103,10 @@ public class CompteController {
     @PatchMapping("/{id}/close")
     public ResponseEntity<CompteResponseDTO> cloturer(
             @PathVariable Long id,
-            @RequestHeader(value = "X-User-Roles", required = false) String userRoles) {
+            @RequestHeader(value = "X-User-Roles", required = false) String userRoles,
+            @RequestHeader(value = "X-Operator-Id", required = false) Long operatorId) {
         verifierRoleAdminOuOperateur(userRoles);
+        verifierOperatorScope(compteService.getCompte(id), userRoles, operatorId);
         return ResponseEntity.ok(compteService.cloturer(id));
     }
 
@@ -112,8 +127,23 @@ public class CompteController {
     // --- Méthodes de vérification d'accès ---
 
     private boolean estAdminOuOperateur(String roles) {
-        if (roles == null || roles.isBlank()) return false;
-        return roles.contains("ADMIN") || roles.contains("OPERATEUR");
+        return estAdmin(roles) || estOperateur(roles);
+    }
+
+    private boolean estAdmin(String roles) {
+        return hasRole(roles, "ADMIN_PLATFORM") || hasRole(roles, "ADMIN");
+    }
+
+    private boolean estOperateur(String roles) {
+        return hasRole(roles, "OPERATOR_ADMIN")
+                || hasRole(roles, "OPERATOR_AGENT")
+                || hasRole(roles, "OPERATEUR");
+    }
+
+    private boolean hasRole(String roles, String expectedRole) {
+        return roles != null && Arrays.stream(roles.split(","))
+                .map(String::trim)
+                .anyMatch(expectedRole::equals);
     }
 
     private Long getClientIdFromEmail(String email) {
@@ -127,13 +157,36 @@ public class CompteController {
         }
     }
 
-    private void verifierAccesCompte(Long compteClientId, String userEmail, String userRoles) {
-        if (estAdminOuOperateur(userRoles)) {
-            return; // Admin/Operateur a accès à tout
+    private void verifierAccesCompte(
+            CompteResponseDTO compte,
+            String userEmail,
+            String userRoles,
+            Long operatorId) {
+        if (estAdmin(userRoles)) {
+            return;
         }
-        Long monClientId = getClientIdFromEmail(userEmail);
-        if (!compteClientId.equals(monClientId)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Accès refusé à ce compte");
+        if (estOperateur(userRoles)) {
+            verifierOperatorScope(compte, userRoles, operatorId);
+            return;
+        }
+        if (!compte.clientId().equals(getClientIdFromEmail(userEmail))) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Acces refuse a ce compte");
+        }
+    }
+
+    private void verifierOperatorScope(CompteResponseDTO compte, String roles, Long operatorId) {
+        if (!estOperateur(roles)) {
+            return;
+        }
+        requireOperatorId(operatorId);
+        if (!operatorId.equals(compte.operateurId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Compte rattache a un autre operateur");
+        }
+    }
+
+    private void requireOperatorId(Long operatorId) {
+        if (operatorId == null) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Identite operateur manquante");
         }
     }
 

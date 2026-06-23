@@ -31,6 +31,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.Arrays;
 import java.util.List;
 
 @Validated
@@ -74,9 +75,10 @@ public class TransactionController {
             )
             @Valid @RequestBody DepotRequestDTO request,
             @RequestHeader(value = "X-User-Email", required = false) String userEmail,
-            @RequestHeader(value = "X-User-Roles", required = false) String userRoles
+            @RequestHeader(value = "X-User-Roles", required = false) String userRoles,
+            @RequestHeader(value = "X-Operator-Id", required = false) Long operatorId
     ) {
-        verifierAccesCompte(request.compteId(), userEmail, userRoles);
+        verifierAccesCompte(request.compteId(), userEmail, userRoles, operatorId);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(transactionService.depot(request));
     }
@@ -103,9 +105,10 @@ public class TransactionController {
             )
             @Valid @RequestBody RetraitRequestDTO request,
             @RequestHeader(value = "X-User-Email", required = false) String userEmail,
-            @RequestHeader(value = "X-User-Roles", required = false) String userRoles
+            @RequestHeader(value = "X-User-Roles", required = false) String userRoles,
+            @RequestHeader(value = "X-Operator-Id", required = false) Long operatorId
     ) {
-        verifierAccesCompte(request.compteId(), userEmail, userRoles);
+        verifierAccesCompte(request.compteId(), userEmail, userRoles, operatorId);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(transactionService.retrait(request));
     }
@@ -135,9 +138,10 @@ public class TransactionController {
             )
             @Valid @RequestBody TransfertRequestDTO request,
             @RequestHeader(value = "X-User-Email", required = false) String userEmail,
-            @RequestHeader(value = "X-User-Roles", required = false) String userRoles
+            @RequestHeader(value = "X-User-Roles", required = false) String userRoles,
+            @RequestHeader(value = "X-Operator-Id", required = false) Long operatorId
     ) {
-        verifierAccesCompte(request.compteSourceId(), userEmail, userRoles);
+        verifierAccesCompte(request.compteSourceId(), userEmail, userRoles, operatorId);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(transactionService.transfert(request));
     }
@@ -160,15 +164,27 @@ public class TransactionController {
     public List<TransactionResponseDTO> getByAccount(
             @Parameter(example = "1") @RequestParam @Positive Long accountId,
             @RequestHeader(value = "X-User-Email", required = false) String userEmail,
-            @RequestHeader(value = "X-User-Roles", required = false) String userRoles
+            @RequestHeader(value = "X-User-Roles", required = false) String userRoles,
+            @RequestHeader(value = "X-Operator-Id", required = false) Long operatorId
     ) {
-        verifierAccesCompte(accountId, userEmail, userRoles);
+        verifierAccesCompte(accountId, userEmail, userRoles, operatorId);
         return transactionService.getByCompte(accountId);
     }
 
-    private boolean estAdminOuOperateur(String roles) {
-        if (roles == null || roles.isBlank()) return false;
-        return roles.contains("ADMIN") || roles.contains("OPERATEUR");
+    private boolean estAdmin(String roles) {
+        return hasRole(roles, "ADMIN_PLATFORM") || hasRole(roles, "ADMIN");
+    }
+
+    private boolean estOperateur(String roles) {
+        return hasRole(roles, "OPERATOR_ADMIN")
+                || hasRole(roles, "OPERATOR_AGENT")
+                || hasRole(roles, "OPERATEUR");
+    }
+
+    private boolean hasRole(String roles, String expectedRole) {
+        return roles != null && Arrays.stream(roles.split(","))
+                .map(String::trim)
+                .anyMatch(expectedRole::equals);
     }
 
     private Long getClientIdFromEmail(String email) {
@@ -178,12 +194,18 @@ public class TransactionController {
         return customerClient.getClientByEmail(email).id();
     }
 
-    private void verifierAccesCompte(Long compteId, String userEmail, String userRoles) {
-        if (estAdminOuOperateur(userRoles)) {
+    private void verifierAccesCompte(Long compteId, String userEmail, String userRoles, Long operatorId) {
+        if (estAdmin(userRoles)) {
+            return;
+        }
+        AccountResponseDTO compte = accountClient.getById(compteId);
+        if (estOperateur(userRoles)) {
+            if (operatorId == null || !operatorId.equals(compte.operateurId())) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Compte rattache a un autre operateur");
+            }
             return;
         }
         Long monClientId = getClientIdFromEmail(userEmail);
-        AccountResponseDTO compte = accountClient.getById(compteId);
         if (!monClientId.equals(compte.clientId())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Accès refusé à ce compte");
         }

@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Arrays;
 import java.util.List;
 
 @RestController
@@ -18,7 +19,15 @@ public class OperateurController {
     private final OperateurService operateurService;
 
     @PostMapping
-    public ResponseEntity<OperateurResponseDTO> creer(@RequestBody OperateurRequestDTO dto) {
+    public ResponseEntity<OperateurResponseDTO> creer(
+            @RequestBody OperateurRequestDTO dto,
+            @RequestHeader(value = "X-User-Roles", required = false) String userRoles) {
+        if (!hasRole(userRoles, "ADMIN_PLATFORM") && !hasRole(userRoles, "ADMIN")) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    HttpStatus.FORBIDDEN,
+                    "Creation reservee a ADMIN_PLATFORM"
+            );
+        }
         return ResponseEntity.status(HttpStatus.CREATED).body(operateurService.creer(dto));
     }
 
@@ -30,5 +39,11 @@ public class OperateurController {
     @GetMapping("/{id}")
     public ResponseEntity<OperateurResponseDTO> getById(@PathVariable Long id) {
         return ResponseEntity.ok(operateurService.getById(id));
+    }
+
+    private boolean hasRole(String roles, String expectedRole) {
+        return roles != null && Arrays.stream(roles.split(","))
+                .map(String::trim)
+                .anyMatch(expectedRole::equals);
     }
 }

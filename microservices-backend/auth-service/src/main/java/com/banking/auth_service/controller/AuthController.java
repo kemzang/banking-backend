@@ -3,6 +3,7 @@ package com.banking.auth_service.controller;
 import com.banking.auth_service.dto.AuthResponse;
 import com.banking.auth_service.dto.GoogleLoginRequest;
 import com.banking.auth_service.dto.LoginRequest;
+import com.banking.auth_service.dto.OperatorUserRequest;
 import com.banking.auth_service.dto.RegisterRequest;
 import com.banking.auth_service.dto.UserResponse;
 import com.banking.auth_service.service.AuthService;
@@ -29,6 +30,12 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@RequestBody LoginRequest req) {
         return ResponseEntity.ok(authService.login(req));
+    }
+
+    // Cree un compte rattache a une organisation. Route reservee a ADMIN_PLATFORM.
+    @PostMapping("/operator-users")
+    public ResponseEntity<UserResponse> createOperatorUser(@RequestBody OperatorUserRequest req) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(authService.createOperatorUser(req));
     }
 
     // POST /api/auth/google -> 200 + jeton JWT (connexion via Google, public)

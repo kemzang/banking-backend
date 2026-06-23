@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -36,6 +37,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/register", "/api/auth/login", "/api/auth/google").permitAll() // routes publiques
                         .requestMatchers("/actuator/**", "/error").permitAll()                  // /error doit rester accessible
+                        .requestMatchers(HttpMethod.POST, "/api/auth/operator-users")
+                        .hasRole("ADMIN_PLATFORM")
                         .anyRequest().authenticated())                                          // tout le reste protege
                 // Non authentifie -> 401 (et non le 403 par defaut)
                 .exceptionHandling(ex -> ex.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))

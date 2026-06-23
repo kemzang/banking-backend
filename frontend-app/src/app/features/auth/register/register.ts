@@ -1,4 +1,5 @@
 import { Component, inject, signal, computed } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
@@ -28,7 +29,7 @@ interface ValidationErrors {
 @Component({
   selector: 'app-register',
   standalone: true,
-  imports: [FormsModule, RouterLink, AuthLayoutComponent],
+  imports: [CommonModule, FormsModule, RouterLink, AuthLayoutComponent],
   templateUrl: './register.html',
   styleUrl: './register.scss',
 })
@@ -75,10 +76,10 @@ export class Register {
   passwordRequirements = computed(() => {
     const pwd = this.form().password;
     return [
-      { key: 'pwd_req_length', met: pwd.length >= 8 },
-      { key: 'pwd_req_upper', met: /[A-Z]/.test(pwd) },
-      { key: 'pwd_req_number', met: /[0-9]/.test(pwd) },
-      { key: 'pwd_req_special', met: /[^A-Za-z0-9]/.test(pwd) }
+      { key: 'length', label: this.t('pwd_req_length'), met: pwd.length >= 8 },
+      { key: 'uppercase', label: this.t('pwd_req_upper'), met: /[A-Z]/.test(pwd) },
+      { key: 'number', label: this.t('pwd_req_number'), met: /[0-9]/.test(pwd) },
+      { key: 'special', label: this.t('pwd_req_special'), met: /[^A-Za-z0-9]/.test(pwd) }
     ];
   });
 

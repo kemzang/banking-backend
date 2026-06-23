@@ -3,6 +3,7 @@ package com.banking.customer_service.service;
 import com.banking.customer_service.dto.OperateurRequestDTO;
 import com.banking.customer_service.dto.OperateurResponseDTO;
 import com.banking.customer_service.entity.Operateur;
+import com.banking.customer_service.entity.StatutOperateur;
 import com.banking.customer_service.repository.OperateurRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -18,6 +19,9 @@ public class OperateurService {
     private final OperateurRepository operateurRepository;
 
     public OperateurResponseDTO creer(OperateurRequestDTO dto) {
+        if (dto.nom() == null || dto.nom().isBlank() || dto.code() == null || dto.code().isBlank() || dto.type() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "nom, code et type sont obligatoires");
+        }
         if (operateurRepository.existsByCode(dto.code())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Code operateur deja utilise: " + dto.code());
         }
@@ -25,6 +29,7 @@ public class OperateurService {
                 .nom(dto.nom())
                 .type(dto.type())
                 .code(dto.code())
+                .statut(dto.statut() != null ? dto.statut() : StatutOperateur.ACTIVE)
                 .build();
         return toResponse(operateurRepository.save(op));
     }
@@ -40,6 +45,7 @@ public class OperateurService {
     }
 
     private OperateurResponseDTO toResponse(Operateur o) {
-        return new OperateurResponseDTO(o.getId(), o.getNom(), o.getType(), o.getCode());
+        StatutOperateur statut = o.getStatut() != null ? o.getStatut() : StatutOperateur.ACTIVE;
+        return new OperateurResponseDTO(o.getId(), o.getNom(), o.getType(), o.getCode(), statut);
     }
 }

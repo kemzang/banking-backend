@@ -17,14 +17,20 @@ export interface LoginRequest {
 
 export interface AuthResponse {
   token: string;
+  accessToken: string;
   type: string;      // "Bearer"
+  tokenType: string;
   expiresIn: number; // secondes
+  user: UserResponse;
 }
 
 export interface UserResponse {
   id: string;
   email: string;
   roles: string[];
+  operatorId?: number | null;
+  firstName?: string | null;
+  lastName?: string | null;
 }
 
 /** Claims extraites du JWT (champ payload décodé en base64) */
@@ -32,6 +38,7 @@ export interface JwtPayload {
   sub: string;           // email
   roles: string[];
   userId?: string;
+  operatorId?: number;
   mfaEnabled?: boolean;
   mfaVerified?: boolean;
   exp: number;           // Unix timestamp secondes

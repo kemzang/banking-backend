@@ -25,12 +25,33 @@ public class DataSeeder implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        if (!utilisateurRepository.existsByEmail("admin@bank.cm")) {
-            utilisateurRepository.save(Utilisateur.builder()
+        utilisateurRepository.findAll().forEach(this::migrateLegacyRoles);
+
+        Utilisateur admin = utilisateurRepository.findByEmailIgnoreCase("admin@bank.cm")
+                .orElseGet(() -> Utilisateur.builder()
                     .email("admin@bank.cm")
                     .motDePasse(passwordEncoder.encode("admin123"))
-                    .roles(new HashSet<>(Set.of(Role.ADMIN, Role.CLIENT)))
                     .build());
+
+        admin.setRoles(new HashSet<>(Set.of(Role.ADMIN_PLATFORM)));
+        utilisateurRepository.save(admin);
+    }
+
+    private void migrateLegacyRoles(Utilisateur user) {
+        Set<Role> roles = new HashSet<>(user.getRoles());
+        boolean changed = false;
+
+        if (roles.remove(Role.ADMIN)) {
+            roles.add(Role.ADMIN_PLATFORM);
+            changed = true;
+        }
+        if (user.getOperatorId() != null && roles.remove(Role.OPERATEUR)) {
+            roles.add(Role.OPERATOR_AGENT);
+            changed = true;
+        }
+        if (changed) {
+            user.setRoles(roles);
+            utilisateurRepository.save(user);
         }
     }
 }

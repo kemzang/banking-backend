@@ -48,6 +48,7 @@ export class AuthService {
 
   email(): string      { return this.payload()?.sub ?? ''; }
   roles(): string[]    { return this.payload()?.roles ?? []; }
+  operatorId(): number | null { return this.payload()?.operatorId ?? null; }
   mfaEnabled(): boolean  { return this.payload()?.mfaEnabled ?? false; }
   mfaVerified(): boolean { return this.payload()?.mfaVerified ?? false; }
 
@@ -58,8 +59,8 @@ export class AuthService {
 
   /** Route cible selon le rôle principal */
   redirectByRole(): string {
-    if (this.hasRole('ADMIN'))     return '/dashboard';
-    if (this.hasRole('OPERATEUR')) return '/dashboard';
+    if (this.hasRole('ADMIN_PLATFORM')) return '/dashboard';
+    if (this.hasRole('OPERATOR_ADMIN', 'OPERATOR_AGENT')) return '/dashboard';
     return '/dashboard';
   }
 

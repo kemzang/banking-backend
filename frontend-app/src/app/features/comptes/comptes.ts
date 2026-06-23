@@ -52,7 +52,7 @@ export class Comptes implements OnInit {
   }
 
   estAdminOuOperateur(): boolean {
-    return this.auth.hasRole('ADMIN', 'OPERATEUR');
+    return this.auth.hasRole('ADMIN_PLATFORM', 'OPERATOR_ADMIN', 'OPERATOR_AGENT');
   }
 
   ouvrir(): void {

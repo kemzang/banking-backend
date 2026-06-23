@@ -24,4 +24,15 @@ public class Operateur {
 
     @Column(unique = true)
     private String code;
+
+    @Enumerated(EnumType.STRING)
+    @Builder.Default
+    private StatutOperateur statut = StatutOperateur.ACTIVE;
+
+    @PrePersist
+    void onCreate() {
+        if (statut == null) {
+            statut = StatutOperateur.ACTIVE;
+        }
+    }
 }

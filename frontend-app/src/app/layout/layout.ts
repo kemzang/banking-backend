@@ -23,8 +23,10 @@ export class Layout {
     this.auth.me().subscribe({ next: (u) => this.user.set(u) });
   }
 
-  estAdmin(): boolean     { return this.auth.hasRole('ADMIN'); }
-  estOperateur(): boolean { return this.auth.hasRole('ADMIN', 'OPERATEUR'); }
+  estAdmin(): boolean     { return this.auth.hasRole('ADMIN_PLATFORM'); }
+  estOperateur(): boolean {
+    return this.auth.hasRole('ADMIN_PLATFORM', 'OPERATOR_ADMIN', 'OPERATOR_AGENT');
+  }
 
   deconnexion(): void {
     this.auth.logout();

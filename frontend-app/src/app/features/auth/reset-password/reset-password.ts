@@ -1,4 +1,5 @@
 import { Component, inject, signal, computed, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
@@ -9,7 +10,7 @@ import { ThemeService } from '../../../core/services/theme.service';
 @Component({
   selector: 'app-reset-password',
   standalone: true,
-  imports: [FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './reset-password.html',
   styleUrl: './reset-password.scss',
 })
@@ -56,10 +57,10 @@ export class ResetPassword implements OnInit {
   passwordRequirements = computed(() => {
     const pwd = this.password();
     return [
-      { key: 'pwd_req_length', met: pwd.length >= 8 },
-      { key: 'pwd_req_upper', met: /[A-Z]/.test(pwd) },
-      { key: 'pwd_req_number', met: /[0-9]/.test(pwd) },
-      { key: 'pwd_req_special', met: /[^A-Za-z0-9]/.test(pwd) }
+      { key: 'length', label: this.t('pwd_req_length'), met: pwd.length >= 8 },
+      { key: 'uppercase', label: this.t('pwd_req_upper'), met: /[A-Z]/.test(pwd) },
+      { key: 'number', label: this.t('pwd_req_number'), met: /[0-9]/.test(pwd) },
+      { key: 'special', label: this.t('pwd_req_special'), met: /[^A-Za-z0-9]/.test(pwd) }
     ];
   });
 

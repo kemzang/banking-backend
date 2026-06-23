@@ -163,6 +163,15 @@ const T = {
     theme_dark:  'Mode sombre',
     theme_light: 'Mode clair',
     back:        'Retour',
+    // ── Missing keys ──────────────────────────────────
+    loading:           'Chargement…',
+    sign_in:           'Se connecter',
+    login_title:       'Connexion Client',
+    login_sub:         'Accédez à votre espace client',
+    login_no_account:  'Pas encore de compte ?',
+    login_register:    'S\'inscrire',
+    register_submit:   'Créer mon compte',
+    already_account:   'Déjà un compte ?',
   },
   en: {
     landing_tagline:    'The distributed financial platform for all stakeholders',
@@ -315,6 +324,15 @@ const T = {
     reset_expired:      'This link has expired or is invalid.',
     // ── General ──────────────────────────────────────────
     required:           'This field is required',
+    // ── Missing keys ──────────────────────────────────
+    loading:           'Loading…',
+    sign_in:           'Sign in',
+    login_title:       'Customer Login',
+    login_sub:         'Access your customer portal',
+    login_no_account:  'No account yet?',
+    login_register:    'Register',
+    register_submit:   'Create my account',
+    already_account:   'Already have an account?',
   },
 } as const;
 

@@ -16,10 +16,10 @@ export type AuthTab    = 'pwd' | 'google';
 declare const google: any;
 
 // Maps which JWT role is expected per portal
-const EXPECTED: Record<PortalRole, string> = {
-  client:   'CLIENT',
-  operator: 'OPERATEUR',
-  admin:    'ADMIN',
+const EXPECTED: Record<PortalRole, string[]> = {
+  client:   ['CLIENT'],
+  operator: ['OPERATOR_ADMIN', 'OPERATOR_AGENT'],
+  admin:    ['ADMIN_PLATFORM'],
 };
 
 const WRONG_ROLE_KEY: Record<PortalRole, string> = {
@@ -29,21 +29,24 @@ const WRONG_ROLE_KEY: Record<PortalRole, string> = {
 };
 
 const HINT_KEY: Record<string, string> = {
-  ADMIN:    'login_hint_use_admin',
-  OPERATEUR:'login_hint_use_operator',
-  CLIENT:   'login_hint_use_client',
+  ADMIN_PLATFORM: 'login_hint_use_admin',
+  OPERATOR_ADMIN: 'login_hint_use_operator',
+  OPERATOR_AGENT: 'login_hint_use_operator',
+  CLIENT:         'login_hint_use_client',
 };
 
 const HINT_ROUTE: Record<string, string> = {
-  ADMIN:    '/auth/admin',
-  OPERATEUR:'/auth/operator',
-  CLIENT:   '/auth/client',
+  ADMIN_PLATFORM: '/auth/admin',
+  OPERATOR_ADMIN: '/auth/operator',
+  OPERATOR_AGENT: '/auth/operator',
+  CLIENT:         '/auth/client',
 };
 
 const DASHBOARD: Record<string, string> = {
-  ADMIN:    '/dashboard',
-  OPERATEUR:'/dashboard',
-  CLIENT:   '/dashboard',
+  ADMIN_PLATFORM: '/dashboard',
+  OPERATOR_ADMIN: '/dashboard',
+  OPERATOR_AGENT: '/dashboard',
+  CLIENT:         '/dashboard',
 };
 
 @Component({
@@ -121,9 +124,10 @@ export class AuthFormComponent implements AfterViewInit, OnDestroy {
     // Role mismatch check
     const roles  = this.auth.roles();
     const expected = EXPECTED[this.portal];
-    if (!roles.includes(expected)) {
+    if (!expected.some(role => roles.includes(role))) {
       // Find what role they actually have
-      const actual = ['ADMIN','OPERATEUR','CLIENT'].find(r => roles.includes(r));
+      const actual = ['ADMIN_PLATFORM', 'OPERATOR_ADMIN', 'OPERATOR_AGENT', 'CLIENT']
+        .find(r => roles.includes(r));
       const errKey = WRONG_ROLE_KEY[this.portal] as Parameters<I18nService['t']>[0];
       this.erreur.set(this.t(errKey));
       if (actual) {
@@ -146,7 +150,8 @@ export class AuthFormComponent implements AfterViewInit, OnDestroy {
 
   private redirect(): void {
     const roles = this.auth.roles();
-    const role  = ['ADMIN','OPERATEUR','CLIENT'].find(r => roles.includes(r)) ?? 'CLIENT';
+    const role = ['ADMIN_PLATFORM', 'OPERATOR_ADMIN', 'OPERATOR_AGENT', 'CLIENT']
+      .find(r => roles.includes(r)) ?? 'CLIENT';
     this.router.navigate([DASHBOARD[role]]);
   }
 

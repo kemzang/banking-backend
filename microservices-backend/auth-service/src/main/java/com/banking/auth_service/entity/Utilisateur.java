@@ -23,6 +23,10 @@ public class Utilisateur {
     @Column(nullable = false, unique = true)
     private String email;
 
+    private String nom;
+
+    private String prenom;
+
     @Column(nullable = false)
     private String motDePasse;        // contient le HACHAGE BCrypt, jamais le mot de passe en clair
 
@@ -40,6 +44,9 @@ public class Utilisateur {
     @Builder.Default
     private Set<Role> roles = new HashSet<>();
 
+    // Identifiant de l'organisation dans customer-service. Il n'est pas une FK locale.
+    private Long operatorId;
+
     private LocalDateTime dateCreation;
 
     @PrePersist
@@ -47,6 +54,19 @@ public class Utilisateur {
         this.dateCreation = LocalDateTime.now();
         if (this.statut == null) {
             this.statut = StatutUtilisateur.ACTIF;
+        }
+        validateOperatorAssignment();
+    }
+
+    @PreUpdate
+    void onUpdate() {
+        validateOperatorAssignment();
+    }
+
+    private void validateOperatorAssignment() {
+        boolean operatorUser = roles != null && roles.stream().anyMatch(Role::isOperatorRole);
+        if (operatorUser && (operatorId == null || operatorId <= 0)) {
+            throw new IllegalStateException("Un utilisateur operateur doit avoir un operatorId positif");
         }
     }
 }
