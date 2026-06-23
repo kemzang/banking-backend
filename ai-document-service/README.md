@@ -12,6 +12,8 @@ SQLAlchemy 2.
 - Upload d'images PNG, JPG et JPEG.
 - Prétraitement OpenCV : niveaux de gris, réduction du bruit et seuillage.
 - Extraction de texte avec Tesseract OCR.
+- Score de fiabilité explicable de 0 à 100 et recommandation de décision.
+- Détection simple des noms, dates et numéros de document sans données inventées.
 - Historique persistant des analyses OCR.
 - Réponses JSON et erreurs standardisées.
 - Documentation interactive Swagger et ReDoc.
@@ -78,6 +80,7 @@ APP_VERSION=1.0.0
 DEBUG=false
 DATABASE_URL=sqlite:///./storage/app.db
 TESSERACT_CMD=C:\Program Files\Tesseract-OCR\tesseract.exe
+OCR_LANGUAGES=fra+eng
 MAX_UPLOAD_SIZE_MB=10
 ```
 
@@ -121,6 +124,8 @@ Dans Docker, `TESSERACT_CMD` est automatiquement remplacé par
 
 | Méthode | Endpoint | Description |
 |---|---|---|
+| `GET` | `/health` | Santé simplifiée (`status: UP`) |
+| `POST` | `/analysis` | Analyse OCR structurée (format recommandé) |
 | `GET` | `/api/v1/health/` | Vérifier l'état du service |
 | `POST` | `/api/v1/analysis/` | Analyser une liste de nombres |
 | `POST` | `/api/v1/ocr/extract` | Envoyer une image et effectuer l'OCR |
@@ -148,6 +153,14 @@ curl -X POST "http://127.0.0.1:8001/api/v1/ocr/extract" \
   -F "file=@facture.png;type=image/png"
 ```
 
+Format structuré recommandé :
+
+```bash
+curl -X POST "http://127.0.0.1:8001/analysis" \
+  -H "accept: application/json" \
+  -F "file=@cni.png;type=image/png"
+```
+
 ## Exemples de réponses
 
 Succès OCR :
@@ -160,8 +173,11 @@ Succès OCR :
     "id": 1,
     "original_filename": "facture.png",
     "extracted_text": "Numéro de facture : 2026-001",
-    "confidence_score": 0.0,
-    "status": "completed",
+    "confidence_score": 82.0,
+    "status": "COMPLETED",
+    "document_type": "IDENTITY_DOCUMENT",
+    "reliability_level": "HIGH",
+    "recommendation": "ACCEPT_FOR_REVIEW",
     "created_at": "2026-06-09T10:30:00"
   }
 }
@@ -187,6 +203,9 @@ La table `document_analyses` contient :
 - le texte extrait ;
 - le score de confiance ;
 - le statut du traitement ;
+- le type de document, les champs détectés et les champs manquants ;
+- la recommandation (`ACCEPT_FOR_REVIEW`, `MANUAL_REVIEW_REQUIRED` ou
+  `REQUEST_NEW_DOCUMENT`) ;
 - la date de création.
 
 La base et les tables sont créées automatiquement au démarrage :
@@ -197,6 +216,13 @@ Get-ChildItem .\app\storage\uploads
 ```
 
 Alembic n'est pas utilisé pour ce MVP.
+
+Le score est borné entre 0 et 100 et repose sur des règles simples : quantité
+de texte, mots-clés, chiffres, dates et champs détectés. Les seuils sont :
+
+- 70–100 : `HIGH` / `ACCEPT_FOR_REVIEW` ;
+- 40–69 : `MEDIUM` / `MANUAL_REVIEW_REQUIRED` ;
+- 0–39 : `LOW` / `REQUEST_NEW_DOCUMENT`.
 
 ## Tests
 

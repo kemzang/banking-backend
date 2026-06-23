@@ -24,6 +24,12 @@ public class DemandePret {
     @Column(name = "client_id", nullable = false)
     private Long clientId;
 
+    @Column(name = "account_id")
+    private Long accountId;
+
+    @Column(name = "operator_id")
+    private Long operatorId;
+
     @Column(name = "montant_demande", nullable = false, precision = 15, scale = 2)
     private BigDecimal montantDemande;
 

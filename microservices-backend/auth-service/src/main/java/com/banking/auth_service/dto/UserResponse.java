@@ -1,6 +1,7 @@
 package com.banking.auth_service.dto;
 
 import com.banking.auth_service.entity.Role;
+import com.banking.auth_service.entity.StatutUtilisateur;
 import java.util.Set;
 import java.util.UUID;
 
@@ -11,6 +12,7 @@ public record UserResponse(
         Set<Role> roles,
         Long operatorId,
         String firstName,
-        String lastName
+        String lastName,
+        StatutUtilisateur status
 ) {
 }

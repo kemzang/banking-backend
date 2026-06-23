@@ -20,6 +20,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
@@ -47,11 +48,14 @@ public class AuthService {
     private final RestClient customerRestClient;
 
     // INSCRIPTION : cree un utilisateur avec mot de passe hache + role CLIENT par defaut.
+    @Transactional
     public UserResponse register(RegisterRequest req) {
         if (req == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Requete d'inscription obligatoire");
         }
         validateCredentials(req.email(), req.motDePasse());
+        validateOperatorId(req.operatorId());
+        validateActiveOperator(req.operatorId());
         String email = normalizeEmail(req.email());
         ensureEmailAvailable(email);
 
@@ -61,6 +65,8 @@ public class AuthService {
                 .prenom(req.prenom())
                 .motDePasse(passwordEncoder.encode(req.motDePasse()))
                 .telephone(req.telephone())
+                .operatorId(req.operatorId())
+                .statut(StatutUtilisateur.EN_ATTENTE)
                 .roles(new HashSet<>(Set.of(Role.CLIENT)))
                 .build();
         u = utilisateurRepository.save(u);
@@ -164,9 +170,14 @@ public class AuthService {
 
     // Cree la fiche client dans customer-service avec des valeurs par defaut
     private void creerFicheClient(Utilisateur u) {
+        if (u.getOperatorId() == null) {
+            LOGGER.warn("Profil client differe pour {}: operateur non selectionne", u.getEmail());
+            return;
+        }
         try {
             Map<String, Object> body = new HashMap<>();
             body.put("utilisateurId", u.getId().toString());
+            body.put("operateurId", u.getOperatorId());
             body.put("nom", valueOrDefault(u.getNom(), u.getEmail().split("@")[0]));
             body.put("prenom", valueOrDefault(u.getPrenom(), u.getEmail().split("@")[0]));
             body.put("dateNaissance", "1990-01-01");
@@ -183,13 +194,18 @@ public class AuthService {
 
             customerRestClient.post()
                     .uri("/api/customers")
+                    .header("X-Internal-Service", "auth-service")
                     .body(body)
                     .retrieve()
                     .toBodilessEntity();
 
             LOGGER.info("Fiche client creee pour {}", u.getEmail());
         } catch (Exception e) {
-            LOGGER.warn("Impossible de creer la fiche client pour {}: {}", u.getEmail(), e.getMessage());
+            throw new ResponseStatusException(
+                    HttpStatus.SERVICE_UNAVAILABLE,
+                    "Impossible de creer le profil client",
+                    e
+            );
         }
     }
 
@@ -203,6 +219,12 @@ public class AuthService {
 
         if (!passwordEncoder.matches(req.motDePasse(), u.getMotDePasse())) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Identifiants invalides");
+        }
+        if (u.getStatut() == StatutUtilisateur.EN_ATTENTE) {
+            throw new ResponseStatusException(HttpStatus.LOCKED, "Compte en attente de validation par l'operateur");
+        }
+        if (u.getStatut() == StatutUtilisateur.REJETE) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Inscription rejetee par l'operateur");
         }
         if (u.getStatut() == StatutUtilisateur.SUSPENDU) {
             throw new ResponseStatusException(HttpStatus.LOCKED, "Compte suspendu");
@@ -244,8 +266,20 @@ public class AuthService {
                 Set.copyOf(u.getRoles()),
                 u.getOperatorId(),
                 u.getPrenom(),
-                u.getNom()
+                u.getNom(),
+                u.getStatut()
         );
+    }
+
+    @Transactional
+    public UserResponse updateInternalStatus(UUID userId, StatutUtilisateur status) {
+        if (status == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "status est obligatoire");
+        }
+        Utilisateur user = utilisateurRepository.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Utilisateur introuvable"));
+        user.setStatut(status);
+        return toResponse(utilisateurRepository.save(user));
     }
 
     private void validateOperatorExists(Long operatorId) {
@@ -262,6 +296,26 @@ public class AuthService {
             throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "customer-service indisponible");
         }
     }
+
+    private void validateActiveOperator(Long operatorId) {
+        try {
+            OperatorSnapshot operator = customerRestClient.get()
+                    .uri("/api/operators/{id}", operatorId)
+                    .retrieve()
+                    .body(OperatorSnapshot.class);
+            if (operator == null || !"ACTIVE".equals(operator.statut())) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Operateur inactif");
+            }
+        } catch (HttpClientErrorException.NotFound e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Operateur introuvable: " + operatorId);
+        } catch (ResponseStatusException e) {
+            throw e;
+        } catch (RestClientException e) {
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "customer-service indisponible");
+        }
+    }
+
+    private record OperatorSnapshot(Long id, String statut) {}
 
     private void validateCredentials(String email, String password) {
         if (email == null || email.isBlank() || !email.contains("@")) {

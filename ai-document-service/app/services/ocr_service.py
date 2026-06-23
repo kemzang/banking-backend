@@ -1,3 +1,4 @@
+import re
 from pathlib import Path
 
 import pytesseract
@@ -44,14 +45,25 @@ class OcrService:
             extracted_text = await run_in_threadpool(
                 pytesseract.image_to_string,
                 processed_image,
+                settings.ocr_languages,
+                "--psm 6",
             )
+
+            text = extracted_text.strip()
+            result = self._analyze_text(text)
 
             return self.repository.create(
                 original_filename=original_filename,
                 stored_filename=stored_filename,
-                extracted_text=extracted_text.strip(),
-                confidence_score=0.0,
-                status="completed",
+                extracted_text=text,
+                confidence_score=result["score"],
+                status="COMPLETED",
+                content_type=file.content_type,
+                document_type=result["document_type"],
+                extracted_fields=result["fields"],
+                missing_fields=result["missing_fields"],
+                recommendation=result["recommendation"],
+                message=result["message"],
             )
         except AppException:
             if saved_path:
@@ -97,3 +109,72 @@ class OcrService:
                 errors={"id": analysis_id},
             )
         return analysis
+
+    @staticmethod
+    def _analyze_text(text: str) -> dict:
+        normalized = " ".join(text.split())
+        upper = normalized.upper()
+        date_match = re.search(
+            r"\b(?:\d{2}[/-]\d{2}[/-]\d{4}|\d{4}-\d{2}-\d{2})\b",
+            normalized,
+        )
+        number_match = re.search(
+            r"(?:NUM(?:E|É)RO|N[°O]|ID)\s*[:#-]?\s*([A-Z0-9-]{5,})",
+            upper,
+        )
+        last_name_match = re.search(
+            r"(?:NOM|SURNAME)\s*[:#-]?\s*([A-ZÀ-ÖØ-Ý'-]{2,})",
+            upper,
+        )
+        first_name_match = re.search(
+            r"(?:PR(?:E|É)NOM|GIVEN NAME)\s*[:#-]?\s*([A-ZÀ-ÖØ-Ý'-]{2,})",
+            upper,
+        )
+
+        fields = {
+            "firstName": first_name_match.group(1) if first_name_match else None,
+            "lastName": last_name_match.group(1) if last_name_match else None,
+            "birthDate": date_match.group(0) if date_match else None,
+            "documentNumber": number_match.group(1) if number_match else None,
+            "expirationDate": None,
+        }
+        missing = [name for name, value in fields.items() if value is None]
+        keywords = sum(
+            keyword in upper
+            for keyword in ("NOM", "PRENOM", "DATE", "NUMERO", "IDENTITE", "PASSPORT")
+        )
+        detected = len(fields) - len(missing)
+        score = min(len(normalized) // 2, 25)
+        score += min(keywords * 5, 20)
+        score += 10 if re.search(r"\d", normalized) else 0
+        score += 10 if date_match else 0
+        score += min(detected * 7, 28)
+        score = min(100, score) if normalized else 0
+
+        if "PASSPORT" in upper or "PASSEPORT" in upper:
+            document_type = "IDENTITY_DOCUMENT"
+        elif any(word in upper for word in ("IDENTITE", "IDENTITY", "CNI")):
+            document_type = "IDENTITY_DOCUMENT"
+        elif any(word in upper for word in ("FACTURE", "INVOICE", "ADRESSE")):
+            document_type = "SUPPORTING_DOCUMENT"
+        else:
+            document_type = "UNKNOWN"
+
+        if score >= 70:
+            recommendation = "ACCEPT_FOR_REVIEW"
+            message = "Document lisible avec un bon niveau de fiabilité."
+        elif score >= 40:
+            recommendation = "MANUAL_REVIEW_REQUIRED"
+            message = "Une vérification humaine du document est recommandée."
+        else:
+            recommendation = "REQUEST_NEW_DOCUMENT"
+            message = "Document peu lisible. Un nouveau document est recommandé."
+
+        return {
+            "score": score,
+            "document_type": document_type,
+            "fields": fields,
+            "missing_fields": missing,
+            "recommendation": recommendation,
+            "message": message,
+        }

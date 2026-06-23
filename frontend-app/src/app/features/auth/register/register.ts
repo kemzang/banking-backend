@@ -7,6 +7,7 @@ import { ToastService } from '../../../core/services/toast.service';
 import { I18nService } from '../../../core/services/i18n.service';
 import { ThemeService } from '../../../core/services/theme.service';
 import { AuthLayoutComponent } from '../../../shared/auth-layout/auth-layout';
+import { CustomerService, Operateur } from '../../../core/services/customer.service';
 
 interface FormData {
   firstName: string;
@@ -15,6 +16,7 @@ interface FormData {
   phone: string;
   password: string;
   confirmPassword: string;
+  operatorId: number;
 }
 
 interface ValidationErrors {
@@ -24,6 +26,7 @@ interface ValidationErrors {
   phone?: string;
   password?: string;
   confirmPassword?: string;
+  operatorId?: string;
 }
 
 @Component({
@@ -37,10 +40,13 @@ export class Register {
   private auth   = inject(AuthService);
   private router = inject(Router);
   private toast  = inject(ToastService);
+  private customer = inject(CustomerService);
   readonly i18n  = inject(I18nService);
   readonly theme = inject(ThemeService);
 
   loading = signal(false);
+  operatorsLoading = signal(true);
+  operators = signal<Operateur[]>([]);
   
   form = signal<FormData>({
     firstName: '',
@@ -48,8 +54,16 @@ export class Register {
     email: '',
     phone: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    operatorId: 0
   });
+
+  constructor() {
+    this.customer.getOperateursActifs().subscribe({
+      next: (operators) => { this.operators.set(operators); this.operatorsLoading.set(false); },
+      error: () => { this.operatorsLoading.set(false); this.toast.error('Impossible de charger les operateurs actifs.'); }
+    });
+  }
 
   showPassword = signal(false);
   showConfirmPassword = signal(false);
@@ -97,6 +111,11 @@ export class Register {
     });
   }
 
+  selectOperator(value: string): void {
+    this.form.update(current => ({ ...current, operatorId: Number(value) }));
+    this.errors.update(current => ({ ...current, operatorId: undefined }));
+  }
+
   validateForm(): boolean {
     const data = this.form();
     const newErrors: ValidationErrors = {};
@@ -120,6 +139,8 @@ export class Register {
     } else if (!/^\+237[0-9]{9}$/.test(data.phone)) {
       newErrors.phone = this.t('phone_hint');
     }
+
+    if (!data.operatorId) newErrors.operatorId = 'Choisissez un operateur financier.';
 
     if (!data.password) {
       newErrors.password = this.t('required');
@@ -149,11 +170,12 @@ export class Register {
       nom: data.lastName,
       prenom: data.firstName,
       telephone: data.phone
+      ,operatorId: data.operatorId
     }).subscribe({
       next: () => {
         this.loading.set(false);
         this.router.navigate(['/auth/client'], { 
-          queryParams: { registered: 'true' } 
+          queryParams: { pending: 'true' }
         });
       },
       error: (error) => {

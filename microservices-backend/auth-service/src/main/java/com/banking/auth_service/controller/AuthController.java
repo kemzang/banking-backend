@@ -16,6 +16,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
+import com.banking.auth_service.entity.StatutUtilisateur;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -72,4 +74,17 @@ public class AuthController {
     public ResponseEntity<UserResponse> me(Authentication authentication) {
         return ResponseEntity.ok(authService.me(authentication.getName()));
     }
+
+    @PatchMapping("/internal/users/{userId}/status")
+    public ResponseEntity<UserResponse> updateInternalStatus(
+            @PathVariable UUID userId,
+            @RequestBody InternalStatusRequest request,
+            @RequestHeader(value = "X-Internal-Service", required = false) String internalService) {
+        if (!"customer-service".equals(internalService)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+        return ResponseEntity.ok(authService.updateInternalStatus(userId, request.status()));
+    }
+
+    public record InternalStatusRequest(StatutUtilisateur status) {}
 }

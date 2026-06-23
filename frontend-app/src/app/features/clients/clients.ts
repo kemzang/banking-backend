@@ -1,6 +1,8 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Client, ClientRequest, CustomerService, Operateur } from '../../core/services/customer.service';
+import { ActivatedRoute } from '@angular/router';
+import { AuthService } from '../../core/services/auth.service';
 
 @Component({
   selector: 'app-clients',
@@ -10,6 +12,9 @@ import { Client, ClientRequest, CustomerService, Operateur } from '../../core/se
 })
 export class Clients implements OnInit {
   private customer = inject(CustomerService);
+  private route = inject(ActivatedRoute);
+  readonly auth = inject(AuthService);
+  readonly pendingOnly = this.route.snapshot.data['pendingOnly'] === true;
 
   clients = signal<Client[]>([]);
   operateurs = signal<Operateur[]>([]);
@@ -25,7 +30,8 @@ export class Clients implements OnInit {
   }
 
   charger(): void {
-    this.customer.getClients().subscribe({
+    const request = this.pendingOnly ? this.customer.getClientsEnAttente() : this.customer.getClients();
+    request.subscribe({
       next: (c) => this.clients.set(c),
       error: () => this.erreur.set('Impossible de charger les clients.'),
     });
@@ -48,6 +54,22 @@ export class Clients implements OnInit {
     this.customer.majKyc(c.id, statut).subscribe({
       next: () => this.charger(),
       error: () => this.erreur.set('Erreur lors de la mise à jour du KYC.'),
+    });
+  }
+
+  approuver(c: Client): void {
+    this.customer.approuverClient(c.id).subscribe({
+      next: () => { this.succes.set('Client approuve et compte active.'); this.charger(); },
+      error: () => this.erreur.set('Validation refusee ou impossible.')
+    });
+  }
+
+  rejeter(c: Client): void {
+    const reason = window.prompt('Motif du rejet :')?.trim();
+    if (!reason) return;
+    this.customer.rejeterClient(c.id, reason).subscribe({
+      next: () => { this.succes.set('Inscription rejetee.'); this.charger(); },
+      error: () => this.erreur.set('Rejet refuse ou impossible.')
     });
   }
 

@@ -45,7 +45,7 @@ public class CompteService {
                 .plafondJournalier(dto.plafondJournalier())
                 .decouvertAutorise(dto.decouvertAutorise() != null
                         ? dto.decouvertAutorise() : BigDecimal.ZERO)
-                .statut(StatutCompte.ACTIF)
+                .statut(StatutCompte.EN_ATTENTE_ACTIVATION)
                 .build();
 
         return toResponse(compteRepository.save(compte));
@@ -65,6 +65,33 @@ public class CompteService {
 
     public List<CompteResponseDTO> listerTous() {
         return compteRepository.findAll().stream().map(this::toResponse).toList();
+    }
+
+    public List<CompteResponseDTO> listerEnAttente(Long operatorId, boolean global) {
+        List<Compte> comptes = global
+                ? compteRepository.findByStatut(StatutCompte.EN_ATTENTE_ACTIVATION)
+                : compteRepository.findByOperateurIdAndStatut(operatorId, StatutCompte.EN_ATTENTE_ACTIVATION);
+        return comptes.stream().map(this::toResponse).toList();
+    }
+
+    @Transactional
+    public CompteResponseDTO activer(Long id) {
+        Compte compte = findOrThrow(id);
+        if (compte.getStatut() != StatutCompte.EN_ATTENTE_ACTIVATION) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Ce compte n'est plus en attente");
+        }
+        compte.setStatut(StatutCompte.ACTIF);
+        return toResponse(compteRepository.save(compte));
+    }
+
+    @Transactional
+    public CompteResponseDTO rejeter(Long id) {
+        Compte compte = findOrThrow(id);
+        if (compte.getStatut() != StatutCompte.EN_ATTENTE_ACTIVATION) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Ce compte n'est plus en attente");
+        }
+        compte.setStatut(StatutCompte.REJETE);
+        return toResponse(compteRepository.save(compte));
     }
 
     public SoldeResponseDTO getSolde(Long id) {

@@ -25,6 +25,7 @@ export interface Client {
   email: string;
   statutKyc: string;
   operateurId: number;
+  motifRejet?: string | null;
 }
 
 export interface ClientRequest {
@@ -52,6 +53,9 @@ export class CustomerService {
   createOperateur(op: { nom: string; type: string; code: string; statut?: string }): Observable<Operateur> {
     return this.http.post<Operateur>(this.opUrl, op);
   }
+  getOperateursActifs(): Observable<Operateur[]> {
+    return this.http.get<Operateur[]>(`${this.opUrl}/active`);
+  }
   updateOperateurStatus(id: number, status: string): Observable<Operateur> {
     return this.http.patch<Operateur>(`${this.opUrl}/${id}/status`, { status });
   }
@@ -71,5 +75,14 @@ export class CustomerService {
   }
   majKyc(id: number, statutKyc: string): Observable<Client> {
     return this.http.patch<Client>(`${this.clUrl}/${id}/kyc`, { statutKyc });
+  }
+  getClientsEnAttente(): Observable<Client[]> {
+    return this.http.get<Client[]>(`${this.clUrl}/pending`);
+  }
+  approuverClient(id: number): Observable<Client> {
+    return this.http.patch<Client>(`${this.clUrl}/${id}/approve`, {});
+  }
+  rejeterClient(id: number, reason: string): Observable<Client> {
+    return this.http.patch<Client>(`${this.clUrl}/${id}/reject`, { reason });
   }
 }

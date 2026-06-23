@@ -1,3 +1,4 @@
+import json
 from datetime import datetime
 
 from sqlalchemy import DateTime, Float, String, Text, func
@@ -37,8 +38,30 @@ class DocumentAnalysis(Base):
         nullable=False,
         default="completed",
     )
+    content_type: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    document_type: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    extracted_fields_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    missing_fields_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    recommendation: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    message: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime,
         nullable=False,
         server_default=func.now(),
     )
+
+    @property
+    def extracted_fields(self) -> dict[str, str | None]:
+        return json.loads(self.extracted_fields_json or "{}")
+
+    @property
+    def missing_fields(self) -> list[str]:
+        return json.loads(self.missing_fields_json or "[]")
+
+    @property
+    def reliability_level(self) -> str:
+        if self.confidence_score >= 70:
+            return "HIGH"
+        if self.confidence_score >= 40:
+            return "MEDIUM"
+        return "LOW"

@@ -9,6 +9,7 @@ public record ClientResponseDTO(
         String prenom,
         String email,
         StatutKyc statutKyc,
-        Long operateurId
+        Long operateurId,
+        String motifRejet
 ) {
 }

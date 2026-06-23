@@ -6,6 +6,8 @@ import { environment } from '../../../environments/environment';
 export interface DemandePret {
   id: number;
   clientId: number;
+  accountId: number;
+  operatorId: number;
   montantDemande: number;
   dureeMois: number;
   scoreRisque: number;
@@ -37,6 +39,7 @@ export interface Echeancier {
 }
 
 export interface ClientLoanRequest {
+  accountId: number;
   montantDemande: number;
   dureeMois: number;
   motif: string;
@@ -47,7 +50,7 @@ export class LoanService {
   private http = inject(HttpClient);
   private base = `${environment.apiUrl}/loans`;
 
-  soumettre(req: { clientId: number; montantDemande: number; dureeMois: number; motif: string }): Observable<DemandePret> {
+  soumettre(req: { clientId: number; accountId: number; montantDemande: number; dureeMois: number; motif: string }): Observable<DemandePret> {
     return this.http.post<DemandePret>(`${this.base}/applications`, req);
   }
   soumettreMaDemande(req: ClientLoanRequest): Observable<DemandePret> {
@@ -55,6 +58,9 @@ export class LoanService {
   }
   mesDemandes(): Observable<DemandePret[]> {
     return this.http.get<DemandePret[]>(`${this.base}/applications/mine`);
+  }
+  demandesEnAttente(): Observable<DemandePret[]> {
+    return this.http.get<DemandePret[]>(`${this.base}/pending`);
   }
   mesPrets(): Observable<Pret[]> {
     return this.http.get<Pret[]>(`${this.base}/mine`);

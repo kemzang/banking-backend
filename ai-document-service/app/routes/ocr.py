@@ -7,6 +7,7 @@ from app.core.database import get_db
 from app.repositories.document_repository import DocumentRepository
 from app.schemas.ocr_schema import (
     OcrAnalysisResponse,
+    DocumentAnalysisResponse,
     ErrorResponse,
     OcrHistorySuccessResponse,
     OcrSuccessResponse,
@@ -16,6 +17,7 @@ from app.utils.response import success_response
 
 
 router = APIRouter()
+public_router = APIRouter()
 
 
 def get_ocr_service(db: Session = Depends(get_db)) -> OcrService:
@@ -45,6 +47,40 @@ async def extract_text(
         message="OCR effectué avec succès",
         data=data,
     )
+
+
+@public_router.post(
+    "/analysis",
+    response_model=DocumentAnalysisResponse,
+    summary="Analyser un document par OCR",
+    responses={
+        400: {"model": ErrorResponse, "description": "Document invalide"},
+        422: {"model": ErrorResponse, "description": "Fichier absent"},
+        503: {"model": ErrorResponse, "description": "Tesseract indisponible"},
+    },
+)
+async def analyze_document(
+    file: Annotated[
+        UploadFile,
+        File(description="Image PNG ou JPEG, 10 Mo maximum"),
+    ],
+    service: OcrService = Depends(get_ocr_service),
+) -> dict:
+    analysis = await service.extract(file)
+    return {
+        "analysisId": analysis.id,
+        "status": analysis.status,
+        "documentType": analysis.document_type or "UNKNOWN",
+        "extractedText": analysis.extracted_text or "",
+        "extractedFields": analysis.extracted_fields,
+        "missingFields": analysis.missing_fields,
+        "confidenceScore": round(analysis.confidence_score),
+        "reliabilityLevel": analysis.reliability_level,
+        "decisionRecommendation": (
+            analysis.recommendation or "REQUEST_NEW_DOCUMENT"
+        ),
+        "message": analysis.message or "Analyse terminée.",
+    }
 
 
 @router.get(

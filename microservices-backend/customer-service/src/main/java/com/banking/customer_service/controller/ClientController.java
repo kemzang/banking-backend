@@ -3,6 +3,7 @@ package com.banking.customer_service.controller;
 import com.banking.customer_service.dto.ClientRequestDTO;
 import com.banking.customer_service.dto.ClientResponseDTO;
 import com.banking.customer_service.dto.KycRequestDTO;
+import com.banking.customer_service.dto.RejectClientRequestDTO;
 import com.banking.customer_service.service.ClientService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -20,7 +21,13 @@ public class ClientController {
 
     // POST /api/customers  -> cree un client, renvoie 201 Created
     @PostMapping
-    public ResponseEntity<ClientResponseDTO> creerClient(@RequestBody ClientRequestDTO dto) {
+    public ResponseEntity<ClientResponseDTO> creerClient(
+            @RequestBody ClientRequestDTO dto,
+            @RequestHeader(value = "X-Internal-Service", required = false) String internalService,
+            @RequestHeader(value = "X-User-Roles", required = false) String roles) {
+        if (!"auth-service".equals(internalService) && !hasRole(roles, "ADMIN_PLATFORM")) {
+            throw new org.springframework.web.server.ResponseStatusException(HttpStatus.FORBIDDEN, "Creation client non autorisee");
+        }
         ClientResponseDTO cree = clientService.creerClient(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(cree);
     }
@@ -72,6 +79,50 @@ public class ClientController {
         throw new org.springframework.web.server.ResponseStatusException(HttpStatus.FORBIDDEN, "Acces refuse");
     }
 
+    @GetMapping("/pending")
+    public ResponseEntity<List<ClientResponseDTO>> pending(
+            @RequestHeader(value = "X-User-Roles", required = false) String roles,
+            @RequestHeader(value = "X-Operator-Id", required = false) Long operatorId) {
+        boolean admin = hasRole(roles, "ADMIN_PLATFORM");
+        if (!admin && !hasRole(roles, "OPERATOR_ADMIN") && !hasRole(roles, "OPERATOR_AGENT")) {
+            throw new org.springframework.web.server.ResponseStatusException(HttpStatus.FORBIDDEN, "Acces refuse");
+        }
+        if (!admin && operatorId == null) {
+            throw new org.springframework.web.server.ResponseStatusException(HttpStatus.FORBIDDEN, "Identite operateur manquante");
+        }
+        return ResponseEntity.ok(clientService.listerEnAttente(operatorId, admin));
+    }
+
+    @PatchMapping("/{id}/approve")
+    public ResponseEntity<ClientResponseDTO> approve(
+            @PathVariable Long id,
+            @RequestHeader(value = "X-User-Roles", required = false) String roles,
+            @RequestHeader(value = "X-Operator-Id", required = false) Long operatorId) {
+        verifierDecisionScope(id, roles, operatorId);
+        return ResponseEntity.ok(clientService.approuver(id));
+    }
+
+    @PatchMapping("/{id}/reject")
+    public ResponseEntity<ClientResponseDTO> reject(
+            @PathVariable Long id,
+            @RequestBody RejectClientRequestDTO request,
+            @RequestHeader(value = "X-User-Roles", required = false) String roles,
+            @RequestHeader(value = "X-Operator-Id", required = false) Long operatorId) {
+        verifierDecisionScope(id, roles, operatorId);
+        return ResponseEntity.ok(clientService.rejeter(id, request.reason()));
+    }
+
+    private void verifierDecisionScope(Long clientId, String roles, Long operatorId) {
+        if (hasRole(roles, "ADMIN_PLATFORM")) return;
+        if (!hasRole(roles, "OPERATOR_ADMIN")) {
+            throw new org.springframework.web.server.ResponseStatusException(HttpStatus.FORBIDDEN, "Decision reservee a OPERATOR_ADMIN");
+        }
+        ClientResponseDTO client = clientService.getClient(clientId);
+        if (operatorId == null || !operatorId.equals(client.operateurId())) {
+            throw new org.springframework.web.server.ResponseStatusException(HttpStatus.FORBIDDEN, "Client rattache a un autre operateur");
+        }
+    }
+
     private boolean hasRole(String roles, String role) {
         return roles != null && java.util.Arrays.stream(roles.split(","))
                 .map(String::trim)
@@ -101,16 +152,12 @@ public class ClientController {
             @RequestBody KycRequestDTO dto,
             @RequestHeader(value = "X-User-Roles", required = false) String roles,
             @RequestHeader(value = "X-Operator-Id", required = false) Long operatorId) {
-        if (hasRole(roles, "CLIENT")) {
-            throw new org.springframework.web.server.ResponseStatusException(HttpStatus.FORBIDDEN, "Un client ne peut pas valider son KYC");
+        verifierDecisionScope(id, roles, operatorId);
+        if (dto.statutKyc() == com.banking.customer_service.entity.StatutKyc.VALIDE) {
+            return ResponseEntity.ok(clientService.approuver(id));
         }
-        ClientResponseDTO client = clientService.getClient(id);
-        if (hasRole(roles, "OPERATOR_ADMIN") || hasRole(roles, "OPERATOR_AGENT")) {
-            if (operatorId == null || !operatorId.equals(client.operateurId())) {
-                throw new org.springframework.web.server.ResponseStatusException(HttpStatus.FORBIDDEN, "Client rattache a un autre operateur");
-            }
-        } else if (!hasRole(roles, "ADMIN_PLATFORM")) {
-            throw new org.springframework.web.server.ResponseStatusException(HttpStatus.FORBIDDEN, "Validation KYC reservee aux operateurs");
+        if (dto.statutKyc() == com.banking.customer_service.entity.StatutKyc.REJETE) {
+            return ResponseEntity.ok(clientService.rejeter(id, "Dossier KYC rejete"));
         }
         return ResponseEntity.ok(clientService.majKyc(id, dto.statutKyc()));
     }

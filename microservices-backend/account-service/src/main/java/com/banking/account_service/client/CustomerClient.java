@@ -10,4 +10,7 @@ public interface CustomerClient {
 
     @GetMapping("/api/customers/by-email/{email}")
     ClientResponseDTO getClientByEmail(@PathVariable("email") String email);
+
+    @GetMapping("/api/customers/{id}")
+    ClientResponseDTO getClientById(@PathVariable("id") Long id);
 }

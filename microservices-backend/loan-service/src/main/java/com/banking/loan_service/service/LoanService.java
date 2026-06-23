@@ -26,6 +26,11 @@ public class LoanService {
     private final RemboursementRepository remboursementRepository;
 
     public DemandePretResponseDTO soumettre(DemandePretRequestDTO request) {
+        if (request.clientId() == null) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.BAD_REQUEST,
+                    "clientId est obligatoire");
+        }
         log.info("Soumission d'une demande de prêt pour le client {}", request.clientId());
         
         // Calcul simple du score de risque (exemple: basé sur le montant et la durée)
@@ -33,6 +38,8 @@ public class LoanService {
         
         DemandePret demande = DemandePret.builder()
                 .clientId(request.clientId())
+                .accountId(request.accountId())
+                .operatorId(request.operatorId())
                 .montantDemande(request.montantDemande())
                 .dureeMois(request.dureeMois())
                 .motif(request.motif())
@@ -44,6 +51,8 @@ public class LoanService {
         return new DemandePretResponseDTO(
                 demande.getId(),
                 demande.getClientId(),
+                demande.getAccountId(),
+                demande.getOperatorId(),
                 demande.getMontantDemande(),
                 demande.getDureeMois(),
                 demande.getScoreRisque(),
@@ -72,6 +81,8 @@ public class LoanService {
             return new DemandePretResponseDTO(
                     demande.getId(),
                     demande.getClientId(),
+                    demande.getAccountId(),
+                    demande.getOperatorId(),
                     demande.getMontantDemande(),
                     demande.getDureeMois(),
                     demande.getScoreRisque(),
@@ -202,6 +213,8 @@ public class LoanService {
         return new DemandePretResponseDTO(
                 demande.getId(),
                 demande.getClientId(),
+                demande.getAccountId(),
+                demande.getOperatorId(),
                 demande.getMontantDemande(),
                 demande.getDureeMois(),
                 demande.getScoreRisque(),
@@ -212,9 +225,19 @@ public class LoanService {
     public List<DemandePretResponseDTO> listerDemandesClient(Long clientId) {
         return demandePretRepository.findByClientIdOrderByDateSoumissionDesc(clientId).stream()
                 .map(demande -> new DemandePretResponseDTO(
-                        demande.getId(), demande.getClientId(), demande.getMontantDemande(),
+                        demande.getId(), demande.getClientId(), demande.getAccountId(), demande.getOperatorId(),
+                        demande.getMontantDemande(),
                         demande.getDureeMois(), demande.getScoreRisque(), demande.getStatut()))
                 .toList();
+    }
+
+    public List<DemandePretResponseDTO> listerEnAttente(Long operatorId, boolean global) {
+        List<DemandePret> demandes = global
+                ? demandePretRepository.findByStatutOrderByDateSoumissionDesc(StatutDemande.SOUMISE)
+                : demandePretRepository.findByOperatorIdAndStatutOrderByDateSoumissionDesc(operatorId, StatutDemande.SOUMISE);
+        return demandes.stream().map(d -> new DemandePretResponseDTO(
+                d.getId(), d.getClientId(), d.getAccountId(), d.getOperatorId(), d.getMontantDemande(),
+                d.getDureeMois(), d.getScoreRisque(), d.getStatut())).toList();
     }
 
     public List<PretResponseDTO> listerPretsClient(Long clientId) {

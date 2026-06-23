@@ -65,6 +65,7 @@ export class Login implements AfterViewInit, OnDestroy {
     const q = this.route.snapshot.queryParamMap;
     if (q.get('expired')) this.toast.warning('Votre session a expiré, reconnectez-vous.');
     if (q.get('registered')) this.toast.success('Compte créé — connectez-vous.');
+    if (q.get('pending')) this.toast.success('Votre compte est en attente de validation par l’opérateur.');
 
     // Google Identity Services
     if (!this.googleActif || typeof google === 'undefined') return;

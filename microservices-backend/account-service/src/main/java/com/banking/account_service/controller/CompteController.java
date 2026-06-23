@@ -3,6 +3,7 @@ package com.banking.account_service.controller;
 import com.banking.account_service.client.CustomerClient;
 import com.banking.account_service.dto.*;
 import com.banking.account_service.service.CompteService;
+import com.banking.account_service.service.AccountNotificationClient;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,21 +27,66 @@ public class CompteController {
 
     private final CompteService compteService;
     private final CustomerClient customerClient;
+    private final AccountNotificationClient notificationClient;
 
     // POST /api/accounts  → ouvrir un compte (201)
     @PostMapping
     public ResponseEntity<CompteResponseDTO> ouvrir(
             @RequestBody CompteRequestDTO dto,
+            @RequestHeader(value = "X-User-Email", required = false) String userEmail,
             @RequestHeader(value = "X-User-Roles", required = false) String roles,
             @RequestHeader(value = "X-Operator-Id", required = false) Long operatorId) {
-        verifierRoleAdminOuOperateur(roles);
+        CompteRequestDTO effective = dto;
+        if (hasRole(roles, "CLIENT")) {
+            ClientResponseDTO client = getClientFromEmail(userEmail);
+            if (!"VALIDE".equals(client.statutKyc())) {
+                throw new ResponseStatusException(HttpStatus.LOCKED, "Profil client non valide");
+            }
+            effective = new CompteRequestDTO(client.id(), client.operateurId(), dto.type(), dto.devise(),
+                    dto.plafondJournalier(), dto.decouvertAutorise());
+        } else {
+            verifierRoleAdminOuOperateur(roles);
+        }
         if (estOperateur(roles)) {
             requireOperatorId(operatorId);
-            if (!operatorId.equals(dto.operateurId())) {
+            if (!operatorId.equals(effective.operateurId())) {
                 throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Impossible d'ouvrir un compte pour un autre operateur");
             }
         }
-        return ResponseEntity.status(HttpStatus.CREATED).body(compteService.ouvrirCompte(dto));
+        ClientResponseDTO owner = customerClient.getClientById(effective.clientId());
+        if (!effective.operateurId().equals(owner.operateurId())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "L'operateur du compte doit etre celui du client");
+        }
+        CompteResponseDTO created = compteService.ouvrirCompte(effective);
+        notificationClient.openingRequested(created, owner.email());
+        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    }
+
+    @GetMapping("/pending")
+    public ResponseEntity<List<CompteResponseDTO>> pending(
+            @RequestHeader(value = "X-User-Roles", required = false) String roles,
+            @RequestHeader(value = "X-Operator-Id", required = false) Long operatorId) {
+        if (!estAdmin(roles) && !estOperateur(roles)) throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Acces refuse");
+        if (!estAdmin(roles)) requireOperatorId(operatorId);
+        return ResponseEntity.ok(compteService.listerEnAttente(operatorId, estAdmin(roles)));
+    }
+
+    @PatchMapping("/{id}/activate")
+    public ResponseEntity<CompteResponseDTO> activer(@PathVariable Long id,
+            @RequestHeader(value = "X-User-Roles", required = false) String roles,
+            @RequestHeader(value = "X-Operator-Id", required = false) Long operatorId) {
+        verifierRoleDecision(roles);
+        verifierOperatorScope(compteService.getCompte(id), roles, operatorId);
+        return ResponseEntity.ok(compteService.activer(id));
+    }
+
+    @PatchMapping("/{id}/reject")
+    public ResponseEntity<CompteResponseDTO> rejeter(@PathVariable Long id,
+            @RequestHeader(value = "X-User-Roles", required = false) String roles,
+            @RequestHeader(value = "X-Operator-Id", required = false) Long operatorId) {
+        verifierRoleDecision(roles);
+        verifierOperatorScope(compteService.getCompte(id), roles, operatorId);
+        return ResponseEntity.ok(compteService.rejeter(id));
     }
 
     // GET /api/accounts/{id}  → détails d'un compte (200 / 404)
@@ -163,11 +209,15 @@ public class CompteController {
     }
 
     private Long getClientIdFromEmail(String email) {
+        return getClientFromEmail(email).id();
+    }
+
+    private ClientResponseDTO getClientFromEmail(String email) {
         if (email == null || email.isBlank()) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Email utilisateur manquant");
         }
         try {
-            return customerClient.getClientByEmail(email).id();
+            return customerClient.getClientByEmail(email);
         } catch (Exception e) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Client non trouvé pour cet email");
         }
@@ -187,6 +237,12 @@ public class CompteController {
         }
         if (!compte.clientId().equals(getClientIdFromEmail(userEmail))) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Acces refuse a ce compte");
+        }
+    }
+
+    private void verifierRoleDecision(String roles) {
+        if (!estAdmin(roles) && !hasRole(roles, "OPERATOR_ADMIN")) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Decision reservee a OPERATOR_ADMIN");
         }
     }
 

@@ -24,7 +24,7 @@ export class Prets implements OnInit {
   erreur = signal<string | null>(null);
   succes = signal<string | null>(null);
 
-  nouvelle = { clientId: 0, montantDemande: 0, dureeMois: 12, motif: '' };
+  nouvelle = { clientId: 0, accountId: 0, montantDemande: 0, dureeMois: 12, motif: '' };
   // champs de décision partagés
   tauxInteret = 0.12;
   compteDecision = 0;
@@ -34,6 +34,7 @@ export class Prets implements OnInit {
   ngOnInit(): void {
     this.customer.getClients().subscribe({ next: (c) => this.clients.set(c) });
     this.account.list().subscribe({ next: (a) => this.comptes.set(a) });
+    this.loan.demandesEnAttente().subscribe({ next: demandes => this.demandes.set(demandes) });
   }
 
   soumettre(): void {
@@ -42,7 +43,7 @@ export class Prets implements OnInit {
       next: (d) => {
         this.demandes.update((list) => [d, ...list]);
         this.succes.set(`Demande #${d.id} soumise (score risque ${d.scoreRisque}).`);
-        this.nouvelle = { clientId: 0, montantDemande: 0, dureeMois: 12, motif: '' };
+        this.nouvelle = { clientId: 0, accountId: 0, montantDemande: 0, dureeMois: 12, motif: '' };
       },
       error: () => this.erreur.set('Erreur lors de la soumission.'),
     });
@@ -83,6 +84,10 @@ export class Prets implements OnInit {
   nomClient(id: number): string {
     const c = this.clients().find((x) => x.id === id);
     return c ? `${c.prenom} ${c.nom}` : `#${id}`;
+  }
+
+  comptesClient(): Compte[] {
+    return this.comptes().filter(c => c.clientId === this.nouvelle.clientId && c.statut === 'ACTIF');
   }
 
   badgeD(s: string): string {

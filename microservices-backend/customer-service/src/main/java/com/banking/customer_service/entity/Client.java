@@ -41,6 +41,8 @@ public class Client {
     @Enumerated(EnumType.STRING)
     private StatutKyc statutKyc;
 
+    private String motifRejet;
+
     @Embedded
     private Adresse adresse;
 

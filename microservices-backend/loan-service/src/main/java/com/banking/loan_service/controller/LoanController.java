@@ -2,7 +2,9 @@ package com.banking.loan_service.controller;
 
 import com.banking.loan_service.dto.*;
 import com.banking.loan_service.service.LoanService;
+import com.banking.loan_service.service.LoanNotificationClient;
 import com.banking.loan_service.client.CustomerClient;
+import com.banking.loan_service.client.AccountClient;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +20,8 @@ public class LoanController {
 
     private final LoanService loanService;
     private final CustomerClient customerClient;
+    private final AccountClient accountClient;
+    private final LoanNotificationClient notificationClient;
 
     @PostMapping("/applications/mine")
     public ResponseEntity<DemandePretResponseDTO> soumettreMaDemande(
@@ -26,8 +30,11 @@ public class LoanController {
             @RequestHeader("X-User-Roles") String roles) {
         requireRole(roles, "CLIENT");
         CustomerResponseDTO customer = customerClient.getByEmail(email);
+        verifierCompte(request.accountId(), customer, email, roles, null);
         DemandePretResponseDTO response = loanService.soumettre(new DemandePretRequestDTO(
-                customer.id(), request.montantDemande(), request.dureeMois(), request.motif()));
+                customer.id(), request.accountId(), customer.operateurId(),
+                request.montantDemande(), request.dureeMois(), request.motif()));
+        notificationClient.requested(response, customer.email());
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -56,8 +63,40 @@ public class LoanController {
             @RequestHeader(value = "X-User-Roles", required = false) String roles,
             @RequestHeader(value = "X-Operator-Id", required = false) Long operatorId) {
         verifierAccesClient(request.clientId(), email, roles, operatorId);
-        DemandePretResponseDTO response = loanService.soumettre(request);
+        CustomerResponseDTO customer = customerClient.getById(request.clientId());
+        verifierCompte(request.accountId(), customer, email, roles, operatorId);
+        DemandePretRequestDTO safeRequest = new DemandePretRequestDTO(customer.id(), request.accountId(),
+                customer.operateurId(), request.montantDemande(), request.dureeMois(), request.motif());
+        DemandePretResponseDTO response = loanService.soumettre(safeRequest);
+        notificationClient.requested(response, customer.email());
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @PostMapping
+    public ResponseEntity<DemandePretResponseDTO> soumettre(
+            @RequestBody ClientLoanRequestDTO request,
+            @RequestHeader("X-User-Email") String email,
+            @RequestHeader("X-User-Roles") String roles) {
+        return soumettreMaDemande(request, email, roles);
+    }
+
+    @GetMapping("/my")
+    public ResponseEntity<java.util.List<DemandePretResponseDTO>> my(
+            @RequestHeader("X-User-Email") String email,
+            @RequestHeader("X-User-Roles") String roles) {
+        return mesDemandes(email, roles);
+    }
+
+    @GetMapping("/pending")
+    public ResponseEntity<java.util.List<DemandePretResponseDTO>> pending(
+            @RequestHeader(value = "X-User-Roles", required = false) String roles,
+            @RequestHeader(value = "X-Operator-Id", required = false) Long operatorId) {
+        boolean admin = hasRole(roles, "ADMIN_PLATFORM");
+        if (!admin && !hasRole(roles, "OPERATOR_ADMIN") && !hasRole(roles, "OPERATOR_AGENT")) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Acces refuse");
+        }
+        if (!admin && operatorId == null) throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Operateur manquant");
+        return ResponseEntity.ok(loanService.listerEnAttente(operatorId, admin));
     }
 
     @GetMapping("/applications/{id}")
@@ -82,7 +121,7 @@ public class LoanController {
             @RequestHeader(value = "X-User-Email", required = false) String email,
             @RequestHeader(value = "X-User-Roles", required = false) String roles,
             @RequestHeader(value = "X-Operator-Id", required = false) Long operatorId) {
-        requireAnyRole(roles, "ADMIN_PLATFORM", "OPERATOR_ADMIN", "OPERATOR_AGENT");
+        requireAnyRole(roles, "ADMIN_PLATFORM", "OPERATOR_ADMIN");
         verifierAccesClient(loanService.getDemandePret(id).clientId(), email, roles, operatorId);
         Object response = loanService.decider(id, decision);
         return ResponseEntity.ok(response);
@@ -126,6 +165,30 @@ public class LoanController {
         return ResponseEntity.ok(response);
     }
 
+    @PatchMapping("/{id}/approve")
+    public ResponseEntity<Object> approve(@PathVariable Long id, @RequestBody DecisionRequestDTO decision,
+            @RequestHeader(value = "X-User-Email", required = false) String email,
+            @RequestHeader(value = "X-User-Roles", required = false) String roles,
+            @RequestHeader(value = "X-Operator-Id", required = false) Long operatorId) {
+        requireAnyRole(roles, "ADMIN_PLATFORM", "OPERATOR_ADMIN");
+        DemandePretResponseDTO demande = loanService.getDemandePret(id);
+        verifierAccesClient(demande.clientId(), email, roles, operatorId);
+        return ResponseEntity.ok(loanService.decider(id,
+                new DecisionRequestDTO(true, decision.tauxInteret(), demande.accountId(), null)));
+    }
+
+    @PatchMapping("/{id}/reject")
+    public ResponseEntity<Object> reject(@PathVariable Long id, @RequestBody LoanRejectRequestDTO request,
+            @RequestHeader(value = "X-User-Email", required = false) String email,
+            @RequestHeader(value = "X-User-Roles", required = false) String roles,
+            @RequestHeader(value = "X-Operator-Id", required = false) Long operatorId) {
+        requireAnyRole(roles, "ADMIN_PLATFORM", "OPERATOR_ADMIN");
+        DemandePretResponseDTO demande = loanService.getDemandePret(id);
+        verifierAccesClient(demande.clientId(), email, roles, operatorId);
+        return ResponseEntity.ok(loanService.decider(id,
+                new DecisionRequestDTO(false, null, demande.accountId(), request.reason())));
+    }
+
     private void verifierAccesClient(Long clientId, String email, String roles, Long operatorId) {
         if (hasRole(roles, "ADMIN_PLATFORM")) {
             return;
@@ -141,6 +204,18 @@ public class LoanController {
             return;
         }
         throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Acces refuse a ce pret");
+    }
+
+    private void verifierCompte(Long accountId, CustomerResponseDTO customer, String email, String roles, Long operatorId) {
+        if (accountId == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "accountId est obligatoire");
+        AccountResponseDTO account = accountClient.getById(accountId, email == null ? "internal@bank" : email,
+                roles == null ? "ADMIN_PLATFORM" : roles, operatorId);
+        if (!customer.id().equals(account.clientId()) || !customer.operateurId().equals(account.operateurId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Compte non rattache a ce client/operateur");
+        }
+        if (!"ACTIF".equals(account.statut())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Le compte bancaire doit etre actif");
+        }
     }
 
     private boolean hasRole(String roles, String expected) {

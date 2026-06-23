@@ -8,6 +8,7 @@ export interface RegisterRequest {
   nom?: string;
   prenom?: string;
   telephone?: string;
+  operatorId: number;
 }
 
 export interface LoginRequest {
@@ -47,6 +48,7 @@ export interface UserResponse {
   operatorId?: number | null;
   firstName?: string | null;
   lastName?: string | null;
+  status?: 'EN_ATTENTE' | 'ACTIF' | 'REJETE' | 'SUSPENDU';
 }
 
 /** Claims extraites du JWT (champ payload décodé en base64) */
@@ -55,6 +57,7 @@ export interface JwtPayload {
   roles: string[];
   userId?: string;
   operatorId?: number;
+  status?: 'EN_ATTENTE' | 'ACTIF' | 'REJETE' | 'SUSPENDU';
   mfaEnabled?: boolean;
   mfaVerified?: boolean;
   exp: number;           // Unix timestamp secondes

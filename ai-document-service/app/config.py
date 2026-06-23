@@ -25,6 +25,7 @@ class Settings(BaseModel):
     debug: bool = _as_bool(os.getenv("DEBUG", "false"))
     database_url: str = os.getenv("DATABASE_URL", "sqlite:///./storage/app.db")
     tesseract_cmd: str | None = os.getenv("TESSERACT_CMD") or None
+    ocr_languages: str = os.getenv("OCR_LANGUAGES", "fra+eng")
     upload_dir: Path = BASE_DIR / "app" / "storage" / "uploads"
     max_upload_size_mb: int = int(os.getenv("MAX_UPLOAD_SIZE_MB", "10"))
 

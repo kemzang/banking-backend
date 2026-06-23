@@ -2,6 +2,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DecimalPipe } from '@angular/common';
 import { LoanService, DemandePret, Pret } from '../../../core/services/loan.service';
+import { AccountService, Compte } from '../../../core/services/account.service';
 
 @Component({
   selector: 'app-client-loans',
@@ -12,14 +13,21 @@ import { LoanService, DemandePret, Pret } from '../../../core/services/loan.serv
 })
 export class ClientLoans implements OnInit {
   private loans = inject(LoanService);
+  private accountsService = inject(AccountService);
+  accounts = signal<Compte[]>([]);
   demandes = signal<DemandePret[]>([]);
   prets = signal<Pret[]>([]);
   chargement = signal(true);
   erreur = signal<string | null>(null);
   succes = signal<string | null>(null);
-  form = { montantDemande: 0, dureeMois: 12, motif: '' };
+  form = { accountId: 0, montantDemande: 0, dureeMois: 12, motif: '' };
 
-  ngOnInit(): void { this.charger(); }
+  ngOnInit(): void {
+    this.charger();
+    this.accountsService.list().subscribe({
+      next: accounts => this.accounts.set(accounts.filter(account => account.statut === 'ACTIF'))
+    });
+  }
 
   charger(): void {
     this.chargement.set(true);
@@ -36,7 +44,7 @@ export class ClientLoans implements OnInit {
     this.loans.soumettreMaDemande(this.form).subscribe({
       next: demande => {
         this.demandes.update(items => [demande, ...items]);
-        this.form = { montantDemande: 0, dureeMois: 12, motif: '' };
+        this.form = { accountId: 0, montantDemande: 0, dureeMois: 12, motif: '' };
         this.succes.set(`Votre demande #${demande.id} a été enregistrée.`);
       },
       error: () => this.erreur.set('Votre demande n’a pas pu être enregistrée.'),

@@ -49,7 +49,7 @@
 
     <!-- Dropzone -->
     <div class="dropzone" [class.dropzone--active]="!!fichier">
-      <input type="file" id="file" accept="image/*" (change)="onFichier($event)" />
+      <input type="file" id="file" accept="image/png,image/jpeg" (change)="onFichier($event)" />
       <label for="file">
         @if (fichier) {
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -96,7 +96,7 @@
           </svg>
           <span>Texte extrait</span>
           <div class="confidence-pill">
-            Confiance : <strong>{{ (r.confidence_score * 100) | number:'1.0-0' }}%</strong>
+            Confiance : <strong>{{ r.confidence_score | number:'1.0-0' }}%</strong>
           </div>
         </div>
         <pre class="ocr-text">{{ r.extracted_text || '(aucun texte détecté)' }}</pre>
@@ -151,9 +151,9 @@
                 <td>
                   <div class="conf-bar-wrap">
                     <div class="conf-bar">
-                      <div class="conf-fill" [style.width.%]="(h.confidence_score * 100)"></div>
+                      <div class="conf-fill" [style.width.%]="h.confidence_score"></div>
                     </div>
-                    <span class="mono-cell">{{ (h.confidence_score * 100) | number:'1.0-0' }}%</span>
+                    <span class="mono-cell">{{ h.confidence_score | number:'1.0-0' }}%</span>
                   </div>
                 </td>
               </tr>

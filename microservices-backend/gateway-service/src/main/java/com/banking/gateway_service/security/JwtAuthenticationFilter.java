@@ -28,7 +28,8 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
     private static final List<String> PUBLIC_PATHS = List.of(
             "/api/auth/login",
             "/api/auth/register",
-            "/api/auth/google"
+            "/api/auth/google",
+            "/api/operators/active"
     );
 
     private final SecretKey key;
@@ -81,6 +82,7 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
                 headers.remove("X-User-Id");
                 headers.remove("X-User-Roles");
                 headers.remove("X-Operator-Id");
+                headers.remove("X-Internal-Service");
                 headers.set("X-User-Email", claims.getSubject());
                 headers.set("X-User-Id", userId);
                 headers.set("X-User-Roles", roles);

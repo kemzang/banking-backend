@@ -18,8 +18,15 @@ const recent = [];
 const MAX_RECENT = 50;
 let seq = 0;
 function addNotification(event) {
-  recent.unshift({ id: ++seq, receivedAt: new Date().toISOString(), ...event });
+  const notification = {
+    id: ++seq,
+    receivedAt: new Date().toISOString(),
+    status: 'UNREAD',
+    ...event
+  };
+  recent.unshift(notification);
   if (recent.length > MAX_RECENT) recent.pop();
+  return notification;
 }
 
 app.get('/health', (_req, res) => res.json({ status: 'UP', service: 'notification-service' }));
@@ -28,7 +35,15 @@ app.get('/',       (_req, res) => res.json({ message: 'notification-service is r
 // Liste des notifications recentes (consommee par le frontend via la gateway)
 app.get('/api/notifications', (req, res) => {
   const roles = String(req.header('X-User-Roles') || '').split(',').map((role) => role.trim());
-  if (!roles.includes('CLIENT')) return res.json(recent);
+  if (roles.includes('ADMIN_PLATFORM')) return res.json(recent);
+
+  if (roles.includes('OPERATOR_ADMIN') || roles.includes('OPERATOR_AGENT')) {
+    const operatorId = Number(req.header('X-Operator-Id'));
+    if (!Number.isFinite(operatorId)) return res.status(403).json({ message: 'Identite operateur manquante' });
+    return res.json(recent.filter((notification) => Number(notification.operatorId) === operatorId));
+  }
+
+  if (!roles.includes('CLIENT')) return res.status(403).json({ message: 'Acces refuse' });
 
   const email = String(req.header('X-User-Email') || '').toLowerCase();
   const own = recent.filter((notification) => {
@@ -36,6 +51,33 @@ app.get('/api/notifications', (req, res) => {
     return owner && String(owner).toLowerCase() === email;
   });
   return res.json(own);
+});
+
+// Creation reservee aux appels directs des microservices. La gateway supprime
+// X-Internal-Service des requetes publiques avant routage.
+app.post('/api/notifications', (req, res) => {
+  const caller = String(req.header('X-Internal-Service') || '');
+  const allowed = ['customer-service', 'account-service', 'loan-service', 'transaction-service'];
+  if (!allowed.includes(caller)) return res.status(403).json({ message: 'Appel interne refuse' });
+  return res.status(201).json(addNotification(req.body || {}));
+});
+
+app.patch('/api/notifications/:id/read', (req, res) => {
+  const roles = String(req.header('X-User-Roles') || '').split(',').map((role) => role.trim());
+  const notification = recent.find((item) => item.id === Number(req.params.id));
+  if (!notification) return res.status(404).json({ message: 'Notification introuvable' });
+
+  const isPlatformAdmin = roles.includes('ADMIN_PLATFORM');
+  const isOperatorOwner = (roles.includes('OPERATOR_ADMIN') || roles.includes('OPERATOR_AGENT'))
+    && Number(notification.operatorId) === Number(req.header('X-Operator-Id'));
+  const email = String(req.header('X-User-Email') || '').toLowerCase();
+  const owner = String(notification.userEmail || notification.clientEmail || notification.email || '').toLowerCase();
+  const isClientOwner = roles.includes('CLIENT') && owner && owner === email;
+  if (!isPlatformAdmin && !isOperatorOwner && !isClientOwner) {
+    return res.status(403).json({ message: 'Acces refuse' });
+  }
+  notification.status = 'READ';
+  return res.json(notification);
 });
 
 app.listen(PORT, () => console.log(`[HTTP] notification-service démarré sur le port ${PORT}`));

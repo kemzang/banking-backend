@@ -17,6 +17,23 @@ def test_health_check() -> None:
     }
 
 
+def test_public_health_check() -> None:
+    response = client.get("/health")
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "status": "UP",
+        "service": "ai-document-service",
+    }
+
+
+def test_public_analysis_requires_a_file() -> None:
+    response = client.post("/analysis")
+
+    assert response.status_code == 422
+    assert response.json()["message"] == "Données de requête invalides"
+
+
 def test_analysis() -> None:
     response = client.post(
         "/api/v1/analysis/",
@@ -61,3 +78,4 @@ def test_ocr_openapi_uses_a_required_binary_upload() -> None:
     assert upload_schema["required"] == ["file"]
     assert upload_schema["properties"]["file"]["type"] == "string"
     assert upload_schema["properties"]["file"]["format"] == "binary"
+    assert "/analysis" in openapi_schema["paths"]

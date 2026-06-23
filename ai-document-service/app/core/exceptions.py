@@ -1,3 +1,4 @@
+import logging
 from typing import Any
 
 from fastapi import FastAPI, HTTPException, Request
@@ -5,6 +6,9 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
 from app.utils.response import error_response
+
+
+LOGGER = logging.getLogger(__name__)
 
 
 class AppException(Exception):
@@ -67,6 +71,7 @@ def register_exception_handlers(app: FastAPI) -> None:
         request: Request,
         exc: Exception,
     ) -> JSONResponse:
+        LOGGER.exception("Erreur non geree sur %s", request.url.path, exc_info=exc)
         return JSONResponse(
             status_code=500,
             content=error_response("Une erreur interne est survenue"),

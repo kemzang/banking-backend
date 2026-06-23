@@ -42,6 +42,11 @@ public class OperateurController {
         return ResponseEntity.ok(operateurService.getById(id));
     }
 
+    @GetMapping("/active")
+    public ResponseEntity<List<OperateurResponseDTO>> listerActifs() {
+        return ResponseEntity.ok(operateurService.listerActifs());
+    }
+
     @PatchMapping("/{id}/status")
     public ResponseEntity<OperateurResponseDTO> changerStatut(
             @PathVariable Long id,

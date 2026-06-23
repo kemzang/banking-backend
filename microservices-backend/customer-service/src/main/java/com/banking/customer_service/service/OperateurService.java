@@ -44,6 +44,11 @@ public class OperateurService {
         return operateurRepository.findAll().stream().map(this::toResponse).toList();
     }
 
+    public List<OperateurResponseDTO> listerActifs() {
+        return operateurRepository.findByStatutOrderByNomAsc(StatutOperateur.ACTIVE)
+                .stream().map(this::toResponse).toList();
+    }
+
     public OperateurResponseDTO changerStatut(Long id, StatutOperateur statut) {
         if (statut == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "status est obligatoire");

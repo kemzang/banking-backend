@@ -33,6 +33,7 @@ public class JwtService {
         Map<String, Object> claims = new java.util.HashMap<>();
         claims.put("userId", u.getId().toString());
         claims.put("roles", u.getRoles().stream().map(Enum::name).sorted().toList());
+        claims.put("status", u.getStatut().name());
         if (u.getOperatorId() != null) {
             claims.put("operatorId", u.getOperatorId());
         }

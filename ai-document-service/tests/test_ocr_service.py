@@ -36,7 +36,7 @@ def test_extract_saves_file_and_analysis(tmp_path, monkeypatch) -> None:
 
     monkeypatch.setattr(
         "app.services.ocr_service.pytesseract.image_to_string",
-        lambda image: "Invoice 123",
+        lambda image, *args: "Invoice 123",
     )
 
     with Session(engine) as session:
@@ -51,8 +51,9 @@ def test_extract_saves_file_and_analysis(tmp_path, monkeypatch) -> None:
 
         assert analysis.original_filename == "invoice.png"
         assert analysis.extracted_text == "Invoice 123"
-        assert analysis.confidence_score == 0.0
-        assert analysis.status == "completed"
+        assert 0 < analysis.confidence_score <= 100
+        assert analysis.status == "COMPLETED"
+        assert analysis.recommendation == "REQUEST_NEW_DOCUMENT"
         assert (tmp_path / analysis.stored_filename).is_file()
         assert service.get_history() == [analysis]
         assert service.get_history_item(analysis.id) == analysis
@@ -95,3 +96,21 @@ def test_get_history_item_raises_when_analysis_is_missing(tmp_path) -> None:
 
         assert exception.value.status_code == 404
         assert exception.value.message == "Analyse OCR introuvable"
+
+
+def test_reliability_rules_for_readable_identity_document() -> None:
+    result = OcrService._analyze_text(
+        "CNI NOM DUPONT PRENOM JEAN DATE 12/05/1998 NUMERO AB1234567"
+    )
+
+    assert result["score"] >= 70
+    assert result["document_type"] == "IDENTITY_DOCUMENT"
+    assert result["fields"]["documentNumber"] == "AB1234567"
+    assert result["recommendation"] == "ACCEPT_FOR_REVIEW"
+
+
+def test_reliability_rules_for_unreadable_document() -> None:
+    result = OcrService._analyze_text("")
+
+    assert result["score"] == 0
+    assert result["recommendation"] == "REQUEST_NEW_DOCUMENT"

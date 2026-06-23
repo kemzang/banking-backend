@@ -41,6 +41,15 @@
           }
         </select>
       </div>
+      <div class="field">
+        <label>Compte actif du client</label>
+        <select name="account" [(ngModel)]="nouvelle.accountId" required>
+          <option [ngValue]="0" disabled>Sélectionner un compte</option>
+          @for (account of comptesClient(); track account.id) {
+            <option [ngValue]="account.id">{{ account.numeroCompte }}</option>
+          }
+        </select>
+      </div>
       <div class="row">
         <div class="field">
           <label>Montant demandé</label>

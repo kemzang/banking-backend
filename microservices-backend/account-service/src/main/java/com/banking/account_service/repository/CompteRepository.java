@@ -6,6 +6,7 @@ import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.banking.account_service.entity.Compte;
+import com.banking.account_service.entity.StatutCompte;
 
 public interface CompteRepository extends JpaRepository<Compte, Long> {
 
@@ -16,4 +17,8 @@ public interface CompteRepository extends JpaRepository<Compte, Long> {
     boolean existsByNumeroCompte(String numeroCompte);
 
     long countByOperateurId(Long operateurId);
+
+    List<Compte> findByStatut(StatutCompte statut);
+
+    List<Compte> findByOperateurIdAndStatut(Long operateurId, StatutCompte statut);
 }

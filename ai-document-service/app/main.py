@@ -6,7 +6,9 @@ from app.config import settings
 from app.core.database import init_db
 from app.core.exceptions import register_exception_handlers
 from app.routes.analysis import router as analysis_router
+from app.routes.health import public_router as public_health_router
 from app.routes.health import router as health_router
+from app.routes.ocr import public_router as public_ocr_router
 from app.routes.ocr import router as ocr_router
 
 
@@ -27,5 +29,7 @@ app = FastAPI(
 app.include_router(health_router, prefix="/api/v1/health", tags=["Health"])
 app.include_router(analysis_router, prefix="/api/v1/analysis", tags=["Analysis"])
 app.include_router(ocr_router, prefix="/api/v1/ocr", tags=["OCR"])
+app.include_router(public_health_router, tags=["Health"])
+app.include_router(public_ocr_router, tags=["OCR"])
 
 register_exception_handlers(app)

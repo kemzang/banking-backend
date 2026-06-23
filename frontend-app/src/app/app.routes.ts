@@ -48,6 +48,7 @@ export const routes: Routes = [
     children: [
       { path: 'dashboard', loadComponent: () => import('./features/operator/dashboard/operator-dashboard').then(m => m.OperatorDashboard) },
       { path: 'clients', loadComponent: () => import('./features/clients/clients').then(m => m.Clients) },
+      { path: 'validations', data: { pendingOnly: true }, loadComponent: () => import('./features/clients/clients').then(m => m.Clients) },
       { path: 'accounts', loadComponent: () => import('./features/comptes/comptes').then(m => m.Comptes) },
       { path: 'accounts/:id', loadComponent: () => import('./features/comptes/compte-detail').then(m => m.CompteDetail) },
       { path: 'transactions', loadComponent: () => import('./features/transactions/transactions').then(m => m.Transactions) },

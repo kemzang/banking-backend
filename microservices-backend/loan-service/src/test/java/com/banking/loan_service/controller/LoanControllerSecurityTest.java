@@ -1,6 +1,8 @@
 package com.banking.loan_service.controller;
 
 import com.banking.loan_service.client.CustomerClient;
+import com.banking.loan_service.client.AccountClient;
+import com.banking.loan_service.dto.AccountResponseDTO;
 import com.banking.loan_service.dto.ClientLoanRequestDTO;
 import com.banking.loan_service.dto.CustomerResponseDTO;
 import com.banking.loan_service.dto.DemandePretRequestDTO;
@@ -8,6 +10,7 @@ import com.banking.loan_service.dto.DemandePretResponseDTO;
 import com.banking.loan_service.dto.DecisionRequestDTO;
 import com.banking.loan_service.entity.StatutDemande;
 import com.banking.loan_service.service.LoanService;
+import com.banking.loan_service.service.LoanNotificationClient;
 import org.junit.jupiter.api.Test;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -27,7 +30,7 @@ class LoanControllerSecurityTest {
     void clientCannotDecideLoanEvenWhenItBelongsToThem() {
         LoanService service = mock(LoanService.class);
         CustomerClient customers = mock(CustomerClient.class);
-        LoanController controller = new LoanController(service, customers);
+        LoanController controller = new LoanController(service, customers, mock(AccountClient.class), mock(LoanNotificationClient.class));
 
         assertThatThrownBy(() -> controller.prendreDecision(
                 10L,
@@ -46,23 +49,26 @@ class LoanControllerSecurityTest {
     void clientLoanRequestUsesCustomerResolvedFromJwtEmail() {
         LoanService service = mock(LoanService.class);
         CustomerClient customers = mock(CustomerClient.class);
-        LoanController controller = new LoanController(service, customers);
+        AccountClient accounts = mock(AccountClient.class);
+        LoanController controller = new LoanController(service, customers, accounts, mock(LoanNotificationClient.class));
         CustomerResponseDTO customer = new CustomerResponseDTO(
                 42L, "Client", "Marie", "marie@example.cm", "EN_ATTENTE", 1L);
         DemandePretResponseDTO saved = new DemandePretResponseDTO(
                 7L, 42L, BigDecimal.valueOf(500_000), 12,
                 BigDecimal.valueOf(.2), StatutDemande.SOUMISE);
         when(customers.getByEmail("marie@example.cm")).thenReturn(customer);
+        when(accounts.getById(5L, "marie@example.cm", "CLIENT", null))
+                .thenReturn(new AccountResponseDTO(5L, "CM-0001-1", 42L, 1L, "ACTIF"));
         when(service.soumettre(any(DemandePretRequestDTO.class))).thenReturn(saved);
 
         var response = controller.soumettreMaDemande(
-                new ClientLoanRequestDTO(BigDecimal.valueOf(500_000), 12, "Equipement"),
+                new ClientLoanRequestDTO(5L, BigDecimal.valueOf(500_000), 12, "Equipement"),
                 "marie@example.cm",
                 "CLIENT"
         );
 
         assertThat(response.getBody().clientId()).isEqualTo(42L);
         verify(service).soumettre(new DemandePretRequestDTO(
-                42L, BigDecimal.valueOf(500_000), 12, "Equipement"));
+                42L, 5L, 1L, BigDecimal.valueOf(500_000), 12, "Equipement"));
     }
 }

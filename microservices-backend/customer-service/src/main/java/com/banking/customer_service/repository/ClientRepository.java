@@ -1,6 +1,7 @@
 package com.banking.customer_service.repository;
 
 import com.banking.customer_service.entity.Client;
+import com.banking.customer_service.entity.StatutKyc;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import java.util.Optional;
@@ -12,5 +13,7 @@ public interface ClientRepository extends JpaRepository<Client, Long> {
     boolean existsByEmail(String email);
     Optional<Client> findByEmail(String email);
     List<Client> findByOperateurId(Long operateurId);
+    List<Client> findByOperateurIdAndStatutKyc(Long operateurId, StatutKyc statutKyc);
+    List<Client> findByStatutKyc(StatutKyc statutKyc);
     
 }

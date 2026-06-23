@@ -1,6 +1,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { HttpErrorResponse } from '@angular/common/http';
 import { DocumentService, OcrAnalysis } from '../../core/services/document.service';
 import { Client, CustomerService } from '../../core/services/customer.service';
 import { AuthService } from '../../core/services/auth.service';
@@ -39,6 +40,11 @@ export class Documents implements OnInit {
     this.fichier = input.files?.[0] ?? null;
     this.resultat.set(null);
     this.apercu.set(this.fichier ? URL.createObjectURL(this.fichier) : null);
+    if (this.fichier && !['image/png', 'image/jpeg'].includes(this.fichier.type)) {
+      this.erreur.set('Format non supporté. Utilisez une image PNG ou JPEG.');
+      this.fichier = null;
+      this.apercu.set(null);
+    }
   }
 
   analyser(): void {
@@ -53,8 +59,11 @@ export class Documents implements OnInit {
         this.chargement.set(false);
         if (!this.estClient()) this.chargerHistorique();
       },
-      error: () => {
-        this.erreur.set("Erreur lors de l'analyse du document.");
+      error: (error: HttpErrorResponse) => {
+        this.erreur.set(
+          error.error?.message
+          ?? "Erreur lors de l'analyse du document.",
+        );
         this.chargement.set(false);
       },
     });

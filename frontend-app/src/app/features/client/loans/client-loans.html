@@ -7,6 +7,14 @@
   <div class="card">
     <h2>Nouvelle demande</h2>
     <form (ngSubmit)="soumettre()">
+      <div class="field"><label>Compte à créditer</label>
+        <select name="accountId" [(ngModel)]="form.accountId" required>
+          <option [ngValue]="0" disabled>Choisir un compte actif</option>
+          @for (account of accounts(); track account.id) {
+            <option [ngValue]="account.id">{{ account.numeroCompte }} — {{ account.solde | number:'1.0-0' }} {{ account.devise }}</option>
+          }
+        </select>
+      </div>
       <div class="field"><label>Montant demandé</label><input type="number" name="montant" [(ngModel)]="form.montantDemande" min="1" required /></div>
       <div class="field"><label>Durée (mois)</label><input type="number" name="duree" [(ngModel)]="form.dureeMois" min="1" required /></div>
       <div class="field"><label>Motif</label><textarea name="motif" [(ngModel)]="form.motif"></textarea></div>

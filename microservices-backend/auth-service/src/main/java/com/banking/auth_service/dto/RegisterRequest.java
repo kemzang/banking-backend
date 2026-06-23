@@ -11,6 +11,7 @@ public record RegisterRequest(
         @JsonAlias("lastName")
         String nom,
         @JsonAlias("firstName")
-        String prenom
+        String prenom,
+        Long operatorId
 ) {
 }

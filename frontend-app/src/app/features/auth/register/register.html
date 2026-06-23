@@ -102,6 +102,20 @@
 
       <!-- Phone -->
       <div class="reg-field">
+        <label for="operatorId">Opérateur financier</label>
+        <select id="operatorId" [value]="form().operatorId" (change)="selectOperator($any($event.target).value)"
+                [class.error]="errors().operatorId" [disabled]="loading() || operatorsLoading()" required>
+          <option value="0" disabled>{{ operatorsLoading() ? 'Chargement...' : 'Choisir un opérateur actif' }}</option>
+          @for (operator of operators(); track operator.id) {
+            <option [value]="operator.id">{{ operator.nom }}</option>
+          }
+        </select>
+        <small class="reg-hint">Votre compte sera soumis à validation par l'opérateur choisi.</small>
+        @if (errors().operatorId) { <span class="reg-error">{{ errors().operatorId }}</span> }
+      </div>
+
+      <!-- Phone -->
+      <div class="reg-field">
         <label for="phone">{{ t('phone') }}</label>
         <input
           id="phone"

@@ -11,6 +11,12 @@ export interface OcrAnalysis {
   confidence_score: number;
   status: string;
   created_at: string;
+  document_type: string;
+  extracted_fields: Record<string, string | null>;
+  missing_fields: string[];
+  reliability_level: 'LOW' | 'MEDIUM' | 'HIGH';
+  recommendation: 'ACCEPT_FOR_REVIEW' | 'MANUAL_REVIEW_REQUIRED' | 'REQUEST_NEW_DOCUMENT';
+  message: string | null;
 }
 
 // Enveloppe { status, message, data } renvoyee par le service Python

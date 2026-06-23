@@ -11,49 +11,44 @@ spring:
     name: gateway-service
   cloud:
     gateway:
-      # NB Spring Cloud 2025.x / gateway-server-webflux : la config est sous
-      # spring.cloud.gateway.server.webflux.* (et non plus directement .gateway.*)
-      server:
-        webflux:
-          # Cree automatiquement une route par service enregistre dans Eureka
-          discovery:
-            locator:
-              enabled: true
-              lower-case-service-id: true
-          # Routes explicites (URLs propres + possibilite d'ajouter des filtres)
-          routes:
-            - id: auth-service
-              uri: lb://auth-service
-              predicates:
-                - Path=/api/auth/**
-            - id: customer-service
-              uri: lb://customer-service        # lb:// = load-balance via Eureka
-              predicates:
-                - Path=/api/customers/**
-            - id: customer-service-operators
-              uri: lb://customer-service
-              predicates:
-                - Path=/api/operators/**
-            - id: account-service
-              uri: lb://account-service
-              predicates:
-                - Path=/api/accounts/**
-            - id: transaction-service
-              uri: lb://transaction-service
-              predicates:
-                - Path=/api/transactions/**
-            - id: loan-service
-              uri: lb://loan-service
-              predicates:
-                - Path=/api/loans/**
-            - id: ai-document-service
-              uri: http://ai-document-service:8001   # URL directe (service Python, pas dans Eureka)
-              predicates:
-                - Path=/api/v1/**
-            - id: notification-service
-              uri: http://notification-service:3000   # URL directe (service Node, pas dans Eureka)
-              predicates:
-                - Path=/api/notifications/**
+      # Configuration Spring Cloud 2023.x / Gateway 4.1.x.
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+      routes:
+        - id: auth-service
+          uri: lb://auth-service
+          predicates:
+            - Path=/api/auth/**
+        - id: customer-service
+          uri: lb://customer-service        # lb:// = load-balance via Eureka
+          predicates:
+            - Path=/api/customers/**
+        - id: customer-service-operators
+          uri: lb://customer-service
+          predicates:
+            - Path=/api/operators/**
+        - id: account-service
+          uri: lb://account-service
+          predicates:
+            - Path=/api/accounts/**
+        - id: transaction-service
+          uri: lb://transaction-service
+          predicates:
+            - Path=/api/transactions/**
+        - id: loan-service
+          uri: lb://loan-service
+          predicates:
+            - Path=/api/loans/**
+        - id: ai-document-service
+          uri: http://ai-document-service:8001   # URL directe (service Python, pas dans Eureka)
+          predicates:
+            - Path=/api/v1/**
+        - id: notification-service
+          uri: http://notification-service:3000   # URL directe (service Node, pas dans Eureka)
+          predicates:
+            - Path=/api/notifications/**
 
 # Enregistrement de la gateway aupres de l'annuaire Eureka
 eureka:

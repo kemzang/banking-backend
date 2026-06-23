@@ -1,3 +1,5 @@
+import json
+
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -17,6 +19,12 @@ class DocumentRepository:
         extracted_text: str | None = None,
         confidence_score: float = 0.0,
         status: str = "completed",
+        content_type: str | None = None,
+        document_type: str = "UNKNOWN",
+        extracted_fields: dict[str, str | None] | None = None,
+        missing_fields: list[str] | None = None,
+        recommendation: str = "REQUEST_NEW_DOCUMENT",
+        message: str | None = None,
     ) -> DocumentAnalysis:
         analysis = DocumentAnalysis(
             original_filename=original_filename,
@@ -24,6 +32,12 @@ class DocumentRepository:
             extracted_text=extracted_text,
             confidence_score=confidence_score,
             status=status,
+            content_type=content_type,
+            document_type=document_type,
+            extracted_fields_json=json.dumps(extracted_fields or {}, ensure_ascii=False),
+            missing_fields_json=json.dumps(missing_fields or [], ensure_ascii=False),
+            recommendation=recommendation,
+            message=message,
         )
         try:
             self.db.add(analysis)

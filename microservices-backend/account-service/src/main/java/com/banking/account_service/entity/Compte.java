@@ -54,7 +54,7 @@ public class Compte {
     @PrePersist
     void onCreate() {
         this.dateOuverture = LocalDateTime.now();
-        if (this.statut == null)       this.statut = StatutCompte.ACTIF;
+        if (this.statut == null)       this.statut = StatutCompte.EN_ATTENTE_ACTIVATION;
         if (this.solde == null)        this.solde = BigDecimal.ZERO;
         if (this.decouvertAutorise == null) this.decouvertAutorise = BigDecimal.ZERO;
         if (this.devise == null)       this.devise = "XAF";

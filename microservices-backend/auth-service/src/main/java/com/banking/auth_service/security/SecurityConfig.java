@@ -36,6 +36,9 @@ public class SecurityConfig {
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/register", "/api/auth/login", "/api/auth/google").permitAll() // routes publiques
+                        // Appel direct customer-service -> auth-service. La gateway retire cet en-tete
+                        // sur les requetes externes et le controleur verifie sa valeur.
+                        .requestMatchers(HttpMethod.PATCH, "/api/auth/internal/users/*/status").permitAll()
                         .requestMatchers("/actuator/**", "/error").permitAll()                  // /error doit rester accessible
                         .requestMatchers(HttpMethod.POST, "/api/auth/operator-users", "/api/auth/operator-admins")
                         .hasRole("ADMIN_PLATFORM")
