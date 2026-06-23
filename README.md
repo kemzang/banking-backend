@@ -53,9 +53,19 @@ homogène, sécurisée et scalable.
 # 1. Configurer les variables d'environnement
 cp .env.example .env        # puis adapter les mots de passe
 
-# 2. Lancer toute la plateforme (build + run)
-docker compose up --build
+# 2. Construire proprement les .jar des services Java
+chmod +x scripts/build-java-services.sh
+./scripts/build-java-services.sh
+
+# 3. Lancer toute la plateforme (build + run)
+docker compose up --build -d
 ```
+
+Les Dockerfiles des services Java copient les fichiers `target/*.jar` existants.
+Il faut donc reconstruire les `.jar` avant `docker compose up --build`, surtout
+apres une modification Java ou si un service demarre avec une ancienne image.
+Le script utilise `clean package -Dmaven.test.skip=true` pour eviter les artefacts
+obsoletes et ignorer aussi la compilation des tests locaux non alignes.
 
 | Service | URL |
 |---------|-----|
