@@ -61,6 +61,10 @@ public class ClientService {
         return clientRepository.findAll().stream().map(this::toResponse).toList();
     }
 
+    public List<ClientResponseDTO> listerParOperateur(Long operatorId) {
+        return clientRepository.findByOperateurId(operatorId).stream().map(this::toResponse).toList();
+    }
+
     // RECUPERER un client par email
     public ClientResponseDTO getClientParEmail(String email) {
         return clientRepository.findByEmail(email)
@@ -88,6 +92,19 @@ public class ClientService {
         client.setTypePiece(dto.typePiece());
         client.setAdresse(dto.adresse());
 
+        return toResponse(clientRepository.save(client));
+    }
+
+    public ClientResponseDTO modifierInformationsPersonnelles(Long id, ClientRequestDTO dto) {
+        Client client = clientRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Client introuvable: " + id));
+        client.setNom(dto.nom());
+        client.setPrenom(dto.prenom());
+        client.setDateNaissance(dto.dateNaissance());
+        client.setTelephone(dto.telephone());
+        client.setNumeroIdentite(dto.numeroIdentite());
+        client.setTypePiece(dto.typePiece());
+        client.setAdresse(dto.adresse());
         return toResponse(clientRepository.save(client));
     }
 

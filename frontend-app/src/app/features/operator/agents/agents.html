@@ -1,0 +1,42 @@
+<h1 class="page-title">Agents de mon opérateur</h1>
+<p class="page-sub">Les nouveaux comptes sont automatiquement rattachés à votre operatorId.</p>
+
+@if (erreur()) { <div class="alert alert-error">{{ erreur() }}</div> }
+@if (succes()) { <div class="alert alert-success">{{ succes() }}</div> }
+
+<div class="agents-grid">
+  <div class="card">
+    <h2>Agents</h2>
+    @if (agents().length === 0) {
+      <p class="muted">Aucun agent créé.</p>
+    } @else {
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th>Nom</th><th>Email</th><th>Rôle</th><th>Opérateur</th></tr></thead>
+          <tbody>
+            @for (agent of agents(); track agent.id) {
+              <tr>
+                <td>{{ agent.firstName }} {{ agent.lastName }}</td>
+                <td>{{ agent.email }}</td>
+                <td><span class="badge badge-valide">OPERATOR_AGENT</span></td>
+                <td>#{{ agent.operatorId }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+
+  <div class="card">
+    <h2>Créer un agent</h2>
+    <form (ngSubmit)="creer()">
+      <div class="field"><label>Prénom</label><input name="firstName" [(ngModel)]="firstName" required /></div>
+      <div class="field"><label>Nom</label><input name="lastName" [(ngModel)]="lastName" required /></div>
+      <div class="field"><label>Email</label><input type="email" name="email" [(ngModel)]="email" required /></div>
+      <div class="field"><label>Mot de passe</label><input type="password" name="password" [(ngModel)]="password" minlength="8" required /></div>
+      <div class="fixed-role">Rôle attribué : <strong>OPERATOR_AGENT</strong></div>
+      <button class="btn" type="submit" [disabled]="creation()">{{ creation() ? 'Création…' : "Créer l'agent" }}</button>
+    </form>
+  </div>
+</div>

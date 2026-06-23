@@ -1,0 +1,6 @@
+.summary-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:1rem; margin-bottom:1rem; }
+.summary-grid .card { display:flex; flex-direction:column; gap:.5rem; text-decoration:none; color:inherit; }
+.summary-grid strong { font-size:1.35rem; }
+.dashboard-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:1rem; }
+.list-row { display:flex; justify-content:space-between; gap:1rem; padding:.8rem 0; border-bottom:1px solid rgba(128,128,128,.15); }
+@media(max-width:900px){.summary-grid{grid-template-columns:repeat(2,1fr)}.dashboard-grid{grid-template-columns:1fr}}

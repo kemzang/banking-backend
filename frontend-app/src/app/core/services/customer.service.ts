@@ -8,6 +8,7 @@ export interface Operateur {
   nom: string;
   type: string;
   code: string;
+  statut?: string;
 }
 
 export interface Adresse {
@@ -48,8 +49,11 @@ export class CustomerService {
   getOperateurs(): Observable<Operateur[]> {
     return this.http.get<Operateur[]>(this.opUrl);
   }
-  createOperateur(op: { nom: string; type: string; code: string }): Observable<Operateur> {
+  createOperateur(op: { nom: string; type: string; code: string; statut?: string }): Observable<Operateur> {
     return this.http.post<Operateur>(this.opUrl, op);
+  }
+  updateOperateurStatus(id: number, status: string): Observable<Operateur> {
+    return this.http.patch<Operateur>(`${this.opUrl}/${id}/status`, { status });
   }
 
   // ----- Clients -----

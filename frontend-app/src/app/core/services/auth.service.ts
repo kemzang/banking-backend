@@ -8,6 +8,7 @@ import {
   LoginRequest, MfaBackupRequest, MfaResendRequest,
   MfaSetupResponse, MfaVerifyRequest, MfaVerifyResponse,
   RefreshResponse, RegisterRequest, ResetPasswordRequest, UserResponse,
+  OperatorAdminRequest, OperatorAgentRequest,
 } from '../models/auth.models';
 import { decodeJwt, isTokenValid } from '../utils/jwt.utils';
 
@@ -59,9 +60,9 @@ export class AuthService {
 
   /** Route cible selon le rôle principal */
   redirectByRole(): string {
-    if (this.hasRole('ADMIN_PLATFORM')) return '/dashboard';
-    if (this.hasRole('OPERATOR_ADMIN', 'OPERATOR_AGENT')) return '/dashboard';
-    return '/dashboard';
+    if (this.hasRole('ADMIN_PLATFORM')) return '/admin/dashboard';
+    if (this.hasRole('OPERATOR_ADMIN', 'OPERATOR_AGENT')) return '/operator/dashboard';
+    return '/client/dashboard';
   }
 
   // ── Authentification ──────────────────────────────────
@@ -72,8 +73,24 @@ export class AuthService {
 
   login(req: LoginRequest): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${this.base}/login`, req).pipe(
-      tap(res => this.storeToken(res.token)),
+      tap(res => this.storeToken(res.accessToken ?? res.token)),
     );
+  }
+
+  createOperatorAdmin(req: OperatorAdminRequest): Observable<UserResponse> {
+    return this.http.post<UserResponse>(`${this.base}/operator-admins`, req);
+  }
+
+  createOperatorAgent(req: OperatorAgentRequest): Observable<UserResponse> {
+    return this.http.post<UserResponse>(`${this.base}/operator-agents`, req);
+  }
+
+  listOperatorAgents(): Observable<UserResponse[]> {
+    return this.http.get<UserResponse[]>(`${this.base}/operator-agents`);
+  }
+
+  discardToken(): void {
+    this.clearToken();
   }
 
   googleLogin(idToken: string): Observable<AuthResponse> {

@@ -3,6 +3,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { AccountService, Compte } from '../../core/services/account.service';
 import { Transaction, TransactionService } from '../../core/services/transaction.service';
+import { AuthService } from '../../core/services/auth.service';
 
 @Component({
   selector: 'app-compte-detail',
@@ -14,6 +15,7 @@ export class CompteDetail implements OnInit {
   private route = inject(ActivatedRoute);
   private accountService = inject(AccountService);
   private transactionService = inject(TransactionService);
+  private auth = inject(AuthService);
 
   compte = signal<Compte | null>(null);
   transactions = signal<Transaction[]>([]);
@@ -66,4 +68,7 @@ export class CompteDetail implements OnInit {
   compteLabel(id?: number | null): string {
     return id ? `#${id}` : '-';
   }
+
+  accountsLink(): string { return this.auth.hasRole('CLIENT') ? '/client/accounts' : '/comptes'; }
+  transactionsLink(): string { return this.auth.hasRole('CLIENT') ? '/client/transactions' : '/transactions'; }
 }

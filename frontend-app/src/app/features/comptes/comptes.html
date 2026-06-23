@@ -1,5 +1,5 @@
 <h1 class="page-title">Comptes</h1>
-<p class="page-sub">Ouverture et gestion des comptes financiers, soldes et statuts.</p>
+<p class="page-sub">{{ estAdminOuOperateur() ? 'Ouverture et gestion des comptes financiers.' : 'Consultez uniquement vos comptes et vos soldes.' }}</p>
 
 @if (erreur()) {
   <div class="alert alert-error">
@@ -19,7 +19,7 @@
   </div>
 }
 
-<div class="grid-2">
+<div [class.grid-2]="estAdminOuOperateur()">
   <!-- Liste -->
   <div class="card">
     <div class="card-header">
@@ -58,14 +58,14 @@
                 <td class="mono-cell"><strong>{{ c.solde | number:'1.0-2' }}</strong> <span class="devise">{{ c.devise }}</span></td>
                 <td><span [class]="badgeClass(c.statut)">{{ c.statut }}</span></td>
                 <td class="actions-cell">
-                  <a class="btn btn-sm btn-ghost" [routerLink]="['/comptes', c.id]">
+                  <a class="btn btn-sm btn-ghost" [routerLink]="detailLink(c.id)">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                       <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z" stroke="currentColor" stroke-width="2"/>
                       <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
                     </svg>
                     Détails
                   </a>
-                  @if (c.statut === 'ACTIF') {
+                  @if (estAdminOuOperateur() && c.statut === 'ACTIF') {
                     <button class="btn btn-sm btn-ghost" (click)="suspendre(c)">Suspendre</button>
                     <button class="btn btn-sm btn-ghost" (click)="cloturer(c)">Clôturer</button>
                   }
@@ -78,7 +78,8 @@
     }
   </div>
 
-  <!-- Formulaire -->
+  @if (estAdminOuOperateur()) {
+  <!-- Formulaire réservé aux opérateurs -->
   <div class="card">
     <div class="card-header">
       <h2>Ouvrir un compte</h2>
@@ -130,4 +131,5 @@
       </button>
     </form>
   </div>
+  }
 </div>

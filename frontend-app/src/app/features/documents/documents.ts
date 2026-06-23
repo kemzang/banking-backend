@@ -3,6 +3,7 @@ import { DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DocumentService, OcrAnalysis } from '../../core/services/document.service';
 import { Client, CustomerService } from '../../core/services/customer.service';
+import { AuthService } from '../../core/services/auth.service';
 
 @Component({
   selector: 'app-documents',
@@ -13,6 +14,7 @@ import { Client, CustomerService } from '../../core/services/customer.service';
 export class Documents implements OnInit {
   private docService = inject(DocumentService);
   private customer = inject(CustomerService);
+  private auth = inject(AuthService);
 
   fichier: File | null = null;
   apercu = signal<string | null>(null);
@@ -28,7 +30,7 @@ export class Documents implements OnInit {
   typeDoc = 'CNI';
 
   ngOnInit(): void {
-    this.chargerHistorique();
+    if (!this.estClient()) this.chargerHistorique();
     this.customer.getClients().subscribe({ next: (c) => this.clients.set(c), error: () => {} });
   }
 
@@ -47,8 +49,9 @@ export class Documents implements OnInit {
     this.docService.extract(this.fichier).subscribe({
       next: (res) => {
         this.resultat.set(res);
+        this.historique.update(items => [res, ...items]);
         this.chargement.set(false);
-        this.chargerHistorique();
+        if (!this.estClient()) this.chargerHistorique();
       },
       error: () => {
         this.erreur.set("Erreur lors de l'analyse du document.");
@@ -72,6 +75,8 @@ export class Documents implements OnInit {
   chargerHistorique(): void {
     this.docService.history().subscribe({ next: (h) => this.historique.set(h) });
   }
+
+  estClient(): boolean { return this.auth.hasRole('CLIENT'); }
 }
 
 function typeDocLabel(t: string): string {

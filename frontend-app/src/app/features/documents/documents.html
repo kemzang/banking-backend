@@ -24,6 +24,7 @@
   <div class="card">
     <h2>Analyser un document</h2>
 
+    @if (!estClient()) {
     <div class="row">
       <div class="field">
         <label>Client concerné</label>
@@ -44,6 +45,7 @@
         </select>
       </div>
     </div>
+    }
 
     <!-- Dropzone -->
     <div class="dropzone" [class.dropzone--active]="!!fichier">
@@ -100,12 +102,14 @@
         <pre class="ocr-text">{{ r.extracted_text || '(aucun texte détecté)' }}</pre>
         <div class="ocr-footer">
           <span class="badge badge-valide">{{ r.status }}</span>
+          @if (!estClient()) {
           <button class="btn btn-green btn-sm" (click)="validerKyc()">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true">
               <path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
             Valider le KYC client
           </button>
+          }
         </div>
       </div>
     }

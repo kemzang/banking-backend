@@ -1,6 +1,7 @@
 package com.banking.auth_service.service;
 
 import com.banking.auth_service.dto.OperatorUserRequest;
+import com.banking.auth_service.dto.OperatorAgentRequest;
 import com.banking.auth_service.dto.AuthResponse;
 import com.banking.auth_service.dto.LoginRequest;
 import com.banking.auth_service.dto.LoginType;
@@ -65,11 +66,11 @@ class AuthServiceOperatorUserTests {
     }
 
     @Test
-    void createsOperatorUserAfterValidatingOrganization() {
+    void platformCreatesFirstOperatorAdminAfterValidatingOrganization() {
         customerServer.expect(once(), requestTo("http://customer-service/api/operators/42"))
                 .andExpect(method(HttpMethod.GET))
                 .andRespond(withSuccess("{}", MediaType.APPLICATION_JSON));
-        when(utilisateurRepository.existsByEmailIgnoreCase("agent@expressunion.cm")).thenReturn(false);
+        when(utilisateurRepository.existsByEmailIgnoreCase("admin@expressunion.cm")).thenReturn(false);
         when(utilisateurRepository.save(any(Utilisateur.class))).thenAnswer(invocation -> {
             Utilisateur user = invocation.getArgument(0);
             user.setId(UUID.randomUUID());
@@ -77,17 +78,17 @@ class AuthServiceOperatorUserTests {
         });
 
         UserResponse response = authService.createOperatorUser(new OperatorUserRequest(
-                "Agent",
+                "Admin",
                 "Express",
-                "Agent@ExpressUnion.cm",
+                "Admin@ExpressUnion.cm",
                 "Password123@",
-                Role.OPERATOR_AGENT,
+                Role.OPERATOR_ADMIN,
                 42L
         ));
 
-        assertThat(response.email()).isEqualTo("agent@expressunion.cm");
+        assertThat(response.email()).isEqualTo("admin@expressunion.cm");
         assertThat(response.operatorId()).isEqualTo(42L);
-        assertThat(response.roles()).containsExactly(Role.OPERATOR_AGENT);
+        assertThat(response.roles()).containsExactly(Role.OPERATOR_ADMIN);
         customerServer.verify();
     }
 
@@ -102,7 +103,54 @@ class AuthServiceOperatorUserTests {
                 42L
         )))
                 .isInstanceOf(ResponseStatusException.class)
-                .hasMessageContaining("OPERATOR_ADMIN ou OPERATOR_AGENT");
+                .hasMessageContaining("OPERATOR_ADMIN");
+
+        verify(utilisateurRepository, never()).save(any());
+    }
+
+    @Test
+    void operatorAdminCreatesAgentForOwnOperator() {
+        Utilisateur creator = Utilisateur.builder()
+                .id(UUID.randomUUID())
+                .email("admin@expressunion.cm")
+                .motDePasse("hash")
+                .roles(new HashSet<>(Set.of(Role.OPERATOR_ADMIN)))
+                .operatorId(42L)
+                .build();
+        when(utilisateurRepository.findByEmailIgnoreCase("admin@expressunion.cm"))
+                .thenReturn(Optional.of(creator));
+        when(utilisateurRepository.existsByEmailIgnoreCase("agent@expressunion.cm")).thenReturn(false);
+        when(utilisateurRepository.save(any(Utilisateur.class))).thenAnswer(invocation -> {
+            Utilisateur user = invocation.getArgument(0);
+            user.setId(UUID.randomUUID());
+            return user;
+        });
+
+        UserResponse response = authService.createOperatorAgent(new OperatorAgentRequest(
+                "Agent", "Express", "agent@expressunion.cm", "Password123@"
+        ), creator.getEmail());
+
+        assertThat(response.roles()).containsExactly(Role.OPERATOR_AGENT);
+        assertThat(response.operatorId()).isEqualTo(42L);
+    }
+
+    @Test
+    void operatorAgentCannotCreateAnotherAgent() {
+        Utilisateur creator = Utilisateur.builder()
+                .id(UUID.randomUUID())
+                .email("agent@expressunion.cm")
+                .motDePasse("hash")
+                .roles(new HashSet<>(Set.of(Role.OPERATOR_AGENT)))
+                .operatorId(42L)
+                .build();
+        when(utilisateurRepository.findByEmailIgnoreCase("agent@expressunion.cm"))
+                .thenReturn(Optional.of(creator));
+
+        assertThatThrownBy(() -> authService.createOperatorAgent(new OperatorAgentRequest(
+                "Other", "Agent", "other@expressunion.cm", "Password123@"
+        ), creator.getEmail()))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("OPERATOR_ADMIN");
 
         verify(utilisateurRepository, never()).save(any());
     }

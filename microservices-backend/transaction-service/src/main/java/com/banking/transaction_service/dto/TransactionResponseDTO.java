@@ -12,6 +12,8 @@ public record TransactionResponseDTO(
         TypeTransaction type,
         BigDecimal montant,
         String devise,
+        Long compteSourceId,
+        Long compteDestId,
         BigDecimal commission,
         StatutTransaction statut,
         String motif,

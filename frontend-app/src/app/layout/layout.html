@@ -10,7 +10,7 @@
     </div>
 
     <nav>
-      <a routerLink="/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}">
+      <a [routerLink]="route('dashboard')" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}">
         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
           <rect x="3" y="3" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.8"/>
           <rect x="14" y="3" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.8"/>
@@ -21,7 +21,7 @@
       </a>
 
       @if (estOperateur()) {
-        <a routerLink="/clients" routerLinkActive="active">
+        <a [routerLink]="route('clients')" routerLinkActive="active">
           <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <circle cx="8" cy="7" r="4" stroke="currentColor" stroke-width="1.8"/>
             <path d="M2 21c0-3.866 2.686-7 6-7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
@@ -32,7 +32,8 @@
         </a>
       }
 
-      <a routerLink="/comptes" routerLinkActive="active">
+      @if (estOperateur() || estClient()) {
+      <a [routerLink]="route('accounts')" routerLinkActive="active">
         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
           <rect x="2" y="5" width="20" height="14" rx="2.5" stroke="currentColor" stroke-width="1.8"/>
           <path d="M2 10h20" stroke="currentColor" stroke-width="1.8"/>
@@ -41,24 +42,46 @@
         </svg>
         {{ t('nav_accounts') }}
       </a>
+      }
 
-      <a routerLink="/transactions" routerLinkActive="active">
+      @if (estClient()) {
+        <a [routerLink]="route('profile')" routerLinkActive="active">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.8"/><path d="M4 22c0-4.4 3.6-8 8-8s8 3.6 8 8" stroke="currentColor" stroke-width="1.8"/></svg>
+          Mon profil
+        </a>
+      }
+
+      @if (estOperateur() || estClient()) {
+      <a [routerLink]="route('transactions')" routerLinkActive="active">
         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
           <path d="M7 16V4m0 0L4 7m3-3 3 3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
           <path d="M17 8v12m0 0 3-3m-3 3-3-3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
         {{ t('nav_transactions') }}
       </a>
+      }
 
-      <a routerLink="/prets" routerLinkActive="active">
+      @if (estOperateur() || estClient()) {
+      <a [routerLink]="route('loans')" routerLinkActive="active">
         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
           <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2Z" stroke="currentColor" stroke-width="1.8"/>
           <path d="M12 6v2m0 8v2M8 12h8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
         </svg>
         {{ t('nav_loans') }}
       </a>
+      }
 
-      <a routerLink="/documents" routerLinkActive="active">
+      @if (estOperatorAdmin()) {
+        <a [routerLink]="route('agents')" routerLinkActive="active">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="1.8"/>
+            <path d="M2 21c0-4 3-7 7-7s7 3 7 7M18 8v6M15 11h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+          Agents
+        </a>
+      }
+
+      <a [routerLink]="estClient() ? route('documents') : '/documents'" routerLinkActive="active">
         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
           <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
           <path d="M14 2v6h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
@@ -67,7 +90,7 @@
         {{ t('nav_documents') }}
       </a>
 
-      <a routerLink="/notifications" routerLinkActive="active">
+      <a [routerLink]="estClient() ? route('notifications') : '/notifications'" routerLinkActive="active">
         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
           <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
           <path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
@@ -86,7 +109,7 @@
       }
 
       @if (estAdmin()) {
-        <a routerLink="/operateurs" routerLinkActive="active">
+        <a [routerLink]="route('operators')" routerLinkActive="active">
           <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <path d="M3 21l9-9m0 0 5-5M12 12l-5-5m5 5 5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
             <circle cx="19" cy="5" r="3" stroke="currentColor" stroke-width="1.8"/>
@@ -134,7 +157,7 @@
         }
       </button>
 
-      <a routerLink="/notifications" class="notif-btn" title="Notifications">
+      <a [routerLink]="estClient() ? route('notifications') : '/notifications'" class="notif-btn" title="Notifications">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
           <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
           <path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>

@@ -43,10 +43,16 @@ const HINT_ROUTE: Record<string, string> = {
 };
 
 const DASHBOARD: Record<string, string> = {
-  ADMIN_PLATFORM: '/dashboard',
-  OPERATOR_ADMIN: '/dashboard',
-  OPERATOR_AGENT: '/dashboard',
-  CLIENT:         '/dashboard',
+  ADMIN_PLATFORM: '/admin/dashboard',
+  OPERATOR_ADMIN: '/operator/dashboard',
+  OPERATOR_AGENT: '/operator/dashboard',
+  CLIENT:         '/client/dashboard',
+};
+
+const LOGIN_TYPE: Record<PortalRole, 'CLIENT_LOGIN' | 'ADMIN_LOGIN' | 'OPERATOR_LOGIN'> = {
+  client: 'CLIENT_LOGIN',
+  admin: 'ADMIN_LOGIN',
+  operator: 'OPERATOR_LOGIN',
 };
 
 @Component({
@@ -113,7 +119,11 @@ export class AuthFormComponent implements AfterViewInit, OnDestroy {
     this.resetErrors();
     this.chargement.set(true);
 
-    this.auth.login({ email: this.email, motDePasse: this.motDePasse }).subscribe({
+    this.auth.login({
+      email: this.email,
+      motDePasse: this.motDePasse,
+      loginType: LOGIN_TYPE[this.portal],
+    }).subscribe({
       next: () => this.onSuccess(),
       error: (e) => this.onError(e),
     });
@@ -135,7 +145,7 @@ export class AuthFormComponent implements AfterViewInit, OnDestroy {
         this.hintLabel.set(this.t(HINT_KEY[actual] as Parameters<I18nService['t']>[0]));
       }
       // Clear stored token — wrong portal
-      this.auth.logout();
+      this.auth.discardToken();
       return;
     }
 
@@ -159,6 +169,9 @@ export class AuthFormComponent implements AfterViewInit, OnDestroy {
     this.chargement.set(false);
     if (e.status === 401) {
       this.erreur.set(this.t('login_err_401'));
+    } else if (e.status === 403) {
+      const errKey = WRONG_ROLE_KEY[this.portal] as Parameters<I18nService['t']>[0];
+      this.erreur.set(this.t(errKey));
     } else if (e.status === 423) {
       this.erreur.set(this.t('login_err_423'));
     } else if (e.status === 429) {

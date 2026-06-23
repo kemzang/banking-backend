@@ -2,6 +2,7 @@ package com.banking.customer_service.controller;
 
 import com.banking.customer_service.dto.OperateurRequestDTO;
 import com.banking.customer_service.dto.OperateurResponseDTO;
+import com.banking.customer_service.dto.OperateurStatusRequestDTO;
 import com.banking.customer_service.service.OperateurService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -39,6 +40,18 @@ public class OperateurController {
     @GetMapping("/{id}")
     public ResponseEntity<OperateurResponseDTO> getById(@PathVariable Long id) {
         return ResponseEntity.ok(operateurService.getById(id));
+    }
+
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<OperateurResponseDTO> changerStatut(
+            @PathVariable Long id,
+            @RequestBody OperateurStatusRequestDTO request,
+            @RequestHeader(value = "X-User-Roles", required = false) String userRoles) {
+        if (!hasRole(userRoles, "ADMIN_PLATFORM")) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    HttpStatus.FORBIDDEN, "Modification reservee a ADMIN_PLATFORM");
+        }
+        return ResponseEntity.ok(operateurService.changerStatut(id, request.status()));
     }
 
     private boolean hasRole(String roles, String expectedRole) {

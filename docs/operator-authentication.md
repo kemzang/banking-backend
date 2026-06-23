@@ -64,33 +64,33 @@ Header : `Authorization: Bearer {{adminToken}}`
 
 Conserver l'`id` retourne dans `operatorId`.
 
-### 3. Creation d'un utilisateur operateur
+### 3. Creation du premier OPERATOR_ADMIN
 
-`POST http://localhost:8080/api/auth/operator-users`
+`POST http://localhost:8080/api/auth/operator-admins`
 
 Header : `Authorization: Bearer {{adminToken}}`
 
 ```json
 {
-  "firstName": "Agent",
+  "firstName": "Admin",
   "lastName": "Express",
-  "email": "agent@expressunion.cm",
+  "email": "admin.operator@expressunion.cm",
   "password": "Password123@",
-  "role": "OPERATOR_AGENT",
   "operatorId": {{operatorId}}
 }
 ```
 
 `auth-service` appelle `GET /api/operators/{operatorId}` dans `customer-service`. Un identifiant absent renvoie `400`; un service indisponible renvoie `503`.
 
-### 4. Connexion de l'agent
+### 4. Connexion de l'administrateur operateur
 
 `POST http://localhost:8080/api/auth/login`
 
 ```json
 {
-  "email": "agent@expressunion.cm",
-  "password": "Password123@"
+  "email": "admin.operator@expressunion.cm",
+  "password": "Password123@",
+  "loginType": "OPERATOR_LOGIN"
 }
 ```
 
@@ -105,10 +105,10 @@ La reponse contient le jeton et l'utilisateur :
   "expiresIn": 86400,
   "user": {
     "id": "uuid",
-    "email": "agent@expressunion.cm",
-    "roles": ["OPERATOR_AGENT"],
+    "email": "admin.operator@expressunion.cm",
+    "roles": ["OPERATOR_ADMIN"],
     "operatorId": 1,
-    "firstName": "Agent",
+    "firstName": "Admin",
     "lastName": "Express"
   }
 }
@@ -116,7 +116,24 @@ La reponse contient le jeton et l'utilisateur :
 
 Le JWT contient `userId`, `sub` (email), `roles` et `operatorId`. La gateway remplace toute identite fournie par le client et propage `X-User-Id`, `X-User-Email`, `X-User-Roles` et `X-Operator-Id`.
 
-### 5. Verification du profil
+### 5. Creation d'un OPERATOR_AGENT
+
+`POST http://localhost:8080/api/auth/operator-agents`
+
+Header : `Authorization: Bearer {{operatorAdminToken}}`
+
+```json
+{
+  "firstName": "Agent",
+  "lastName": "Express",
+  "email": "agent@expressunion.cm",
+  "password": "Password123@"
+}
+```
+
+Le body ne contient ni role ni `operatorId`. Le backend impose `OPERATOR_AGENT` et recupere l'`operatorId` du compte `OPERATOR_ADMIN` authentifie. La liste des agents du meme operateur est disponible avec `GET /api/auth/operator-agents`.
+
+### 6. Verification du profil
 
 `GET http://localhost:8080/api/auth/me`
 
@@ -127,9 +144,13 @@ Le profil doit contenir le meme `operatorId` et le meme role que la reponse de l
 ## Verification rapide
 
 - [ ] L'organisation est creee avec le jeton `ADMIN_PLATFORM`.
+- [ ] Le premier compte cree par la plateforme est uniquement `OPERATOR_ADMIN`.
 - [ ] Un utilisateur operateur avec un `operatorId` inexistant est refuse.
-- [ ] `CLIENT` est refuse par `/api/auth/operator-users`.
+- [ ] `OPERATOR_ADMIN` cree un agent sans envoyer d'`operatorId`.
+- [ ] L'agent cree recoit le meme `operatorId` que son administrateur.
+- [ ] `OPERATOR_AGENT` recoit 403 sur `/api/auth/operator-agents`.
 - [ ] L'agent peut se connecter sur `/auth/operator`.
+- [ ] Un client est refuse sur la page et les routes `/operator/**`.
 - [ ] Le JWT contient `operatorId`.
 - [ ] `/api/auth/me` retourne `operatorId`.
 - [ ] Un agent ne voit pas les comptes d'un autre operateur.

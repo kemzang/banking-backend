@@ -25,7 +25,15 @@ export class Layout {
 
   estAdmin(): boolean     { return this.auth.hasRole('ADMIN_PLATFORM'); }
   estOperateur(): boolean {
-    return this.auth.hasRole('ADMIN_PLATFORM', 'OPERATOR_ADMIN', 'OPERATOR_AGENT');
+    return this.auth.hasRole('OPERATOR_ADMIN', 'OPERATOR_AGENT');
+  }
+  estOperatorAdmin(): boolean { return this.auth.hasRole('OPERATOR_ADMIN'); }
+  estClient(): boolean { return this.auth.hasRole('CLIENT'); }
+
+  route(segment: string): string {
+    if (this.estAdmin()) return `/admin/${segment}`;
+    if (this.estOperateur()) return `/operator/${segment}`;
+    return `/client/${segment}`;
   }
 
   deconnexion(): void {

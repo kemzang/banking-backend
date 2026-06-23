@@ -14,6 +14,8 @@ public class TransactionMapper {
                 transaction.getType(),
                 transaction.getMontant(),
                 transaction.getDevise(),
+                transaction.getCompteSourceId(),
+                transaction.getCompteDestId(),
                 transaction.getCommission(),
                 transaction.getStatut(),
                 transaction.getMotif(),

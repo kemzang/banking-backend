@@ -26,7 +26,17 @@ app.get('/health', (_req, res) => res.json({ status: 'UP', service: 'notificatio
 app.get('/',       (_req, res) => res.json({ message: 'notification-service is running' }));
 
 // Liste des notifications recentes (consommee par le frontend via la gateway)
-app.get('/api/notifications', (_req, res) => res.json(recent));
+app.get('/api/notifications', (req, res) => {
+  const roles = String(req.header('X-User-Roles') || '').split(',').map((role) => role.trim());
+  if (!roles.includes('CLIENT')) return res.json(recent);
+
+  const email = String(req.header('X-User-Email') || '').toLowerCase();
+  const own = recent.filter((notification) => {
+    const owner = notification.userEmail || notification.clientEmail || notification.email;
+    return owner && String(owner).toLowerCase() === email;
+  });
+  return res.json(own);
+});
 
 app.listen(PORT, () => console.log(`[HTTP] notification-service démarré sur le port ${PORT}`));
 

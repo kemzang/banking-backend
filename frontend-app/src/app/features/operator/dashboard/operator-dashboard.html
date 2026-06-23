@@ -1,0 +1,10 @@
+<h1 class="page-title">Espace opérateur</h1>
+@if (user(); as current) {
+  <p class="page-sub">{{ current.email }} · {{ current.roles.join(', ') }} · Opérateur #{{ current.operatorId }}</p>
+}
+<div class="operator-stats">
+  <div class="card"><strong>{{ clients() }}</strong><span>Clients de mon opérateur</span></div>
+  <div class="card"><strong>{{ comptes() }}</strong><span>Comptes de mon opérateur</span></div>
+  <div class="card"><strong>{{ operations() }}</strong><span>Transactions visibles</span></div>
+  <div class="card"><strong>—</strong><span>Prêts (pas d'endpoint de liste disponible)</span></div>
+</div>

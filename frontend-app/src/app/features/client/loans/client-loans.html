@@ -1,0 +1,33 @@
+<h1 class="page-title">Mes demandes de prêt</h1>
+<p class="page-sub">Soumettez une demande et suivez son évolution.</p>
+@if (erreur()) { <div class="alert alert-error">{{ erreur() }}</div> }
+@if (succes()) { <div class="alert alert-success">{{ succes() }}</div> }
+
+<div class="client-loans-grid">
+  <div class="card">
+    <h2>Nouvelle demande</h2>
+    <form (ngSubmit)="soumettre()">
+      <div class="field"><label>Montant demandé</label><input type="number" name="montant" [(ngModel)]="form.montantDemande" min="1" required /></div>
+      <div class="field"><label>Durée (mois)</label><input type="number" name="duree" [(ngModel)]="form.dureeMois" min="1" required /></div>
+      <div class="field"><label>Motif</label><textarea name="motif" [(ngModel)]="form.motif"></textarea></div>
+      <button class="btn" type="submit">Soumettre ma demande</button>
+    </form>
+  </div>
+  <div class="card">
+    <h2>Historique des demandes</h2>
+    @if (chargement()) { <p class="muted">Chargement…</p> }
+    @else if (demandes().length === 0) { <div class="empty-state"><p>Aucune demande de prêt.</p></div> }
+    @else {
+      <div class="table-scroll"><table>
+        <thead><tr><th>Référence</th><th>Montant</th><th>Durée</th><th>Statut</th></tr></thead>
+        <tbody>@for (d of demandes(); track d.id) {<tr><td>#{{ d.id }}</td><td>{{ d.montantDemande | number:'1.0-0' }}</td><td>{{ d.dureeMois }} mois</td><td><span [class]="badge(d.statut)">{{ d.statut }}</span></td></tr>}</tbody>
+      </table></div>
+    }
+  </div>
+</div>
+
+<div class="card" style="margin-top:1rem">
+  <h2>Mes prêts accordés</h2>
+  @if (prets().length === 0) { <div class="empty-state"><p>Aucun prêt accordé.</p></div> }
+  @else { <div class="table-scroll"><table><thead><tr><th>Référence</th><th>Montant</th><th>Capital restant</th><th>Statut</th></tr></thead><tbody>@for (p of prets(); track p.id) {<tr><td>#{{ p.id }}</td><td>{{ p.montantAccorde | number:'1.0-0' }}</td><td>{{ p.capitalRestant | number:'1.0-0' }}</td><td><span [class]="badge(p.statut)">{{ p.statut }}</span></td></tr>}</tbody></table></div> }
+</div>

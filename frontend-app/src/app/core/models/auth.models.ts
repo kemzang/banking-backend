@@ -13,6 +13,22 @@ export interface RegisterRequest {
 export interface LoginRequest {
   email: string;
   motDePasse: string;
+  loginType?: 'CLIENT_LOGIN' | 'ADMIN_LOGIN' | 'OPERATOR_LOGIN';
+}
+
+export interface OperatorAdminRequest {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  operatorId: number;
+}
+
+export interface OperatorAgentRequest {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
 }
 
 export interface AuthResponse {

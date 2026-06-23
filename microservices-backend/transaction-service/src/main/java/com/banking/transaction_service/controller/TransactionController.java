@@ -153,9 +153,20 @@ public class TransactionController {
             @ApiResponse(responseCode = "404", description = "Transaction introuvable")
     })
     public TransactionResponseDTO getById(
-            @Parameter(example = "1") @PathVariable @Positive Long id
+            @Parameter(example = "1") @PathVariable @Positive Long id,
+            @RequestHeader(value = "X-User-Email", required = false) String userEmail,
+            @RequestHeader(value = "X-User-Roles", required = false) String userRoles,
+            @RequestHeader(value = "X-Operator-Id", required = false) Long operatorId
     ) {
-        return transactionService.getById(id);
+        TransactionResponseDTO transaction = transactionService.getById(id);
+        Long accountId = transaction.compteSourceId() != null
+                ? transaction.compteSourceId()
+                : transaction.compteDestId();
+        if (accountId == null) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Transaction sans compte accessible");
+        }
+        verifierAccesCompte(accountId, userEmail, userRoles, operatorId);
+        return transaction;
     }
 
     @GetMapping

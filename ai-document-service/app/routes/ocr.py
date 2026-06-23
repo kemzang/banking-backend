@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, File, UploadFile
+from fastapi import APIRouter, Depends, File, Header, HTTPException, UploadFile
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
@@ -54,7 +54,10 @@ async def extract_text(
 )
 def get_history(
     service: OcrService = Depends(get_ocr_service),
+    x_user_roles: str | None = Header(default=None),
 ) -> dict:
+    if x_user_roles and "CLIENT" in {role.strip() for role in x_user_roles.split(",")}:
+        return success_response(message="Historique OCR personnel", data=[])
     analyses = service.get_history()
     data = [
         OcrAnalysisResponse.model_validate(item).model_dump(mode="json")
@@ -77,7 +80,10 @@ def get_history(
 def get_history_item(
     analysis_id: int,
     service: OcrService = Depends(get_ocr_service),
+    x_user_roles: str | None = Header(default=None),
 ) -> dict:
+    if x_user_roles and "CLIENT" in {role.strip() for role in x_user_roles.split(",")}:
+        raise HTTPException(status_code=403, detail="Acces direct a l'historique OCR interdit au client")
     analysis = service.get_history_item(analysis_id)
     data = OcrAnalysisResponse.model_validate(analysis).model_dump(mode="json")
     return success_response(

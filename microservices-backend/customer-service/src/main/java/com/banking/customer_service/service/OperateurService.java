@@ -44,6 +44,16 @@ public class OperateurService {
         return operateurRepository.findAll().stream().map(this::toResponse).toList();
     }
 
+    public OperateurResponseDTO changerStatut(Long id, StatutOperateur statut) {
+        if (statut == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "status est obligatoire");
+        }
+        Operateur operateur = operateurRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Operateur introuvable: " + id));
+        operateur.setStatut(statut);
+        return toResponse(operateurRepository.save(operateur));
+    }
+
     private OperateurResponseDTO toResponse(Operateur o) {
         StatutOperateur statut = o.getStatut() != null ? o.getStatut() : StatutOperateur.ACTIVE;
         return new OperateurResponseDTO(o.getId(), o.getNom(), o.getType(), o.getCode(), statut);

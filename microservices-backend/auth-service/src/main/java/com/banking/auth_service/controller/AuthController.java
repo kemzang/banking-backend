@@ -4,6 +4,8 @@ import com.banking.auth_service.dto.AuthResponse;
 import com.banking.auth_service.dto.GoogleLoginRequest;
 import com.banking.auth_service.dto.LoginRequest;
 import com.banking.auth_service.dto.OperatorUserRequest;
+import com.banking.auth_service.dto.OperatorAdminRequest;
+import com.banking.auth_service.dto.OperatorAgentRequest;
 import com.banking.auth_service.dto.RegisterRequest;
 import com.banking.auth_service.dto.UserResponse;
 import com.banking.auth_service.service.AuthService;
@@ -12,6 +14,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -32,10 +36,28 @@ public class AuthController {
         return ResponseEntity.ok(authService.login(req));
     }
 
-    // Cree un compte rattache a une organisation. Route reservee a ADMIN_PLATFORM.
+    // Route historique conservee : elle ne cree desormais que le premier OPERATOR_ADMIN.
     @PostMapping("/operator-users")
     public ResponseEntity<UserResponse> createOperatorUser(@RequestBody OperatorUserRequest req) {
         return ResponseEntity.status(HttpStatus.CREATED).body(authService.createOperatorUser(req));
+    }
+
+    @PostMapping("/operator-admins")
+    public ResponseEntity<UserResponse> createOperatorAdmin(@RequestBody OperatorAdminRequest req) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(authService.createOperatorAdmin(req));
+    }
+
+    @PostMapping("/operator-agents")
+    public ResponseEntity<UserResponse> createOperatorAgent(
+            @RequestBody OperatorAgentRequest req,
+            Authentication authentication) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(authService.createOperatorAgent(req, authentication.getName()));
+    }
+
+    @GetMapping("/operator-agents")
+    public ResponseEntity<List<UserResponse>> listOperatorAgents(Authentication authentication) {
+        return ResponseEntity.ok(authService.listOperatorAgents(authentication.getName()));
     }
 
     // POST /api/auth/google -> 200 + jeton JWT (connexion via Google, public)

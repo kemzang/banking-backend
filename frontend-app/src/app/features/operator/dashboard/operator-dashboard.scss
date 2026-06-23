@@ -1,0 +1,4 @@
+.operator-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; }
+.operator-stats .card { display: flex; flex-direction: column; gap: .5rem; }
+.operator-stats strong { font-size: 2rem; color: var(--accent, #00d4ff); }
+@media (max-width: 900px) { .operator-stats { grid-template-columns: repeat(2, 1fr); } }

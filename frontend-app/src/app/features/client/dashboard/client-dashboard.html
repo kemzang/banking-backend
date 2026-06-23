@@ -1,0 +1,23 @@
+<h1 class="page-title">Bonjour{{ profile() ? ', ' + profile()!.prenom : '' }}</h1>
+<p class="page-sub">Voici un aperçu de votre espace bancaire personnel.</p>
+
+<div class="summary-grid">
+  <a class="card" routerLink="/client/profile"><span>Profil/KYC</span><strong>{{ profile()?.statutKyc ?? 'Chargement…' }}</strong></a>
+  <a class="card" routerLink="/client/accounts"><span>Mes comptes</span><strong>{{ accounts().length }}</strong></a>
+  <a class="card" routerLink="/client/accounts"><span>Solde cumulé</span><strong>{{ soldeTotal() | number:'1.0-2' }} XAF</strong></a>
+  <a class="card" routerLink="/client/loans"><span>Demandes de prêt</span><strong>{{ demandes().length }}</strong></a>
+</div>
+
+<div class="dashboard-grid">
+  <div class="card">
+    <h2>Dernières transactions</h2>
+    @if (chargement()) { <p class="muted">Chargement…</p> }
+    @else if (transactions().length === 0) { <div class="empty-state"><p>Aucune transaction récente.</p></div> }
+    @else { @for (tx of transactions(); track tx.id) { <div class="list-row"><span>{{ tx.type }} · {{ tx.reference }}</span><strong>{{ tx.montant | number:'1.0-2' }} {{ tx.devise }}</strong></div> } }
+  </div>
+  <div class="card">
+    <h2>Mes demandes récentes</h2>
+    @if (demandes().length === 0) { <div class="empty-state"><p>Aucune demande de prêt.</p></div> }
+    @else { @for (loan of demandes(); track loan.id) { <div class="list-row"><span>Demande #{{ loan.id }}</span><span class="badge badge-attente">{{ loan.statut }}</span></div> } }
+  </div>
+</div>

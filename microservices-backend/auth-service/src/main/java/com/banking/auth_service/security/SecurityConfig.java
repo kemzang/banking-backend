@@ -37,8 +37,10 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/register", "/api/auth/login", "/api/auth/google").permitAll() // routes publiques
                         .requestMatchers("/actuator/**", "/error").permitAll()                  // /error doit rester accessible
-                        .requestMatchers(HttpMethod.POST, "/api/auth/operator-users")
+                        .requestMatchers(HttpMethod.POST, "/api/auth/operator-users", "/api/auth/operator-admins")
                         .hasRole("ADMIN_PLATFORM")
+                        .requestMatchers("/api/auth/operator-agents/**")
+                        .hasRole("OPERATOR_ADMIN")
                         .anyRequest().authenticated())                                          // tout le reste protege
                 // Non authentifie -> 401 (et non le 403 par defaut)
                 .exceptionHandling(ex -> ex.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))

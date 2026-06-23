@@ -36,6 +36,12 @@ export interface Echeancier {
   echeances: Echeance[];
 }
 
+export interface ClientLoanRequest {
+  montantDemande: number;
+  dureeMois: number;
+  motif: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class LoanService {
   private http = inject(HttpClient);
@@ -43,6 +49,15 @@ export class LoanService {
 
   soumettre(req: { clientId: number; montantDemande: number; dureeMois: number; motif: string }): Observable<DemandePret> {
     return this.http.post<DemandePret>(`${this.base}/applications`, req);
+  }
+  soumettreMaDemande(req: ClientLoanRequest): Observable<DemandePret> {
+    return this.http.post<DemandePret>(`${this.base}/applications/mine`, req);
+  }
+  mesDemandes(): Observable<DemandePret[]> {
+    return this.http.get<DemandePret[]>(`${this.base}/applications/mine`);
+  }
+  mesPrets(): Observable<Pret[]> {
+    return this.http.get<Pret[]>(`${this.base}/mine`);
   }
   getDemande(id: number): Observable<DemandePret> {
     return this.http.get<DemandePret>(`${this.base}/applications/${id}`);

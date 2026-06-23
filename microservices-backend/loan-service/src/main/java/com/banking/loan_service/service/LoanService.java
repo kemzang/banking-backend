@@ -209,6 +209,22 @@ public class LoanService {
         );
     }
 
+    public List<DemandePretResponseDTO> listerDemandesClient(Long clientId) {
+        return demandePretRepository.findByClientIdOrderByDateSoumissionDesc(clientId).stream()
+                .map(demande -> new DemandePretResponseDTO(
+                        demande.getId(), demande.getClientId(), demande.getMontantDemande(),
+                        demande.getDureeMois(), demande.getScoreRisque(), demande.getStatut()))
+                .toList();
+    }
+
+    public List<PretResponseDTO> listerPretsClient(Long clientId) {
+        return pretRepository.findByClientIdOrderByDateDeblocageDesc(clientId).stream()
+                .map(pret -> new PretResponseDTO(
+                        pret.getId(), pret.getClientId(), pret.getMontantAccorde(),
+                        pret.getTauxInteret(), pret.getDureeMois(), pret.getCapitalRestant(), pret.getStatut()))
+                .toList();
+    }
+
     public PretResponseDTO getPret(Long id) {
         Pret pret = pretRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Prêt non trouvé: " + id));

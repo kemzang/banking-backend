@@ -29,7 +29,17 @@ public class CompteController {
 
     // POST /api/accounts  → ouvrir un compte (201)
     @PostMapping
-    public ResponseEntity<CompteResponseDTO> ouvrir(@RequestBody CompteRequestDTO dto) {
+    public ResponseEntity<CompteResponseDTO> ouvrir(
+            @RequestBody CompteRequestDTO dto,
+            @RequestHeader(value = "X-User-Roles", required = false) String roles,
+            @RequestHeader(value = "X-Operator-Id", required = false) Long operatorId) {
+        verifierRoleAdminOuOperateur(roles);
+        if (estOperateur(roles)) {
+            requireOperatorId(operatorId);
+            if (!operatorId.equals(dto.operateurId())) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Impossible d'ouvrir un compte pour un autre operateur");
+            }
+        }
         return ResponseEntity.status(HttpStatus.CREATED).body(compteService.ouvrirCompte(dto));
     }
 
@@ -113,14 +123,20 @@ public class CompteController {
     // POST /api/accounts/{id}/credit  → créditer (usage interne)
     @PostMapping("/{id}/credit")
     public ResponseEntity<SoldeResponseDTO> crediter(
-            @PathVariable Long id, @RequestBody MouvementDTO dto) {
+            @PathVariable Long id,
+            @RequestBody MouvementDTO dto,
+            @RequestHeader(value = "X-User-Roles", required = false) String roles) {
+        refuserClientSurOperationInterne(roles);
         return ResponseEntity.ok(compteService.crediter(id, dto));
     }
 
     // POST /api/accounts/{id}/debit  → débiter (usage interne)
     @PostMapping("/{id}/debit")
     public ResponseEntity<SoldeResponseDTO> debiter(
-            @PathVariable Long id, @RequestBody MouvementDTO dto) {
+            @PathVariable Long id,
+            @RequestBody MouvementDTO dto,
+            @RequestHeader(value = "X-User-Roles", required = false) String roles) {
+        refuserClientSurOperationInterne(roles);
         return ResponseEntity.ok(compteService.debiter(id, dto));
     }
 
@@ -193,6 +209,12 @@ public class CompteController {
     private void verifierRoleAdminOuOperateur(String roles) {
         if (!estAdminOuOperateur(roles)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Opération réservée aux administrateurs");
+        }
+    }
+
+    private void refuserClientSurOperationInterne(String roles) {
+        if (hasRole(roles, "CLIENT")) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Operation de solde interne interdite au client");
         }
     }
 }

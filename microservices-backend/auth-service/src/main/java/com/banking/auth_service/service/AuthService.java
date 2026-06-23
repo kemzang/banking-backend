@@ -4,6 +4,8 @@ import com.banking.auth_service.dto.AuthResponse;
 import com.banking.auth_service.dto.LoginRequest;
 import com.banking.auth_service.dto.LoginType;
 import com.banking.auth_service.dto.OperatorUserRequest;
+import com.banking.auth_service.dto.OperatorAdminRequest;
+import com.banking.auth_service.dto.OperatorAgentRequest;
 import com.banking.auth_service.dto.RegisterRequest;
 import com.banking.auth_service.dto.UserResponse;
 import com.banking.auth_service.entity.Role;
@@ -29,6 +31,7 @@ import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -73,30 +76,90 @@ public class AuthService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Requete utilisateur operateur obligatoire");
         }
         validateCredentials(req.email(), req.motDePasse());
-        if (req.role() == null || !req.role().isOperatorRole()) {
+        if (req.role() != Role.OPERATOR_ADMIN) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    "Le role doit etre OPERATOR_ADMIN ou OPERATOR_AGENT"
+                    "ADMIN_PLATFORM ne peut creer que le premier OPERATOR_ADMIN"
             );
         }
-        if (req.operatorId() == null || req.operatorId() <= 0) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "operatorId est obligatoire");
+        return createOperatorAdmin(new OperatorAdminRequest(
+                req.prenom(), req.nom(), req.email(), req.motDePasse(), req.operatorId()
+        ));
+    }
+
+    public UserResponse createOperatorAdmin(OperatorAdminRequest req) {
+        if (req == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Requete administrateur operateur obligatoire");
         }
-
+        validateCredentials(req.email(), req.motDePasse());
+        validateOperatorId(req.operatorId());
         validateOperatorExists(req.operatorId());
-        String email = normalizeEmail(req.email());
-        ensureEmailAvailable(email);
+        if (utilisateurRepository.existsByOperatorIdAndRolesContaining(req.operatorId(), Role.OPERATOR_ADMIN)) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Un OPERATOR_ADMIN existe deja pour cet operateur"
+            );
+        }
+        return createOperatorIdentity(
+                req.prenom(), req.nom(), req.email(), req.motDePasse(),
+                Role.OPERATOR_ADMIN, req.operatorId()
+        );
+    }
 
+    public UserResponse createOperatorAgent(OperatorAgentRequest req, String creatorEmail) {
+        if (req == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Requete agent operateur obligatoire");
+        }
+        validateCredentials(req.email(), req.motDePasse());
+        Utilisateur creator = requireOperatorAdmin(creatorEmail);
+        return createOperatorIdentity(
+                req.prenom(), req.nom(), req.email(), req.motDePasse(),
+                Role.OPERATOR_AGENT, creator.getOperatorId()
+        );
+    }
+
+    public List<UserResponse> listOperatorAgents(String creatorEmail) {
+        Utilisateur creator = requireOperatorAdmin(creatorEmail);
+        return utilisateurRepository
+                .findByOperatorIdAndRolesContaining(creator.getOperatorId(), Role.OPERATOR_AGENT)
+                .stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
+    private UserResponse createOperatorIdentity(
+            String firstName,
+            String lastName,
+            String rawEmail,
+            String rawPassword,
+            Role role,
+            Long operatorId) {
+        String email = normalizeEmail(rawEmail);
+        ensureEmailAvailable(email);
         Utilisateur user = Utilisateur.builder()
                 .email(email)
-                .nom(req.nom())
-                .prenom(req.prenom())
-                .motDePasse(passwordEncoder.encode(req.motDePasse()))
-                .roles(new HashSet<>(Set.of(req.role())))
-                .operatorId(req.operatorId())
+                .nom(lastName)
+                .prenom(firstName)
+                .motDePasse(passwordEncoder.encode(rawPassword))
+                .roles(new HashSet<>(Set.of(role)))
+                .operatorId(operatorId)
                 .build();
-
         return toResponse(utilisateurRepository.save(user));
+    }
+
+    private Utilisateur requireOperatorAdmin(String email) {
+        Utilisateur creator = utilisateurRepository.findByEmailIgnoreCase(normalizeEmail(email))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Utilisateur courant introuvable"));
+        if (!creator.getRoles().contains(Role.OPERATOR_ADMIN) || creator.getOperatorId() == null) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Creation reservee a OPERATOR_ADMIN");
+        }
+        return creator;
+    }
+
+    private void validateOperatorId(Long operatorId) {
+        if (operatorId == null || operatorId <= 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "operatorId est obligatoire");
+        }
     }
 
     // Cree la fiche client dans customer-service avec des valeurs par defaut
@@ -215,9 +278,9 @@ public class AuthService {
         }
 
         boolean authorized = switch (loginType) {
-            case CLIENT_LOGIN -> user.getRoles().contains(Role.CLIENT);
-            case ADMIN_LOGIN -> user.getRoles().contains(Role.ADMIN_PLATFORM);
-            case OPERATOR_LOGIN -> user.getRoles().stream().anyMatch(Role::isOperatorRole);
+            case CLIENT_LOGIN, CLIENT -> user.getRoles().contains(Role.CLIENT);
+            case ADMIN_LOGIN, ADMIN -> user.getRoles().contains(Role.ADMIN_PLATFORM);
+            case OPERATOR_LOGIN, OPERATOR -> user.getRoles().stream().anyMatch(Role::isOperatorRole);
         };
         if (!authorized) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Role incompatible avec la page de connexion");

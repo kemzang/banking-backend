@@ -10,6 +10,9 @@
     {{ erreur() }}
   </div>
 }
+@if (succes()) {
+  <div class="alert alert-success">{{ succes() }}</div>
+}
 
 <div class="grid-2">
   <!-- Liste -->
@@ -30,7 +33,7 @@
       <div class="table-scroll">
         <table>
           <thead>
-            <tr><th>ID</th><th>Nom</th><th>Type</th><th>Code</th></tr>
+            <tr><th>ID</th><th>Nom</th><th>Type</th><th>Code</th><th>Statut</th></tr>
           </thead>
           <tbody>
             @for (op of operateurs(); track op.id) {
@@ -39,6 +42,13 @@
                 <td class="op-name">{{ op.nom }}</td>
                 <td><span [class]="typeBadge(op.type)">{{ op.type }}</span></td>
                 <td class="mono-cell">{{ op.code }}</td>
+                <td>
+                  <select [ngModel]="op.statut ?? 'ACTIVE'" (ngModelChange)="changerStatut(op, $event)" [name]="'status-' + op.id">
+                    <option value="ACTIVE">ACTIVE</option>
+                    <option value="INACTIVE">INACTIVE</option>
+                    <option value="SUSPENDED">SUSPENDED</option>
+                  </select>
+                </td>
               </tr>
             }
           </tbody>
@@ -49,7 +59,7 @@
 
   <!-- Formulaire -->
   <div class="card">
-    <h2>Nouvel opérateur</h2>
+    <h2>Nouvel opérateur et administrateur</h2>
     <form (ngSubmit)="creer()">
       <div class="field">
         <label>Nom</label>
@@ -67,12 +77,25 @@
         <label>Code unique</label>
         <input name="code" [(ngModel)]="code" required placeholder="AFB001" />
       </div>
-      <button type="submit" class="btn" style="width:100%;margin-top:0.25rem">
+      <div class="field">
+        <label>Statut</label>
+        <select name="statut" [(ngModel)]="statut">
+          <option value="ACTIVE">ACTIVE</option>
+          <option value="INACTIVE">INACTIVE</option>
+          <option value="SUSPENDED">SUSPENDED</option>
+        </select>
+      </div>
+      <h3>Premier compte OPERATOR_ADMIN</h3>
+      <div class="field"><label>Prénom</label><input name="adminFirstName" [(ngModel)]="adminFirstName" required /></div>
+      <div class="field"><label>Nom</label><input name="adminLastName" [(ngModel)]="adminLastName" required /></div>
+      <div class="field"><label>Email</label><input type="email" name="adminEmail" [(ngModel)]="adminEmail" required /></div>
+      <div class="field"><label>Mot de passe</label><input type="password" name="adminPassword" [(ngModel)]="adminPassword" minlength="8" required /></div>
+      <button type="submit" class="btn" [disabled]="creation()" style="width:100%;margin-top:0.25rem">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
           <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
           <path d="M12 8v8M8 12h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
         </svg>
-        Créer l'opérateur
+        {{ creation() ? 'Création…' : "Créer l'opérateur et son administrateur" }}
       </button>
     </form>
   </div>

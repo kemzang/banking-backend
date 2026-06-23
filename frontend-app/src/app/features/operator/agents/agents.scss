@@ -1,0 +1,3 @@
+.agents-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 1.25rem; }
+.fixed-role { margin: .75rem 0 1rem; padding: .75rem; border-radius: .5rem; background: rgba(0, 212, 255, .08); }
+@media (max-width: 900px) { .agents-grid { grid-template-columns: 1fr; } }

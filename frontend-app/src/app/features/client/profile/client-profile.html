@@ -1,0 +1,11 @@
+<h1 class="page-title">Mon profil</h1>
+<p class="page-sub">Informations personnelles et statut de vérification.</p>
+@if (erreur()) { <div class="alert alert-error">{{ erreur() }}</div> }
+@if (client(); as profile) {
+  <div class="profile-grid">
+    <div class="card"><span class="label">Nom complet</span><strong>{{ profile.prenom }} {{ profile.nom }}</strong></div>
+    <div class="card"><span class="label">Email</span><strong>{{ profile.email }}</strong></div>
+    <div class="card"><span class="label">Statut KYC</span><strong class="badge badge-attente">{{ profile.statutKyc }}</strong></div>
+    <div class="card"><span class="label">Identifiant client</span><strong>#{{ profile.id }}</strong></div>
+  </div>
+}

@@ -120,6 +120,8 @@ class TransactionControllerTest {
                 type,
                 new BigDecimal("1000.00"),
                 "XAF",
+                1L,
+                null,
                 BigDecimal.ZERO,
                 StatutTransaction.VALIDEE,
                 null,

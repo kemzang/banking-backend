@@ -89,6 +89,12 @@ export class Comptes implements OnInit {
     return `badge badge-${s}`;
   }
 
+  detailLink(id: number): string {
+    if (this.auth.hasRole('CLIENT')) return `/client/accounts/${id}`;
+    if (this.auth.hasRole('OPERATOR_ADMIN', 'OPERATOR_AGENT')) return `/operator/accounts/${id}`;
+    return `/comptes/${id}`;
+  }
+
   private vide(): CompteRequest {
     return { clientId: 0, operateurId: 1, type: 'COURANT', devise: 'XAF', plafondJournalier: 500000, decouvertAutorise: 0 };
   }

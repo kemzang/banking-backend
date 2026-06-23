@@ -21,5 +21,5 @@ export const roleGuard: CanActivateFn = (route: ActivatedRouteSnapshot) => {
   const requis = (route.data?.['roles'] as string[]) ?? [];
 
   if (requis.length === 0 || auth.hasRole(...requis)) return true;
-  return router.parseUrl('/dashboard');
+  return router.parseUrl(auth.redirectByRole());
 };
