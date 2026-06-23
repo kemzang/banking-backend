@@ -37,25 +37,25 @@ public class CompteController {
             @RequestHeader(value = "X-User-Roles", required = false) String roles,
             @RequestHeader(value = "X-Operator-Id", required = false) Long operatorId) {
         CompteRequestDTO effective = dto;
+        ClientResponseDTO owner;
         if (hasRole(roles, "CLIENT")) {
-            ClientResponseDTO client = getClientFromEmail(userEmail);
-            if (!"VALIDE".equals(client.statutKyc())) {
+            owner = getClientFromEmail(userEmail);
+            if (!"VALIDE".equals(owner.statutKyc())) {
                 throw new ResponseStatusException(HttpStatus.LOCKED, "Profil client non valide");
             }
-            effective = new CompteRequestDTO(client.id(), client.operateurId(), dto.type(), dto.devise(),
+            effective = new CompteRequestDTO(owner.id(), owner.operateurId(), dto.type(), dto.devise(),
                     dto.plafondJournalier(), dto.decouvertAutorise());
         } else {
             verifierRoleAdminOuOperateur(roles);
+            owner = customerClient.getClientById(dto.clientId());
+            effective = new CompteRequestDTO(owner.id(), owner.operateurId(), dto.type(), dto.devise(),
+                    dto.plafondJournalier(), dto.decouvertAutorise());
         }
         if (estOperateur(roles)) {
             requireOperatorId(operatorId);
             if (!operatorId.equals(effective.operateurId())) {
                 throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Impossible d'ouvrir un compte pour un autre operateur");
             }
-        }
-        ClientResponseDTO owner = customerClient.getClientById(effective.clientId());
-        if (!effective.operateurId().equals(owner.operateurId())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "L'operateur du compte doit etre celui du client");
         }
         CompteResponseDTO created = compteService.ouvrirCompte(effective);
         notificationClient.openingRequested(created, owner.email());

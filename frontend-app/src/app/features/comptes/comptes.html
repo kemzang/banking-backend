@@ -69,6 +69,10 @@
                     <button class="btn btn-sm btn-ghost" (click)="suspendre(c)">Suspendre</button>
                     <button class="btn btn-sm btn-ghost" (click)="cloturer(c)">Clôturer</button>
                   }
+                  @if (peutDecider() && c.statut === 'EN_ATTENTE_ACTIVATION') {
+                    <button class="btn btn-sm btn-green" (click)="activer(c)">Activer</button>
+                    <button class="btn btn-sm btn-ghost" (click)="rejeter(c)">Rejeter</button>
+                  }
                 </td>
               </tr>
             }

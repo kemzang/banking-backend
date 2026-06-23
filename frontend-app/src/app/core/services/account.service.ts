@@ -47,4 +47,10 @@ export class AccountService {
   close(id: number): Observable<Compte> {
     return this.http.patch<Compte>(`${this.base}/${id}/close`, {});
   }
+  activate(id: number): Observable<Compte> {
+    return this.http.patch<Compte>(`${this.base}/${id}/activate`, {});
+  }
+  reject(id: number): Observable<Compte> {
+    return this.http.patch<Compte>(`${this.base}/${id}/reject`, {});
+  }
 }

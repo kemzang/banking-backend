@@ -55,6 +55,8 @@ export class Comptes implements OnInit {
     return this.auth.hasRole('ADMIN_PLATFORM', 'OPERATOR_ADMIN', 'OPERATOR_AGENT');
   }
 
+  peutDecider(): boolean { return this.auth.hasRole('ADMIN_PLATFORM', 'OPERATOR_ADMIN'); }
+
   ouvrir(): void {
     this.erreur.set(null);
     this.succes.set(null);
@@ -87,6 +89,14 @@ export class Comptes implements OnInit {
   badgeClass(statut: string): string {
     const s = statut === 'ACTIF' ? 'valide' : statut === 'CLOTURE' ? 'rejete' : 'attente';
     return `badge badge-${s}`;
+  }
+
+  activer(c: Compte): void {
+    this.account.activate(c.id).subscribe({ next: () => this.charger(), error: () => this.erreur.set('Activation refusee.') });
+  }
+
+  rejeter(c: Compte): void {
+    this.account.reject(c.id).subscribe({ next: () => this.charger(), error: () => this.erreur.set('Rejet refuse.') });
   }
 
   detailLink(id: number): string {
