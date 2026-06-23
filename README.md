@@ -124,3 +124,50 @@ modèle de données AVANT d'écrire la logique métier.** On démarre par
 
 ## Équipe
 _(noms des membres et répartition par bounded context à compléter)_
+
+---
+
+## Diagnostic des téléchargements Maven dans Docker
+
+Les services Java utilisent Spring Boot 3.3.5, Spring Cloud 2023.0.3 et Java 17.
+Un `ping` en échec ne suffit pas à diagnostiquer Maven Central, car le trafic ICMP
+peut être bloqué. Tester plutôt HTTPS et Maven depuis un conteneur :
+
+```bash
+docker run --rm alpine wget -S -O - https://repo.maven.apache.org/maven2/
+docker run --rm maven:3.9.9-eclipse-temurin-17 mvn -version
+docker run --rm maven:3.9.9-eclipse-temurin-17 mvn dependency:get -Dartifact=org.springframework.boot:spring-boot-starter-parent:3.3.5:pom
+```
+
+Si `wget` ne parvient pas à résoudre `repo.maven.apache.org`, configurer le moteur
+Docker (Docker Desktop > Settings > Docker Engine), puis redémarrer Docker Desktop :
+
+```json
+{
+  "dns": ["8.8.8.8", "1.1.1.1"]
+}
+```
+
+Cette configuration appartient au moteur Docker de la machine et ne doit pas
+être ajoutée au `docker-compose.yml` du projet.
+
+Si le nom est résolu mais que la connexion au port 443 est refusée ou déclarée
+inaccessible, le DNS fonctionne déjà : vérifier le pare-feu, le VPN, le proxy
+d'entreprise et la configuration proxy de Docker Desktop. Autoriser au minimum
+les connexions HTTPS sortantes vers `repo.maven.apache.org:443`.
+
+Dans ce projet, les builds Docker Maven utilisent aussi le miroir Central
+`https://repo1.maven.org/maven2` via `.mvn/settings-docker.xml`. Les Dockerfile
+activent un cache BuildKit Maven partagé et des reprises automatiques afin que les
+huit services ne retéléchargent pas toutes les dépendances. Le premier build peut
+rester long sur une connexion lente ; les suivants réutilisent le cache.
+
+Pour valider progressivement les images critiques :
+
+```bash
+docker compose build transaction-service
+docker compose build auth-service
+docker compose build gateway-service
+docker compose up --build
+docker compose ps
+```
