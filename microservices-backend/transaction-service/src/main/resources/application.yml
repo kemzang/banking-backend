@@ -1,6 +1,11 @@
 server:
   port: 8083
 
+# Cle JWT partagee avec auth-service et gateway (doit etre identique).
+app:
+  jwt:
+    secret: ${JWT_SECRET:change-me-une-cle-secrete-de-256-bits-minimum-pour-le-tp-inf462}
+
 spring:
   application:
     name: transaction-service

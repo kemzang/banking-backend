@@ -16,23 +16,26 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Validated
 @RestController
@@ -74,11 +77,9 @@ public class TransactionController {
                     )
             )
             @Valid @RequestBody DepotRequestDTO request,
-            @RequestHeader(value = "X-User-Email", required = false) String userEmail,
-            @RequestHeader(value = "X-User-Roles", required = false) String userRoles,
-            @RequestHeader(value = "X-Operator-Id", required = false) Long operatorId
+            HttpServletRequest httpRequest
     ) {
-        verifierAccesCompte(request.compteId(), userEmail, userRoles, operatorId);
+        verifierAccesCompte(request.compteId(), httpRequest);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(transactionService.depot(request));
     }
@@ -104,11 +105,9 @@ public class TransactionController {
                     )
             )
             @Valid @RequestBody RetraitRequestDTO request,
-            @RequestHeader(value = "X-User-Email", required = false) String userEmail,
-            @RequestHeader(value = "X-User-Roles", required = false) String userRoles,
-            @RequestHeader(value = "X-Operator-Id", required = false) Long operatorId
+            HttpServletRequest httpRequest
     ) {
-        verifierAccesCompte(request.compteId(), userEmail, userRoles, operatorId);
+        verifierAccesCompte(request.compteId(), httpRequest);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(transactionService.retrait(request));
     }
@@ -137,11 +136,9 @@ public class TransactionController {
                     )
             )
             @Valid @RequestBody TransfertRequestDTO request,
-            @RequestHeader(value = "X-User-Email", required = false) String userEmail,
-            @RequestHeader(value = "X-User-Roles", required = false) String userRoles,
-            @RequestHeader(value = "X-Operator-Id", required = false) Long operatorId
+            HttpServletRequest httpRequest
     ) {
-        verifierAccesCompte(request.compteSourceId(), userEmail, userRoles, operatorId);
+        verifierAccesCompte(request.compteSourceId(), httpRequest);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(transactionService.transfert(request));
     }
@@ -154,9 +151,7 @@ public class TransactionController {
     })
     public TransactionResponseDTO getById(
             @Parameter(example = "1") @PathVariable @Positive Long id,
-            @RequestHeader(value = "X-User-Email", required = false) String userEmail,
-            @RequestHeader(value = "X-User-Roles", required = false) String userRoles,
-            @RequestHeader(value = "X-Operator-Id", required = false) Long operatorId
+            HttpServletRequest httpRequest
     ) {
         TransactionResponseDTO transaction = transactionService.getById(id);
         Long accountId = transaction.compteSourceId() != null
@@ -165,7 +160,7 @@ public class TransactionController {
         if (accountId == null) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Transaction sans compte accessible");
         }
-        verifierAccesCompte(accountId, userEmail, userRoles, operatorId);
+        verifierAccesCompte(accountId, httpRequest);
         return transaction;
     }
 
@@ -174,28 +169,46 @@ public class TransactionController {
     @ApiResponse(responseCode = "200", description = "Historique retourne")
     public List<TransactionResponseDTO> getByAccount(
             @Parameter(example = "1") @RequestParam @Positive Long accountId,
-            @RequestHeader(value = "X-User-Email", required = false) String userEmail,
-            @RequestHeader(value = "X-User-Roles", required = false) String userRoles,
-            @RequestHeader(value = "X-Operator-Id", required = false) Long operatorId
+            HttpServletRequest httpRequest
     ) {
-        verifierAccesCompte(accountId, userEmail, userRoles, operatorId);
+        verifierAccesCompte(accountId, httpRequest);
         return transactionService.getByCompte(accountId);
     }
 
-    private boolean estAdmin(String roles) {
-        return hasRole(roles, "ADMIN_PLATFORM") || hasRole(roles, "ADMIN");
+    // ── Verification d'acces (lit le JWT via le SecurityContext) ──
+
+    private String getCurrentUserEmail() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated() || "anonymousUser".equals(auth.getPrincipal())) {
+            return null;
+        }
+        return auth.getName();
     }
 
-    private boolean estOperateur(String roles) {
-        return hasRole(roles, "OPERATOR_ADMIN")
-                || hasRole(roles, "OPERATOR_AGENT")
-                || hasRole(roles, "OPERATEUR");
+    private List<String> getCurrentRoles() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null) return List.of();
+        return auth.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .map(a -> a.startsWith("ROLE_") ? a.substring(5) : a)
+                .collect(Collectors.toList());
     }
 
-    private boolean hasRole(String roles, String expectedRole) {
-        return roles != null && Arrays.stream(roles.split(","))
-                .map(String::trim)
-                .anyMatch(expectedRole::equals);
+    private Long getCurrentOperatorId(HttpServletRequest request) {
+        Object op = request.getAttribute("operatorId");
+        if (op instanceof Long l) return l;
+        if (op instanceof Number n) return n.longValue();
+        return null;
+    }
+
+    private boolean estAdmin(List<String> roles) {
+        return roles.contains("ADMIN_PLATFORM") || roles.contains("ADMIN");
+    }
+
+    private boolean estOperateur(List<String> roles) {
+        return roles.contains("OPERATOR_ADMIN")
+                || roles.contains("OPERATOR_AGENT")
+                || roles.contains("OPERATEUR");
     }
 
     private Long getClientIdFromEmail(String email) {
@@ -205,19 +218,37 @@ public class TransactionController {
         return customerClient.getClientByEmail(email).id();
     }
 
-    private void verifierAccesCompte(Long compteId, String userEmail, String userRoles, Long operatorId) {
+    private void verifierAccesCompte(Long compteId, HttpServletRequest httpRequest) {
+        String userEmail = getCurrentUserEmail();
+        List<String> userRoles = getCurrentRoles();
+        Long operatorId = getCurrentOperatorId(httpRequest);
+
+        // Pas d'auth du tout (route publique mal appellee)
+        if (userEmail == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentification requise");
+        }
+
+        // ADMIN : acces total
         if (estAdmin(userRoles)) {
             return;
         }
+
         AccountResponseDTO compte = accountClient.getById(compteId);
+        if (compte == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Compte introuvable");
+        }
+
+        // OPERATEUR : doit etre rattache au meme operateur que le compte
         if (estOperateur(userRoles)) {
             if (operatorId == null || !operatorId.equals(compte.operateurId())) {
                 throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Compte rattache a un autre operateur");
             }
             return;
         }
+
+        // CLIENT : doit etre le proprietaire du compte
         Long monClientId = getClientIdFromEmail(userEmail);
-        if (!monClientId.equals(compte.clientId())) {
+        if (compte.clientId() == null || !monClientId.equals(compte.clientId())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Accès refusé à ce compte");
         }
     }
